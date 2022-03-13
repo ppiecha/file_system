@@ -11,7 +11,7 @@ def json_to_file(json_dict: Dict[str, Any], file_name: str):
 
 def json_from_file(file_name: str) -> Dict[str, Any]:
     if file_name and QFileInfo(file_name).exists():
-        with open(file_name) as json_file:
+        with open(file_name, encoding="utf-8") as json_file:
             return json.load(json_file)
     else:
         return {}

@@ -19,4 +19,3 @@ class FilterView(QWidget):
         filters = text.split(";")
         self.parent.model().setNameFilters(filters if filters else "*")
         self.parent.model().setNameFilterDisables(False)
-

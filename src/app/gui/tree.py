@@ -6,8 +6,14 @@ from PySide2.QtCore import QDir, QFileInfo, QModelIndex, QPoint
 from PySide2.QtGui import Qt
 from PySide2.QtWidgets import QTreeView, QFileSystemModel, QApplication, QMenu, QAbstractItemView, QInputDialog
 
-from src.app.gui.action import create_folder_action, create_file_action, create_pin_action, open_console_action, \
-    open_folder_action, open_file_action
+from src.app.gui.action import (
+    create_folder_action,
+    create_file_action,
+    create_pin_action,
+    open_console_action,
+    open_folder_action,
+    open_file_action,
+)
 from src.app.gui.palette import dark_palette
 from src.app.model.path import all_folders, all_files, is_single, parent_path
 from src.app.model.schema import Tree
@@ -100,8 +106,7 @@ class TreeView(QTreeView):
         self.customContextMenuRequested.connect(self.open_menu)
 
     def get_selected_paths(self) -> List[str]:
-        return [self.model().fileInfo(index).absoluteFilePath()
-                for index in self.selectedIndexes()]
+        return [self.model().fileInfo(index).absoluteFilePath() for index in self.selectedIndexes()]
 
     def on_clicked(self, index):
         path = self.model().fileInfo(index).absoluteFilePath()
@@ -157,12 +162,11 @@ class TreeView(QTreeView):
             print(f)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
-    app.setStyle('Fusion')  # Style needed for palette to work
+    app.setStyle("Fusion")  # Style needed for palette to work
     app.setPalette(dark_palette)
     tree = TreeView(parent=None, tree=Tree(root_path="c:\\", current_path="c:\\Users\\piotr\\temp"))
     tree.show()
     tree.current_path = tree.current_path
     sys.exit(app.exec_())
-

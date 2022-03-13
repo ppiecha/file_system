@@ -1,3 +1,4 @@
+# pylint: skip-file
 import os
 from pathlib import Path
 from win32com.shell import shell, shellcon
@@ -34,20 +35,13 @@ def copy(src, dst: str, auto_rename: bool = False) -> bool:
     if isinstance(src, str):  # in Py3 replace basestring with str
         src = os.path.abspath(src)
     else:  # iterable
-        src = '\0'.join(os.path.abspath(path) for path in src)
+        src = "\0".join(os.path.abspath(path) for path in src)
 
     flags = shellcon.FOF_NOCONFIRMMKDIR
     if auto_rename:
         flags = flags | shellcon.FOF_RENAMEONCOLLISION
 
-    result, aborted = shell.SHFileOperation((
-        0,
-        shellcon.FO_COPY,
-        src,
-        os.path.abspath(dst),
-        flags,
-        None,
-        None))
+    result, aborted = shell.SHFileOperation((0, shellcon.FO_COPY, src, os.path.abspath(dst), flags, None, None))
 
     if not aborted and result != 0:
         # Note: raising a WindowsError with correct error code is quite
@@ -78,20 +72,13 @@ def move(src, dst: str, auto_rename: bool = False) -> bool:
     if isinstance(src, str):  # in Py3 replace basestring with str
         src = os.path.abspath(src)
     else:  # iterable
-        src = '\0'.join(os.path.abspath(path) for path in src)
+        src = "\0".join(os.path.abspath(path) for path in src)
 
     flags = shellcon.FOF_NOCONFIRMMKDIR
     if auto_rename:
         flags = flags | shellcon.FOF_RENAMEONCOLLISION
 
-    result, aborted = shell.SHFileOperation((
-        0,
-        shellcon.FO_MOVE,
-        src,
-        os.path.abspath(dst),
-        flags,
-        None,
-        None))
+    result, aborted = shell.SHFileOperation((0, shellcon.FO_MOVE, src, os.path.abspath(dst), flags, None, None))
 
     if not aborted and result != 0:
         # Note: raising a WindowsError with correct error code is quite
@@ -122,20 +109,13 @@ def rename(src, dst: str, auto_rename: bool = False) -> bool:
     if isinstance(src, str):  # in Py3 replace basestring with str
         src = os.path.abspath(src)
     else:  # iterable
-        src = '\0'.join(os.path.abspath(path) for path in src)
+        src = "\0".join(os.path.abspath(path) for path in src)
 
     flags = shellcon.FOF_NOCONFIRMMKDIR | shellcon.FOF_SILENT
     if auto_rename:
         flags = flags | shellcon.FOF_RENAMEONCOLLISION
 
-    result, aborted = shell.SHFileOperation((
-        0,
-        shellcon.FO_RENAME,
-        src,
-        os.path.abspath(dst),
-        flags,
-        None,
-        None))
+    result, aborted = shell.SHFileOperation((0, shellcon.FO_RENAME, src, os.path.abspath(dst), flags, None, None))
 
     if not aborted and result != 0:
         # Note: raising a WindowsError with correct error code is quite
@@ -165,7 +145,7 @@ def delete(src, hard_delete: bool) -> bool:
     if isinstance(src, str):  # in Py3 replace basestring with str
         src = os.path.abspath(src)
     else:  # iterable
-        src = '\0'.join(os.path.abspath(path) for path in src)
+        src = "\0".join(os.path.abspath(path) for path in src)
 
     flags = 0  # shellcon.FOF_SILENT
 
@@ -174,16 +154,7 @@ def delete(src, hard_delete: bool) -> bool:
     if not hard_delete:
         flags |= shellcon.FOF_ALLOWUNDO
 
-
-
-    result, aborted = shell.SHFileOperation((
-        0,
-        shellcon.FO_DELETE,
-        src,
-        None,
-        flags,  # Flags
-        None,
-        None))
+    result, aborted = shell.SHFileOperation((0, shellcon.FO_DELETE, src, None, flags, None, None))  # Flags
 
     if not aborted and result != 0:
         # Note: raising a WindowsError with correct error code is quite
@@ -197,14 +168,15 @@ def delete(src, hard_delete: bool) -> bool:
 
 def new_file(file_name: str) -> None:
     try:
-        handle = win32file.CreateFile(file_name,
-                                      win32file.GENERIC_WRITE,
-                                      win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE |
-                                      win32file.FILE_SHARE_DELETE,
-                                      None,
-                                      win32con.CREATE_NEW,
-                                      win32con.FILE_ATTRIBUTE_NORMAL,
-                                      None)
+        handle = win32file.CreateFile(
+            file_name,
+            win32file.GENERIC_WRITE,
+            win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE | win32file.FILE_SHARE_DELETE,
+            None,
+            win32con.CREATE_NEW,
+            win32con.FILE_ATTRIBUTE_NORMAL,
+            None,
+        )
         handle.Close()
     except Exception as e:
         raise e
@@ -221,7 +193,7 @@ def get_new_name(full_name: str) -> str:
             stop = path.stem.rfind(")")
             # print(path.stem[start:stop+1])
             try:
-                num = int(path.stem[start+1:stop])
+                num = int(path.stem[start + 1 : stop])
             except:
                 return str(path.parent.joinpath(path.stem)) + "(1)" + path.suffix
             else:
@@ -265,32 +237,32 @@ def paste_file(path):
     pidl = parent_folder.ParseDisplayName(hwnd, None, item.name)[1]
     context_menu = parent_folder.GetUIObjectOf(hwnd, [pidl], shell.IID_IContextMenu, 0)[1]
     menu = win32gui.CreatePopupMenu()
-    context_menu.QueryContextMenu(menu, 0, 1, 0x7FFF, shellcon.CMF_EXPLORE | shellcon.CMF_ITEMMENU |
-                                  shellcon.CMF_EXTENDEDVERBS)
-    ci = (0,  # Mask
-          hwnd,  # hwnd
-          "Paste",  # Verb
-          "",  # Parameters
-          "",  # Directory
-          win32con.SW_SHOWNORMAL,  # Show
-          0,  # HotKey
-          None  # Icon
-          )
+    context_menu.QueryContextMenu(
+        menu, 0, 1, 0x7FFF, shellcon.CMF_EXPLORE | shellcon.CMF_ITEMMENU | shellcon.CMF_EXTENDEDVERBS
+    )
+    ci = (
+        0,  # Mask
+        hwnd,  # hwnd
+        "Paste",  # Verb
+        "",  # Parameters
+        "",  # Directory
+        win32con.SW_SHOWNORMAL,  # Show
+        0,  # HotKey
+        None,  # Icon
+    )
     context_menu.InvokeCommand(ci)
 
 
 def start_file(file_name: str):
-    shell.ShellExecuteEx(fMask=shellcon.SEE_MASK_NOCLOSEPROCESS,
-                         nShow=win32con.SW_NORMAL,
-                         lpVerb="Open",
-                         lpFile=file_name)
+    shell.ShellExecuteEx(
+        fMask=shellcon.SEE_MASK_NOCLOSEPROCESS, nShow=win32con.SW_NORMAL, lpVerb="Open", lpFile=file_name
+    )
 
 
 def open_folder(dir_name: str):
-    shell.ShellExecuteEx(fMask=shellcon.SEE_MASK_NOCLOSEPROCESS,
-                         nShow=win32con.SW_NORMAL,
-                         lpVerb="Open",
-                         lpFile=dir_name)
+    shell.ShellExecuteEx(
+        fMask=shellcon.SEE_MASK_NOCLOSEPROCESS, nShow=win32con.SW_NORMAL, lpVerb="Open", lpFile=dir_name
+    )
 
 
 def new_folder(folder_name):
@@ -310,10 +282,9 @@ def get_file_name(path: str) -> str:
 
 class Shortcut:
     def __init__(self):
-        self._base = pythoncom.CoCreateInstance(shell.CLSID_ShellLink,
-                                                None,
-                                                pythoncom.CLSCTX_INPROC_SERVER,
-                                                shell.IID_IShellLink)
+        self._base = pythoncom.CoCreateInstance(
+            shell.CLSID_ShellLink, None, pythoncom.CLSCTX_INPROC_SERVER, shell.IID_IShellLink
+        )
 
     def load(self, filename):
         self._base.QueryInterface(pythoncom.IID_IPersistFile).Load(filename)
@@ -328,11 +299,13 @@ class Shortcut:
 
     @staticmethod
     def new_shortcut(path, lnk_name, target, args=None, desc=None, start_in=None):
-        winshell.CreateShortcut(Path=str(os.path.join(path, lnk_name) if lnk_name else path),
-                                Target=str(target),
-                                Arguments=str(args),
-                                Description="Shortcut to " + str(target),
-                                StartIn=str(start_in))
+        winshell.CreateShortcut(
+            Path=str(os.path.join(path, lnk_name) if lnk_name else path),
+            Target=str(target),
+            Arguments=str(args),
+            Description="Shortcut to " + str(target),
+            StartIn=str(start_in),
+        )
 
 
 def get_drives():
@@ -344,7 +317,7 @@ def get_drives():
         3: "Local Disk",
         4: "Network Drive",
         5: "Compact Disc",
-        6: "RAM Disk"
+        6: "RAM Disk",
     }
 
     drives = (drive for drive in win32api.GetLogicalDriveStrings().split("\000") if drive)
@@ -399,21 +372,23 @@ def get_context_menu(path, file_names):
         context_menu.Release()
         context_menu = cm_plus
     menu = win32gui.CreatePopupMenu()
-    context_menu.QueryContextMenu(menu, 0, 1, 0x7FFF, shellcon.CMF_EXPLORE | shellcon.CMF_ITEMMENU |
-                                  shellcon.CMF_EXTENDEDVERBS)
+    context_menu.QueryContextMenu(
+        menu, 0, 1, 0x7FFF, shellcon.CMF_EXPLORE | shellcon.CMF_ITEMMENU | shellcon.CMF_EXTENDEDVERBS
+    )
     x, y = win32gui.GetCursorPos()
     flags = win32gui.TPM_LEFTALIGN | win32gui.TPM_RETURNCMD
     cmd = win32gui.TrackPopupMenu(menu, flags, x, y, 0, hwnd, None)
     if cmd:
-        ci = (0,  # Mask
-              hwnd,  # hwnd
-              cmd - 1,  # Verb
-              "",  # Parameters
-              "",  # Directory
-              win32con.SW_SHOWNORMAL,  # Show
-              0,  # HotKey
-              None  # Icon
-              )
+        ci = (
+            0,  # Mask
+            hwnd,  # hwnd
+            cmd - 1,  # Verb
+            "",  # Parameters
+            "",  # Directory
+            win32con.SW_SHOWNORMAL,  # Show
+            0,  # HotKey
+            None,  # Icon
+        )
         context_menu.InvokeCommand(ci)
 
 
@@ -423,6 +398,7 @@ class ShellThread(threading.Thread):
     however, if an exception occurs in the thread the error will be logged
     to the user rather than printed to stderr.
     """
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._real_run = self.run
@@ -436,6 +412,3 @@ class ShellThread(threading.Thread):
 
 
 # class SHException(Exception):
-
-
-

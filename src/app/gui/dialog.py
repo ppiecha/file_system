@@ -1,8 +1,15 @@
 import sys
 
 from PySide2.QtGui import Qt, QMouseEvent
-from PySide2.QtWidgets import QDialog, QFormLayout, QLineEdit, QApplication, QDialogButtonBox, QFileDialog, \
-    QAbstractButton
+from PySide2.QtWidgets import (
+    QDialog,
+    QFormLayout,
+    QLineEdit,
+    QApplication,
+    QDialogButtonBox,
+    QFileDialog,
+    QAbstractButton,
+)
 
 from src.app.gui.palette import dark_palette
 from src.app.gui.widget import Layout
@@ -34,11 +41,7 @@ class FavoriteDlg(QDialog):
 
     def button_clicked(self, button: QAbstractButton):
         if self.buttons.buttonRole(button) == QDialogButtonBox.AcceptRole:
-            favorite = Favorite(
-                name=self.name.text(),
-                description=self.description.text(),
-                path=self.path.text()
-            )
+            favorite = Favorite(name=self.name.text(), description=self.description.text(), path=self.path.text())
             # print(favorite)
             if favorite and favorite.name:
                 self.favorite = favorite
@@ -47,7 +50,7 @@ class FavoriteDlg(QDialog):
             self.reject()
 
     def on_get_dir(self, e: QMouseEvent):
-        self.path.setText(QFileDialog.getExistingDirectory(self, 'Select directory'))
+        self.path.setText(QFileDialog.getExistingDirectory(self, "Select directory"))
 
     @classmethod
     def get_favorite(cls, parent, favorite: Favorite = None) -> Favorite:
@@ -56,9 +59,9 @@ class FavoriteDlg(QDialog):
         return dlg.favorite
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
-    app.setStyle('Fusion')  # Style needed for palette to work
+    app.setStyle("Fusion")  # Style needed for palette to work
     app.setPalette(dark_palette)
     dlg = FavoriteDlg()
     dlg.show()

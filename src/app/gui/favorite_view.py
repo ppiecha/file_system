@@ -3,6 +3,7 @@ import sys
 from functools import partial
 from typing import List
 
+from PySide2.QtCore import QPoint
 from PySide2.QtGui import Qt
 from PySide2.QtWidgets import QWidget, QTreeWidget, QApplication, QTreeWidgetItem, QAbstractItemView, QMenu
 
@@ -21,7 +22,6 @@ class FavoriteTree(QTreeWidget):
     def __init__(self, parent, favorites: Favorites):
         super().__init__(parent=parent)
         self.favorites = favorites
-        # print(Favorite.__dict__["__fields__"])
         self.setHeaderLabels(["Name", "Description", "Path"])
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -29,7 +29,7 @@ class FavoriteTree(QTreeWidget):
 
         # self.clicked.connect(self.on_clicked)
         # self.doubleClicked.connect(self.on_double_clicked)
-        self.customContextMenuRequested.connect(self.open_menu)
+        self.customContextMenuRequested.connect(self.show_menu)
         self.itemExpanded.connect(self.expanded)
         self.itemCollapsed.connect(self.collapsed)
         self.itemSelectionChanged.connect(self.selection_changed)
@@ -80,6 +80,8 @@ class FavoriteTree(QTreeWidget):
     def create_top_level_item(self, favorite: Favorite) -> QTreeWidgetItem:
         item = QTreeWidgetItem(self)
         self.populate_favorite_item(item=item, favorite=favorite)
+        if self.favorites.selected and favorite.dict() == self.favorites.selected.dict():
+            self.set_item_selected(item)
         return item
 
     def set_item_selected(self, item: QTreeWidgetItem):
@@ -93,54 +95,71 @@ class FavoriteTree(QTreeWidget):
             if parent.data(0, Qt.UserRole).expanded:
                 self.expandItem(parent)
             if self.favorites.selected and child.dict() == self.favorites.selected.dict():
-                self.setItemSelected(item, True)
+                self.set_item_selected(item)
             self.create_children(parent=item, children=child.children)
         return parent
 
-    def open_menu(self, position):
-        def creator(parent: QTreeWidgetItem):
-            favorite = FavoriteDlg.get_favorite(parent=self)
+    def show_menu(self, position: QPoint):
+        items = self.selectedItems()
+        parent_item = items[0] if items else None
+        with FavoriteTree.Menu(favorite_tree=self, parent_item=parent_item) as menu:
+            menu.open_menu(position=position)
+
+    class Menu(QMenu):
+        def __init__(self, favorite_tree: FavoriteTree, parent_item: QTreeWidgetItem):
+            super().__init__(parent=favorite_tree)
+            self.favorite_tree = favorite_tree
+            self.parent_item = parent_item
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            pass
+
+        def save_tree_and_recreate(self):
+            self.favorite_tree.save_to_file()
+            self.favorite_tree.recreate()
+
+        def creator(self, parent_item: QTreeWidgetItem):
+            favorite = FavoriteDlg.get_favorite(parent=self.favorite_tree)
             if favorite:
-                self.favorites.selected = favorite
-                parent_favorite = parent.data(0, Qt.UserRole) if parent else None
+                self.favorite_tree.favorites.selected = favorite
+                parent_favorite = parent_item.data(0, Qt.UserRole) if parent_item else None
                 if parent_favorite:
                     parent_favorite.expanded = True
-                self.favorites.create_item(
-                    item=favorite,
-                    parent=parent_favorite)
-                self.save_to_file()
-                self.recreate()
+                self.favorites.create_item(item=favorite, parent=parent_favorite)
+                self.save_tree_and_recreate()
 
-        items = self.selectedItems()
-        parent = items[0] if items else None
-        menu = QMenu()
-        menu.addAction(Action(
-            parent=self,
-            caption="Create top level item",
-            slot=partial(creator, None),
-            # tip=f"Create item",
-        ))
-        if parent:
-            menu.addAction(Action(
-                parent=self,
-                caption="Create sub-item",
-                slot=partial(creator, parent),
-                # tip=f"Create item",
-            ))
-        menu.exec_(self.viewport().mapToGlobal(position))
+        def open_menu(self, position: QPoint):
+            self.clear()
+            self.addAction(
+                Action(
+                    parent=self,
+                    caption="Create top level item",
+                    slot=partial(self.creator, None),
+                )
+            )
+            if self.parent_item:
+                self.addAction(
+                    Action(
+                        parent=self,
+                        caption="Create sub-item",
+                        slot=partial(self.creator, self.parent_item),
+                    )
+                )
+            self.exec_(self.favorite_tree.viewport().mapToGlobal(position))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
-    app.setStyle('Fusion')  # Style needed for palette to work
+    app.setStyle("Fusion")  # Style needed for palette to work
     app.setPalette(dark_palette)
     with FavoriteTree(
-            parent=None,
-            favorites=Favorites(items=
-            [
-                Favorite(name="First", description="desc", path="c:", children=[Favorite(name="Second")])
-            ]
-            )
-        ) as tree:
+        parent=None,
+        favorites=Favorites(
+            items=[Favorite(name="First", description="desc", path="c:", children=[Favorite(name="Second")])]
+        ),
+    ) as tree:
         tree.show()
         sys.exit(app.exec_())
