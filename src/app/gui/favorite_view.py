@@ -1,7 +1,8 @@
 from __future__ import annotations
 import sys
 from functools import partial
-from typing import List
+from typing import List, Callable
+from enum import Enum, auto
 
 from PySide2.QtCore import QPoint
 from PySide2.QtGui import Qt
@@ -16,6 +17,12 @@ from src.app.utils.serializer import json_to_file, json_from_file
 
 
 logger = get_console_logger(name=__name__)
+
+
+class EditMode(Enum):
+    NEW = auto()
+    EDIT = auto()
+    DELETE = auto()
 
 
 class FavoriteTree(QTreeWidget):
@@ -46,7 +53,7 @@ class FavoriteTree(QTreeWidget):
         item = items[0] if items else None
         if item:
             self.favorites.selected = item.data(0, Qt.UserRole)
-            print(self.favorites.selected.dict())
+            logger.debug(f"selected {self.favorites.selected.dict()}")
 
     def expanded(self, item: QTreeWidgetItem):
         item.data(0, Qt.UserRole).expanded = True
@@ -121,14 +128,19 @@ class FavoriteTree(QTreeWidget):
             self.favorite_tree.save_to_file()
             self.favorite_tree.recreate()
 
-        def creator(self, parent_item: QTreeWidgetItem):
-            favorite = FavoriteDlg.get_favorite(parent=self.favorite_tree)
-            if favorite:
-                self.favorite_tree.favorites.selected = favorite
-                parent_favorite = parent_item.data(0, Qt.UserRole) if parent_item else None
+        def modifier(self, current_item: QTreeWidgetItem, parent_item: QTreeWidgetItem, func: Callable, mode: EditMode):
+            favorite = None
+            current_favorite = current_item.data(0, Qt.UserRole) if current_item else None
+            parent_favorite = parent_item.data(0, Qt.UserRole) if parent_item else None
+            if mode in (EditMode.NEW, EditMode.EDIT):
+                favorite = FavoriteDlg.get_favorite(
+                    parent=self.favorite_tree, favorite=current_favorite if mode == EditMode.EDIT else None
+                )
+            if favorite or mode == EditMode.DELETE:
+                self.favorite_tree.favorites.selected = parent_favorite if mode == EditMode.DELETE else favorite
                 if parent_favorite:
                     parent_favorite.expanded = True
-                self.favorites.create_item(item=favorite, parent=parent_favorite)
+                func(favorite=current_favorite, parent_favorite=parent_favorite, new_favorite=favorite)
                 self.save_tree_and_recreate()
 
         def open_menu(self, position: QPoint):
@@ -137,7 +149,7 @@ class FavoriteTree(QTreeWidget):
                 Action(
                     parent=self,
                     caption="Create top level item",
-                    slot=partial(self.creator, None),
+                    slot=partial(self.modifier, None, None, self.favorite_tree.favorites.create_item, EditMode.NEW),
                 )
             )
             if self.parent_item:
@@ -145,7 +157,39 @@ class FavoriteTree(QTreeWidget):
                     Action(
                         parent=self,
                         caption="Create sub-item",
-                        slot=partial(self.creator, self.parent_item),
+                        slot=partial(
+                            self.modifier,
+                            self.parent_item,
+                            self.parent_item,
+                            self.favorite_tree.favorites.create_item,
+                            EditMode.NEW,
+                        ),
+                    )
+                )
+                self.addAction(
+                    Action(
+                        parent=self,
+                        caption="Edit item",
+                        slot=partial(
+                            self.modifier,
+                            self.parent_item,
+                            self.parent_item,
+                            self.favorite_tree.favorites.modify_item,
+                            EditMode.EDIT,
+                        ),
+                    )
+                )
+                self.addAction(
+                    Action(
+                        parent=self,
+                        caption="Delete item",
+                        slot=partial(
+                            self.modifier,
+                            self.parent_item,
+                            self.parent_item,
+                            self.favorite_tree.favorites.delete_item,
+                            EditMode.DELETE,
+                        ),
                     )
                 )
             self.exec_(self.favorite_tree.viewport().mapToGlobal(position))

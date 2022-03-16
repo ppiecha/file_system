@@ -1,0 +1,28 @@
+[MASTER]
+
+disable=
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    logging-fstring-interpolation,
+    broad-except,
+    too-few-public-methods,
+    too-many-locals,
+    too-many-arguments,
+    too-many-instance-attributes,
+    import-error,
+    too-many-statements,
+    protected-access,
+    no-name-in-module,
+
+good-names=i,j,k,ex,Run,_,e,db,f
+
+max-line-length=120
+
+extension-pkg-allow-list=cx_Oracle,pydantic
+
+[SIMILARITIES]
+
+ignore-imports=yes
+
+min-similarity-lines=10

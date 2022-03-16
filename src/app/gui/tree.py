@@ -159,7 +159,7 @@ class TreeView(QTreeView):
     def dropEvent(self, event):
         files = [u.toLocalFile() for u in event.mimeData().urls()]
         for f in files:
-            print(f)
+            logger.debug(f"dropped file {f}")
 
 
 if __name__ == "__main__":

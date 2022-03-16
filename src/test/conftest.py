@@ -21,4 +21,3 @@ def empty_favorites() -> Favorites:
 @pytest.fixture
 def one_item_favorites(favorite1) -> Favorites:
     return Favorites(items=[favorite1], selected=favorite1)
-
