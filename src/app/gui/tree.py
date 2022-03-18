@@ -34,6 +34,7 @@ class TreeView(QTreeView):
         super().__init__(parent)
         self.setModel(QFileSystemModel())
         self.model().setRootPath(tree.root_path)
+        self.filtered_indexes = []
         self.init_ui(tree=tree)
 
     @property
@@ -47,9 +48,26 @@ class TreeView(QTreeView):
         logger.debug(f"root path {path}")
 
     def pin(self, path: str, pin: bool):
+
+        def show_children(index: QModelIndex):
+            for row in range(self.model().rowCount(index)):
+                self.setRowHidden(row, index, False)
+
         if pin:
-            self.setRootIndex(self.model().index(path))
+            # self.setRootIndex(self.model().index(path))
+            parent_path_val = parent_path(path)
+            if path != parent_path_val:
+                parent_index = self.model().index(parent_path_val)
+                self.setRootIndex(parent_index)
+                self.filtered_indexes.append(parent_index)
+                for row in range(self.model().rowCount(parent_index)):
+                    row_index = self.model().index(row, 0, parent_index)
+                    logger.debug(f"curr path {self.model().filePath(row_index)}")
+                    self.setRowHidden(row, parent_index, self.model().filePath(row_index) != path)
         else:
+            for index in self.filtered_indexes:
+                show_children(index=index)
+            self.filtered_indexes.clear()
             self.setRootIndex(QModelIndex())
 
     @property
