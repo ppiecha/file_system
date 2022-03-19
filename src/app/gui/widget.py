@@ -28,3 +28,11 @@ def populated_box_layout(direction: QBoxLayout.Direction, widgets: List[QWidget]
     for widget in widgets:
         layout.addWidget(widget)
     return layout
+
+
+def widget_of_widgets(
+    direction: QBoxLayout.Direction = QBoxLayout.TopToBottom, widgets: List[QWidget] = None
+) -> QWidget:
+    widget = QWidget()
+    widget.setLayout(populated_box_layout(direction=direction, widgets=widgets))
+    return widget

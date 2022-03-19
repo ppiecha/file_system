@@ -2,10 +2,16 @@ from typing import Optional, List
 
 from pydantic import BaseModel
 
+from src.app.model.favorite import Favorites
+
+
+CONFIG_FILE = "file_system.json"
+
 
 class Tree(BaseModel):
-    root_path: str
+    root_path: Optional[str] = None
     current_path: Optional[str] = None
+    pinned_path: Optional[str] = None
     visible_columns: List[int] = []
     hide_header: bool = True
     show_files: bool = True
@@ -13,6 +19,12 @@ class Tree(BaseModel):
     show_system: bool = False
 
 
-class Navigator(BaseModel):
-    left: List[Tree] = []
-    right: List[Tree] = []
+class App(BaseModel):
+    name: str = "File system"
+    pages: List[Tree] = []
+    favorites: Favorites = Favorites()
+
+    def add_page(self, pinned_path: str = None) -> Tree:
+        tree = Tree(pinned_path=pinned_path)
+        self.pages.append(tree)
+        return tree

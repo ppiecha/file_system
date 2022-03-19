@@ -1,6 +1,6 @@
 import sys
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 from PySide2.QtCore import QDir, QFileInfo, QModelIndex, QPoint
 from PySide2.QtGui import Qt
@@ -30,12 +30,25 @@ class TreeColumn(int, Enum):
 
 
 class TreeView(QTreeView):
-    def __init__(self, parent, tree: Tree):
+    def __init__(self, parent, tree_model: Tree):
         super().__init__(parent)
         self.setModel(QFileSystemModel())
-        self.model().setRootPath(tree.root_path)
+        # self.model().setRootPath(tree_model.root_path)
+        self.tree_model = tree_model
         self.filtered_indexes = []
-        self.init_ui(tree=tree)
+        self.init_ui()
+
+    @property
+    def current_path(self) -> str:
+        return self.model().fileInfo(self.currentIndex()).absoluteFilePath()
+
+    @current_path.setter
+    def current_path(self, path: str):
+        if path:
+            index = self.model().index(path)
+            self.setCurrentIndex(index)
+            self.scrollTo(index, QAbstractItemView.ScrollHint.PositionAtCenter)
+        self.tree_model.current_path = path
 
     @property
     def root_path(self) -> str:
@@ -45,10 +58,21 @@ class TreeView(QTreeView):
     def root_path(self, path: str):
         self.model().setRootPath(path)
         # self.setRootIndex(self.model().index(path))
-        logger.debug(f"root path {path}")
+        self.tree_model.root_path = path
+
+    @property
+    def pinned_path(self) -> Optional[str]:
+        return self.pinned_path
+
+    @pinned_path.setter
+    def pinned_path(self, path: str):
+        self._pin(path=path, pin=path is not None)
+        self.tree_model.pinned_path = path
 
     def pin(self, path: str, pin: bool):
+        self.pinned_path = path if pin else None
 
+    def _pin(self, path: str, pin: bool):
         def show_children(index: QModelIndex):
             for row in range(self.model().rowCount(index)):
                 self.setRowHidden(row, index, False)
@@ -62,25 +86,12 @@ class TreeView(QTreeView):
                 self.filtered_indexes.append(parent_index)
                 for row in range(self.model().rowCount(parent_index)):
                     row_index = self.model().index(row, 0, parent_index)
-                    logger.debug(f"curr path {self.model().filePath(row_index)}")
                     self.setRowHidden(row, parent_index, self.model().filePath(row_index) != path)
         else:
             for index in self.filtered_indexes:
                 show_children(index=index)
             self.filtered_indexes.clear()
             self.setRootIndex(QModelIndex())
-
-    @property
-    def current_path(self) -> str:
-        return self.model().fileInfo(self.currentIndex()).absoluteFilePath()
-
-    @current_path.setter
-    def current_path(self, path: str):
-        if path:
-            index = self.model().index(path)
-            self.setCurrentIndex(index)
-            self.scrollTo(index, QAbstractItemView.ScrollHint.PositionAtCenter)
-        logger.debug(f"current path {path}")
 
     @property
     def filter(self) -> QDir.Filters:
@@ -107,12 +118,12 @@ class TreeView(QTreeView):
     def hide_header(self, hide: bool = True):
         self.header().setHidden(hide)
 
-    def init_ui(self, tree: Tree):
-        self.hide_header(hide=tree.hide_header)
+    def init_ui(self):
+        self.hide_header(hide=self.tree_model.hide_header)
         for column in TreeColumn:
-            self.hide_column(column=column.value, hide=column.value not in tree.visible_columns)
-        self.root_path = tree.root_path
-        self.current_path = tree.current_path
+            self.hide_column(column=column.value, hide=column.value not in self.tree_model.visible_columns)
+        self.root_path = self.tree_model.root_path
+        self.current_path = self.tree_model.current_path
         self.filter = TreeView.get_filter()
         self.setAcceptDrops(True)
         self.setDragEnabled(True)
@@ -184,7 +195,8 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setStyle("Fusion")  # Style needed for palette to work
     app.setPalette(dark_palette)
-    tree = TreeView(parent=None, tree=Tree(root_path="c:\\", current_path="c:\\Users\\piotr\\temp"))
+    # tree = TreeView(parent=None, tree_model=Tree(root_path="c:\\", current_path="c:\\Users\\piotr\\temp"))
+    tree = TreeView(parent=None, tree_model=Tree())
     tree.show()
     tree.current_path = tree.current_path
     sys.exit(app.exec_())

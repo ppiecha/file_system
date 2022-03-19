@@ -29,10 +29,18 @@ def all_files(paths: PathList) -> bool:
 
 def parent_path(path: str):
     logger.info(f"parent path {path}")
-    dir = QDir(path)
-    dir.cdUp()
-    logger.info(f"parent path {dir.path()}")
-    return dir.path()
+    directory = QDir(path)
+    directory.cdUp()
+    logger.info(f"parent path {directory.path()}")
+    return directory.path()
+
+
+def path_caption(path: str) -> str:
+    directory = QDir(path)
+    if directory.isRoot():
+        return path.lower()
+    else:
+        return directory.dirName()
 
 
 def create_folder(parent, path: str) -> bool:
