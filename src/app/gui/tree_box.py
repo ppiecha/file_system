@@ -40,6 +40,9 @@ class TreeBox(QTabWidget):
             raise RuntimeError(f"Found for than one page with path {path}")
         return pages[0]
 
+    def current_tree(self) -> Optional[TreeView]:
+        return self.currentWidget()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

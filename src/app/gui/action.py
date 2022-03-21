@@ -1,4 +1,5 @@
 import subprocess
+from enum import Enum
 from functools import partial
 from typing import Callable, List
 
@@ -8,6 +9,21 @@ from PySide2.QtWidgets import QAction, QMenu, QWidget
 
 from src.app.model.path import create_folder, create_file
 from src.app.utils.shell import start_file, open_folder
+
+
+class FileAction(Enum):
+    CREATE = "Create"
+    OPEN = "Open"
+
+
+class FolderAction(Enum):
+    SELECT = "Select"
+    PIN_UNPIN = "Pin/Unpin"
+    CREATE = "Create"
+    OPEN_EXT = "Open (externally)"
+    OPEN_TAB = "Open (new tab)"
+    OPEN_WIN = "Open (new window)"
+    OPEN_CONSOLE = "Open (console)"
 
 
 class Action(QAction):
@@ -32,22 +48,32 @@ class Action(QAction):
             self.triggered.connect(slot)
 
 
-def create_folder_action(parent: QWidget, path: str, shortcut: bool = False) -> Action:
+def create_action(parent: QWidget, caption: str, slot: callable, shortcut: QKeySequence, tip: str):
     return Action(
         parent=parent,
-        caption="Create new folder",
-        shortcut=QKeySequence(Qt.Key_F7) if shortcut else None,
-        slot=partial(create_folder, parent, path),
+        caption=caption,
+        shortcut=shortcut,
+        slot=slot,
+        tip=tip,
+    )
+
+
+def create_folder_action(parent: QWidget, path_func: Callable) -> Action:
+    return Action(
+        parent=parent,
+        caption="Create",
+        shortcut=QKeySequence(Qt.Key_F7),
+        slot=partial(create_folder, parent, path_func),
         tip="Creates sub-folder under current folder",
     )
 
 
-def create_file_action(parent: QWidget, path: str, shortcut: bool = False) -> Action:
+def create_file_action(parent: QWidget, path_func: Callable) -> Action:
     return Action(
         parent=parent,
-        caption="Create new file",
-        shortcut=QKeySequence(Qt.Key_F9) if shortcut else None,
-        slot=partial(create_file, parent, path),
+        caption="Create",
+        shortcut=QKeySequence(Qt.Key_F9),
+        slot=partial(create_file, parent, path_func),
         tip="Creates new file under current folder",
     )
 
@@ -62,8 +88,10 @@ def create_pin_action(parent: QWidget, path: str, pin: bool = True) -> Action:
     )
 
 
-def open_file_action(parent: QWidget, paths: List[str]) -> Action:
+def open_file_action(parent: QWidget, path_func: Callable) -> Action:
+
     def open_paths():
+        paths = path_func()
         for path in paths:
             start_file(file_name=path)
 

@@ -152,7 +152,7 @@ class TreeView(QTreeView):
             menu = QMenu()
             if all_folders(paths=paths):
                 if is_single(paths=paths):
-                    menu.addAction(create_folder_action(parent=self, path=paths[0]))
+                    menu.addAction(create_folder_action(parent=self, path_func=self.get_selected_paths))
                     menu.addAction(create_file_action(parent=self, path=paths[0]))
                     menu.addSeparator()
                     menu.addAction(create_pin_action(parent=self, path=paths[0], pin=True))

@@ -3,7 +3,7 @@ from typing import Optional, List
 from pydantic import BaseModel
 
 from src.app.model.favorite import Favorites
-
+from src.app.utils.constant import APP_NAME
 
 CONFIG_FILE = "file_system.json"
 
@@ -20,7 +20,7 @@ class Tree(BaseModel):
 
 
 class App(BaseModel):
-    name: str = "File system"
+    name: str = APP_NAME
     pages: List[Tree] = []
     favorites: Favorites = Favorites()
 
