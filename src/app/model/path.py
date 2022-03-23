@@ -24,8 +24,16 @@ def all_folders(paths: PathList) -> bool:
     return all([QFileInfo(path).isDir() for path in paths])
 
 
+def only_folders(paths: PathList) -> PathList:
+    return [path for path in paths if QFileInfo(path).isDir()]
+
+
 def all_files(paths: PathList) -> bool:
     return all([QFileInfo(path).isFile() for path in paths])
+
+
+def only_files(paths: PathList) -> PathList:
+    return [path for path in paths if QFileInfo(path).isFile()]
 
 
 def parent_path(path: str):
@@ -59,15 +67,17 @@ def create_folder(parent, path_func: Callable) -> bool:
     if not is_ok:
         return False
     label = "New folder name"
-    name, ok = QInputDialog.getText(parent, label, label, text=QDir(path).dirName())
-    if ok and name:
-        directory = QDir(os.path.join(path, name))
-        logger.info(f"new folder {directory.absolutePath()}")
-        if directory.exists():
-            QMessageBox.information(parent, APP_NAME, f"Folder {path} already exists")
-            return False
-        else:
-            return directory.mkpath(directory.absolutePath())
+    names, ok = QInputDialog.getText(parent, label, label, text=QDir(path).dirName())
+    if ok and names:
+        for name in names.split(";"):
+            directory = QDir(os.path.join(path, name))
+            logger.info(f"new folder {directory.absolutePath()}")
+            if directory.exists():
+                QMessageBox.information(parent, APP_NAME, f"Folder {path} already exists")
+            else:
+                directory.mkpath(directory.absolutePath())
+        return True
+    return False
 
 
 def create_file(parent, path_func: Callable) -> bool:
@@ -76,19 +86,17 @@ def create_file(parent, path_func: Callable) -> bool:
     if not is_ok:
         return False
     label = "New file name"
-    info = QFileInfo(path)
-    logger.debug(f"info {info}")
-    text = info.fileName() if info.isFile() else "new.sql"
-    dir_path = info.absoluteFilePath() if info.isFile() else info.absolutePath()
-    logger.debug(f"absolute {dir_path}")
-    name, ok = QInputDialog.getText(parent, label, label, text=text)
-    if ok and name:
-
-        file = QFileInfo(os.path.join(info.dirName(), name))
-        logger.info(f"new file {file.absoluteFilePath()}")
-        if file.exists():
-            QMessageBox.information(parent, APP_NAME, f"File {name} already exists in {path}")
-            return False
-        else:
-            new_file(file.absoluteFilePath())
-            return True
+    info = QFileInfo(path if QFileInfo(path).isFile() else path if path.endswith(os.sep) else "".join([path, os.sep]))
+    logger.debug(f"info {info.path()}")
+    text = QFileInfo(path).fileName() if QFileInfo(path).isFile() else "new.sql"
+    names, ok = QInputDialog.getText(parent, label, label, text=text)
+    if ok and names:
+        for name in names.split(";"):
+            file = QFileInfo(os.path.join(info.path(), name))
+            logger.info(f"new file {file.absoluteFilePath()}")
+            if file.exists():
+                QMessageBox.information(parent, APP_NAME, f"File {name} already exists in {path}")
+            else:
+                new_file(file.absoluteFilePath())
+        return True
+    return False

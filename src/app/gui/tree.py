@@ -1,22 +1,25 @@
 import sys
 from enum import Enum
-from typing import List, Optional
+from time import sleep
+from typing import List, Optional, Callable, Dict, Set
 
 from PySide2.QtCore import QDir, QFileInfo, QModelIndex, QPoint
 from PySide2.QtGui import Qt
-from PySide2.QtWidgets import QTreeView, QFileSystemModel, QApplication, QMenu, QAbstractItemView, QInputDialog
+from PySide2.QtWidgets import QTreeView, QFileSystemModel, QApplication, QMenu, QAbstractItemView, QInputDialog, \
+    QFileDialog
 
 from src.app.gui.action import (
     create_folder_action,
     create_file_action,
     create_pin_action,
-    open_console_action,
-    open_folder_action,
-    open_file_action,
+    create_open_console_action,
+    create_open_folder_externally_action,
+    create_open_file_action,
 )
 from src.app.gui.palette import dark_palette
-from src.app.model.path import all_folders, all_files, is_single, parent_path
+from src.app.model.path import all_folders, all_files, is_single, parent_path, validate_single_path
 from src.app.model.schema import Tree
+from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger
 from src.app.utils.shell import start_file
 
@@ -32,11 +35,37 @@ class TreeColumn(int, Enum):
 class TreeView(QTreeView):
     def __init__(self, parent, tree_model: Tree):
         super().__init__(parent)
+        self.tree_box = parent
         self.setModel(QFileSystemModel())
-        # self.model().setRootPath(tree_model.root_path)
+        self.loaded_paths: Set[str] = set()
         self.tree_model = tree_model
         self.filtered_indexes = []
         self.init_ui()
+
+    def init_ui(self):
+        self.hide_header(hide=self.tree_model.hide_header)
+        for column in TreeColumn:
+            self.hide_column(column=column.value, hide=column.value not in self.tree_model.visible_columns)
+        self.model().directoryLoaded.connect(self.on_dir_loaded)
+        self.root_path = parent_path(path=self.tree_model.pinned_path)
+        self.root_path = self.tree_model.pinned_path
+        self.current_path = self.tree_model.current_path
+        self.pinned_path = self.tree_model.pinned_path
+        self.filter = TreeView.get_filter()
+        self.setAcceptDrops(True)
+        self.setDragEnabled(True)
+        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+
+        self.clicked.connect(self.on_clicked)
+        self.doubleClicked.connect(self.on_double_clicked)
+        self.customContextMenuRequested.connect(self.open_menu)
+
+    def on_dir_loaded(self, path: str):
+        logger.debug(f"Path {path} loaded")
+        self.loaded_paths.add(path)
+        if path == self.tree_model.pinned_path:
+            self.pinned_path = path
 
     @property
     def current_path(self) -> str:
@@ -59,18 +88,26 @@ class TreeView(QTreeView):
         self.model().setRootPath(path)
         # self.setRootIndex(self.model().index(path))
         self.tree_model.root_path = path
+        logger.debug(f"tree root path set to {path}")
 
     @property
     def pinned_path(self) -> Optional[str]:
-        return self.pinned_path
+        return self.tree_model.pinned_path
 
     @pinned_path.setter
     def pinned_path(self, path: str):
         self._pin(path=path, pin=path is not None)
         self.tree_model.pinned_path = path
 
-    def pin(self, path: str, pin: bool):
-        self.pinned_path = path if pin else None
+    def select_folder(self):
+        path = QFileDialog.getExistingDirectory(self, APP_NAME, self.current_path)
+        if path:
+            self.pinned_path = path
+
+    def pin(self, path_func: Callable, pin: bool):
+        is_ok, path = validate_single_path(parent=self, paths=path_func())
+        if is_ok and path:
+            self.pinned_path = path if pin else None
 
     def _pin(self, path: str, pin: bool):
         def show_children(index: QModelIndex):
@@ -78,15 +115,23 @@ class TreeView(QTreeView):
                 self.setRowHidden(row, index, False)
 
         if pin:
-            # self.setRootIndex(self.model().index(path))
-            parent_path_val = parent_path(path)
-            if path != parent_path_val:
-                parent_index = self.model().index(parent_path_val)
-                self.setRootIndex(parent_index)
-                self.filtered_indexes.append(parent_index)
-                for row in range(self.model().rowCount(parent_index)):
-                    row_index = self.model().index(row, 0, parent_index)
-                    self.setRowHidden(row, parent_index, self.model().filePath(row_index) != path)
+            if path in self.loaded_paths:
+                parent_path_val = parent_path(path)
+                logger.debug(f"pinned parent path {parent_path_val} path {path}")
+                if path != parent_path_val:
+                    parent_index = self.model().index(parent_path_val)
+                    self.setRootIndex(parent_index)
+                    self.filtered_indexes.append(parent_index)
+                    logger.debug(f"children of {self.model().filePath(parent_index)} valid {parent_index.isValid()} "
+                                 f"{list(range(self.model().rowCount(parent_index)))}")
+                    for row in range(self.model().rowCount(parent_index)):
+                        row_index = self.model().index(row, 0, parent_index)
+                        self.setRowHidden(row, parent_index, self.model().filePath(row_index) != path)
+                        if self.model().filePath(row_index) == path:
+                            self.expand(row_index)
+                        logger.debug(f"hiding row {self.model().filePath(row_index)}")
+            else:
+                logger.debug(f"path {path} not loaded yet")
         else:
             for index in self.filtered_indexes:
                 show_children(index=index)
@@ -118,22 +163,6 @@ class TreeView(QTreeView):
     def hide_header(self, hide: bool = True):
         self.header().setHidden(hide)
 
-    def init_ui(self):
-        self.hide_header(hide=self.tree_model.hide_header)
-        for column in TreeColumn:
-            self.hide_column(column=column.value, hide=column.value not in self.tree_model.visible_columns)
-        self.root_path = self.tree_model.root_path
-        self.current_path = self.tree_model.current_path
-        self.filter = TreeView.get_filter()
-        self.setAcceptDrops(True)
-        self.setDragEnabled(True)
-        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.setContextMenuPolicy(Qt.CustomContextMenu)
-
-        self.clicked.connect(self.on_clicked)
-        self.doubleClicked.connect(self.on_double_clicked)
-        self.customContextMenuRequested.connect(self.open_menu)
-
     def get_selected_paths(self) -> List[str]:
         return [self.model().fileInfo(index).absoluteFilePath() for index in self.selectedIndexes()]
 
@@ -158,11 +187,11 @@ class TreeView(QTreeView):
                     menu.addAction(create_pin_action(parent=self, path=paths[0], pin=True))
                     menu.addAction(create_pin_action(parent=self, path=paths[0], pin=False))
                     menu.addSeparator()
-                    menu.addAction(open_console_action(parent=self, path=paths[0]))
-                menu.addAction(open_folder_action(parent=self, paths=paths))
+                    menu.addAction(create_open_console_action(parent=self, path=paths[0]))
+                menu.addAction(create_open_folder_externally_action(parent=self, paths=paths))
             elif all_files(paths=paths):
                 menu.addAction(create_file_action(parent=self, path=paths[0]))
-                menu.addAction(open_file_action(parent=self, paths=paths))
+                menu.addAction(create_open_file_action(parent=self, paths=paths))
             else:
                 pass
             menu.exec_(self.viewport().mapToGlobal(position))

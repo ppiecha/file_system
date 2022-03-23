@@ -3,10 +3,13 @@ from typing import Optional, List
 from PySide2.QtGui import QIcon
 from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox
 
-from src.app.gui.action import create_folder_action, open_file_action, FileAction, create_file_action
+from src.app.gui.action import create_folder_action, create_open_file_action, FileAction, create_file_action, \
+    create_select_folder_action, create_pin_action, create_open_folder_externally_action, \
+    create_open_folder_in_new_tab_action
 from src.app.gui.favorite_view import FavoriteTree
+from src.app.gui.tree import TreeView
 from src.app.gui.tree_box import TreeBox
-from src.app.model.schema import App, CONFIG_FILE
+from src.app.model.schema import App, CONFIG_FILE, Tree
 from src.app.utils.constant import APP_NAME
 from src.app.utils.serializer import json_to_file
 
@@ -31,12 +34,16 @@ class MainForm(QMainWindow):
         if not self.app.pages:
             self.tree_box.add_page()
 
-    def path_func(self) -> Optional[List[str]]:
+    def current_tree(self) -> Optional[TreeView]:
         current_tree = self.tree_box.current_tree()
         if not current_tree:
             QMessageBox.information(self, APP_NAME, "No tab selected")
-            return
-        return current_tree.get_selected_paths()
+            return None
+        return current_tree
+
+    def path_func(self) -> Optional[List[str]]:
+        current_tree = self.current_tree()
+        return current_tree.get_selected_paths() if current_tree else None
 
     def init_menu(self):
         file_menu = self.menuBar().addMenu("&File")
@@ -44,25 +51,48 @@ class MainForm(QMainWindow):
         self.actions[FileAction.CREATE] = create_file_action(parent=self, path_func=self.path_func)
         file_menu.addAction(self.actions[FileAction.CREATE])
         # Open
-        self.actions[FileAction.OPEN] = open_file_action(parent=self, path_func=self.path_func)
+        self.actions[FileAction.OPEN] = create_open_file_action(parent=self, path_func=self.path_func)
         file_menu.addAction(self.actions[FileAction.OPEN])
+        # Open file in VS code
         # folder menu
-        file_folder = self.menuBar().addMenu("Fol&der")
+        folder_menu = self.menuBar().addMenu("Fol&der")
         # Create
-        file_folder.addAction(create_folder_action(parent=self, path_func=self.path_func))
+        folder_menu.addAction(create_folder_action(parent=self, path_func=self.path_func))
+        # Select
+        folder_menu.addAction(create_select_folder_action(parent=self.current_tree()))
         # Pin
+        folder_menu.addAction(create_pin_action(parent=self.current_tree(), path_func=self.path_func, pin=True))
+        # Unpin
+        folder_menu.addAction(create_pin_action(parent=self.current_tree(), path_func=self.path_func, pin=False))
         # Open (externally)
+        folder_menu.addAction(create_open_folder_externally_action(
+            parent=self.current_tree(), path_func=self.path_func
+        ))
         # Open (new tab)
+        folder_menu.addAction(create_open_folder_in_new_tab_action(
+            parent=self.current_tree(), path_func=self.path_func
+        ))
+
         # Open (new window)
-        # Selection menu
-        # Create
+        # Open (VS Code)
+        # Open Console
+        # Command menu
         # Copy
+        # Paste
         # Duplicate
         # Rename
         # Delete
-        # ----------
+        # Compare
+        # Selection menu
         # Copy full path
         # Copy name
+        #  -----------
+        # Select children/siblings
+        # Invert selection
+        # View menu
+    #     show favorite
+    # show buttons
+    #
 
     def closeEvent(self, event):
         json_to_file(json_dict=self.app.dict(), file_name=CONFIG_FILE)
