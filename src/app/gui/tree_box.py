@@ -1,10 +1,14 @@
 from typing import List, Optional
 
-from PySide2.QtWidgets import QTabWidget
+from PySide2.QtCore import Qt
+from PySide2.QtGui import QKeySequence
+from PySide2.QtWidgets import QTabWidget, QMenu, QMessageBox
 
+from src.app.gui.action import Action, create_close_tab_action
 from src.app.gui.tree_view import TreeView
 from src.app.model.path_util import path_caption
 from src.app.model.schema import App, Tree
+from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger
 
 logger = get_console_logger(name=__name__)
@@ -15,7 +19,16 @@ class TreeBox(QTabWidget):
         super().__init__(parent=parent)
         # self.setTabsClosable(True)
         self.app_model = app_model
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.open_menu)
         self.open_pages()
+
+    def open_menu(self, position):
+        menu = QMenu()
+        index = self.tabBar().tabAt(position)
+        if index >= 0:
+            menu.addAction(create_close_tab_action(parent=self, index=index))
+        menu.exec_(self.mapToGlobal(position))
 
     # pylint: disable=unnecessary-comprehension
     def open_pages(self):
@@ -23,9 +36,9 @@ class TreeBox(QTabWidget):
             logger.debug(f"Opening page {str(page)}")
             self.open_tree_page(pinned_path=page.pinned_path, create=False)
 
-    def open_tree_page(self, pinned_path: str = None, create: bool = True):
+    def open_tree_page(self, pinned_path: str = None, create: bool = True, find_existing: bool = True):
         page = self.page(path=pinned_path)
-        if page:
+        if page and find_existing:
             self.setCurrentIndex(self.indexOf(page))
             return
         if create:
@@ -34,6 +47,9 @@ class TreeBox(QTabWidget):
             tree_model = self.app_model.get_page_by_pinned_path(pinned_path=pinned_path)
             tree_model = tree_model or Tree(pinned_path=pinned_path)
         self.add_page(tree_model=tree_model)
+
+    def open_root_page(self):
+        self.open_tree_page(pinned_path="/", find_existing=False)
 
     def add_page(self, tree_model: Tree):
         page = TreeView(parent=self, tree_model=tree_model)
@@ -54,3 +70,16 @@ class TreeBox(QTabWidget):
 
     def current_tree(self) -> Optional[TreeView]:
         return self.currentWidget()
+
+    def close_page(self, index: int):
+        if index == -1:
+            QMessageBox.information(self.parent(), APP_NAME, "No tab selected")
+            return
+        page = self.widget(index)
+        self.app_model.remove_page(page=page.tree_model)
+        page.deleteLater()
+        self.removeTab(index)
+
+    def tabRemoved(self, index):
+        logger.debug(f"Deleted widget with index {index}")
+

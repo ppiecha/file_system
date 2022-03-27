@@ -32,6 +32,11 @@ class FolderAction(Enum):
     OPEN_CONSOLE = "Open (console)"
 
 
+class TabAction(Enum):
+    NEW = "New"
+    CLOSE = "Close"
+
+
 class Action(QAction):
     def __init__(
         self,
@@ -158,4 +163,22 @@ def create_open_console_action(parent: QWidget, path_func: Callable) -> Action:
         shortcut=None,
         slot=open_paths,
         tip="Open console in selected locations",
+    )
+
+
+def create_new_tab_action(parent: QWidget) -> Action:
+    return Action(
+        parent=parent,
+        caption=TabAction.NEW.value,
+        shortcut=QKeySequence(Qt.CTRL + Qt.Key_N),
+        slot=parent.open_root_page,
+    )
+
+
+def create_close_tab_action(parent: QWidget, index: int) -> Action:
+    return Action(
+        parent=parent,
+        caption=TabAction.CLOSE.value,
+        shortcut=QKeySequence(Qt.SHIFT + Qt.CTRL + Qt.Key_T),
+        slot=partial(parent.close_page, index),
     )

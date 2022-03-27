@@ -4,8 +4,11 @@ from pydantic import BaseModel
 
 from src.app.model.favorite import Favorites
 from src.app.utils.constant import APP_NAME
+from src.app.utils.logger import get_console_logger
 
 CONFIG_FILE = "file_system.json"
+
+logger = get_console_logger(name=__name__)
 
 
 class Tree(BaseModel):
@@ -43,3 +46,8 @@ class App(BaseModel):
     def get_page_by_pinned_path(self, pinned_path: str) -> Optional[Tree]:
         pages = [page for page in self.pages if page.pinned_path == pinned_path]
         return pages[0] if pages else None
+
+    def remove_page(self, page: Tree):
+        self.pages.remove(page)
+        logger.debug(f"Page removed {page}")
+

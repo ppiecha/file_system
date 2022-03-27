@@ -15,6 +15,9 @@ from src.app.gui.action import (
     create_open_folder_in_new_tab_action,
     FolderAction,
     create_open_console_action,
+    TabAction,
+    create_new_tab_action,
+    create_close_tab_action,
 )
 from src.app.gui.favorite_view import FavoriteTree
 from src.app.gui.tree_view import TreeView
@@ -28,7 +31,6 @@ class MainForm(QMainWindow):
     def __init__(self, app: App):
         super().__init__()
         self.app = app
-        self.codec = QTextCodec.codecForName(b"UTF-8")
         self.actions = {}
         self.splitter = QSplitter(self)
         self.favorite_tree = FavoriteTree(parent=self.splitter, app_model=app)
@@ -43,7 +45,7 @@ class MainForm(QMainWindow):
         self.setWindowTitle(self.app.name)
         self.setWindowIcon(QIcon("file_system.ico"))
         if not self.app.pages:
-            self.tree_box.open_tree_page(pinned_path=None)
+            self.tree_box.open_root_page()
         state: WindowState = self.app.win_state
         if state:
             self.setGeometry(state.x, state.y, state.width, state.height)
@@ -133,6 +135,12 @@ class MainForm(QMainWindow):
         # Invert selection
         # Tab menu
         tab_menu = self.menuBar().addMenu("&Tab")
+        self.actions[TabAction.NEW] = create_new_tab_action(parent=self.tree_box)
+        tab_menu.addAction(self.actions[TabAction.NEW])
+        self.actions[TabAction.CLOSE] = create_close_tab_action(
+            parent=self.tree_box, index=self.tree_box.currentIndex()
+        )
+        tab_menu.addAction(self.actions[TabAction.CLOSE])
         # View menu
         view_menu = self.menuBar().addMenu("&View")
         # show favorite

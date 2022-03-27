@@ -41,7 +41,7 @@ class FavoriteTree(QTreeWidget):
         # self.clicked.connect(self.on_clicked)
         # self.doubleClicked.connect(self.on_double_clicked)
         self.itemActivated.connect(self.on_item_activated)
-        self.customContextMenuRequested.connect(self.show_menu)
+        self.customContextMenuRequested.connect(self.open_menu)
         self.itemExpanded.connect(self.expanded)
         self.itemCollapsed.connect(self.collapsed)
         self.itemSelectionChanged.connect(self.selection_changed)
@@ -143,7 +143,7 @@ class FavoriteTree(QTreeWidget):
         self.recreate()
         logger.debug(f"Favorites after drop {self.favorites}")
 
-    def show_menu(self, position: QPoint):
+    def open_menu(self, position: QPoint):
         items = self.selectedItems()
         parent_item = items[0] if items else None
         with FavoriteTree.Menu(favorite_tree=self, current_item=parent_item) as menu:

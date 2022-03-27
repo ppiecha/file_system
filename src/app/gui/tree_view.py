@@ -50,13 +50,13 @@ class TreeView(QTreeView):
         # logger.debug(f"root index {self.rootIndex()} {self.rootIndex().isValid()}")
         # logger.debug(f"root index path {self.sys_model.filePath(self.sys_index(proxy_index=self.rootIndex()))}")
 
-    def get_root_index(self) -> QModelIndex:
-        root_sys_index = self.sys_model.index(QDir.rootPath())
-        root_proxy_index = self.proxy_index(sys_index=root_sys_index)
-        logger.debug(f"root_proxy_index {root_proxy_index}")
-        logger.debug(f"root_proxy_index parent {root_proxy_index.parent()}")
-        # self.setRootIndex(c_proxy_index.parent())
-        return root_proxy_index.parent()
+    # def get_root_index(self) -> QModelIndex:
+    #     root_sys_index = self.sys_model.index(QDir.rootPath())
+    #     root_proxy_index = self.proxy_index(sys_index=root_sys_index)
+    #     logger.debug(f"root_proxy_index {root_proxy_index}")
+    #     logger.debug(f"root_proxy_index parent {root_proxy_index.parent()}")
+    #     # self.setRootIndex(c_proxy_index.parent())
+    #     return root_proxy_index.parent()
 
     def init_ui(self):
         self.hide_header(hide=self.tree_model.hide_header)
