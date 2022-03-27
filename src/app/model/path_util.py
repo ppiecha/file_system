@@ -21,7 +21,7 @@ def has_common_parent(paths: PathList) -> bool:
 
 
 def all_folders(paths: PathList) -> bool:
-    return all([QFileInfo(path).isDir() for path in paths])
+    return all((QFileInfo(path).isDir() for path in paths))
 
 
 def only_folders(paths: PathList) -> PathList:
@@ -29,7 +29,7 @@ def only_folders(paths: PathList) -> PathList:
 
 
 def all_files(paths: PathList) -> bool:
-    return all([QFileInfo(path).isFile() for path in paths])
+    return all((QFileInfo(path).isFile() for path in paths))
 
 
 def only_files(paths: PathList) -> PathList:
@@ -37,6 +37,8 @@ def only_files(paths: PathList) -> PathList:
 
 
 def parent_path(path: str):
+    if not path:
+        return None
     logger.info(f"parent path {path}")
     directory = QDir(path)
     directory.cdUp()
@@ -48,8 +50,7 @@ def path_caption(path: str) -> str:
     directory = QDir(path)
     if directory.isRoot():
         return path.lower()
-    else:
-        return directory.dirName()
+    return directory.dirName()
 
 
 def validate_single_path(parent, paths: List[str]) -> Tuple[bool, Optional[str]]:

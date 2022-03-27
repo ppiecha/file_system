@@ -14,12 +14,15 @@ disable=
     too-many-statements,
     protected-access,
     no-name-in-module,
+    unused-argument,
+    invalid-name,
+    no-self-use
 
 good-names=i,j,k,ex,Run,_,e,db,f
 
 max-line-length=120
 
-extension-pkg-allow-list=cx_Oracle,pydantic
+extension-pkg-allow-list=cx_Oracle, pydantic
 
 [SIMILARITIES]
 

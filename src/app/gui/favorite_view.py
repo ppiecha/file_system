@@ -1,19 +1,19 @@
 from __future__ import annotations
-import sys
 from functools import partial
 from typing import List, Callable
 from enum import Enum, auto
 
 from PySide2.QtCore import QPoint
 from PySide2.QtGui import Qt
-from PySide2.QtWidgets import QWidget, QTreeWidget, QApplication, QTreeWidgetItem, QAbstractItemView, QMenu
+from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem, QAbstractItemView, QMenu, QStyle
 
 from src.app.gui.action import Action
 from src.app.gui.dialog import FavoriteDlg
-from src.app.gui.palette import dark_palette
 from src.app.model.favorite import Favorite, Favorites
+from src.app.model.path_util import all_folders, path_caption
+from src.app.model.schema import App
 from src.app.utils.logger import get_console_logger
-from src.app.utils.serializer import json_to_file, json_from_file
+from src.app.utils.serializer import json_to_file
 
 
 logger = get_console_logger(name=__name__)
@@ -26,46 +26,54 @@ class EditMode(Enum):
 
 
 class FavoriteTree(QTreeWidget):
-    def __init__(self, parent, favorites: Favorites):
+    def __init__(self, parent, app_model: App):
         super().__init__(parent=parent)
-        self.favorites = favorites
-        self.setHeaderLabels(["Name", "Description", "Path"])
-        self.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.favorites = app_model.favorites
+        self.main_form = parent.parent()
+        self.init_ui()
         self.recreate()
 
+    def init_ui(self):
+        self.setAcceptDrops(True)
+        self.setHeaderHidden(True)
+        self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
         # self.clicked.connect(self.on_clicked)
         # self.doubleClicked.connect(self.on_double_clicked)
+        self.itemActivated.connect(self.on_item_activated)
         self.customContextMenuRequested.connect(self.show_menu)
         self.itemExpanded.connect(self.expanded)
         self.itemCollapsed.connect(self.collapsed)
         self.itemSelectionChanged.connect(self.selection_changed)
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.save_to_file()
-        logger.debug("saved")
+    # pylint: disable=unused-argument)
+    def on_item_activated(self, item: QTreeWidgetItem, column: int):
+        favorite = self.get_favorite(item)
+        if not favorite:
+            raise ValueError(f"Cannot get favorite from item {item}")
+        self.main_form.tree_box.open_tree_page(pinned_path=favorite.path)
 
     def selection_changed(self):
         items = self.selectedItems()
         item = items[0] if items else None
         if item:
-            self.favorites.selected = item.data(0, Qt.UserRole)
+            self.favorites.selected = self.get_favorite(item)
             # logger.debug(f"selected {self.favorites.selected.dict()}")
 
+    def get_favorite(self, item: QTreeWidgetItem) -> Favorite:
+        return item.data(0, Qt.UserRole)
+
+    # pylint: disable=unused-argument
     def expanded(self, item: QTreeWidgetItem):
-        item.data(0, Qt.UserRole).expanded = True
+        self.get_favorite(item).expanded = True
 
     def collapsed(self, item: QTreeWidgetItem):
-        item.data(0, Qt.UserRole).expanded = False
+        self.get_favorite(item).expanded = False
 
     def save_to_file(self):
         json_to_file(json_dict=self.favorites.dict(), file_name="favorites.json")
 
     def recreate(self):
-        self.favorites = Favorites(**json_from_file(file_name="favorites.json"))
         self.clear()
         self.insertTopLevelItems(0, self.create_items(self.favorites))
 
@@ -82,6 +90,8 @@ class FavoriteTree(QTreeWidget):
         item.setText(1, favorite.description)
         item.setText(2, favorite.path)
         item.setData(0, Qt.UserRole, favorite)
+        icon = self.style().standardIcon(getattr(QStyle, "SP_DirIcon"))
+        item.setIcon(0, icon)
         return item
 
     def create_top_level_item(self, favorite: Favorite) -> QTreeWidgetItem:
@@ -106,6 +116,33 @@ class FavoriteTree(QTreeWidget):
             self.create_children(parent=item, children=child.children)
         return parent
 
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls() and all_folders([u.toLocalFile() for u in event.mimeData().urls()]):
+            event.accept()
+        else:
+            event.ignore()
+
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasUrls() and all_folders([u.toLocalFile() for u in event.mimeData().urls()]):
+            event.accept()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        item: QTreeWidgetItem = self.itemAt(event.pos())
+        files = [u.toLocalFile() for u in event.mimeData().urls()]
+        new_favorites = [Favorite(name=path_caption(path=file), path=file) for file in files]
+        if item:
+            current_favorite = self.get_favorite(item=item)
+            for new_favorite in new_favorites:
+                self.favorites.create_item(current_favorite=current_favorite, new_favorite=new_favorite)
+            self.create_children(parent=item, children=new_favorites)
+        else:
+            for new_favorite in new_favorites:
+                self.favorites.create_item(new_favorite=new_favorite)
+        self.recreate()
+        logger.debug(f"Favorites after drop {self.favorites}")
+
     def show_menu(self, position: QPoint):
         items = self.selectedItems()
         parent_item = items[0] if items else None
@@ -125,13 +162,12 @@ class FavoriteTree(QTreeWidget):
             pass
 
         def save_tree_and_recreate(self):
-            self.favorite_tree.save_to_file()
             self.favorite_tree.recreate()
 
         def modifier(self, current_item: QTreeWidgetItem, parent_item: QTreeWidgetItem, func: Callable, mode: EditMode):
             favorite = None
-            current_favorite = current_item.data(0, Qt.UserRole) if current_item else None
-            parent_favorite = parent_item.data(0, Qt.UserRole) if parent_item else None
+            current_favorite = self.favorite_tree.get_favorite(current_item) if current_item else None
+            parent_favorite = self.favorite_tree.get_favorite(parent_item) if parent_item else None
             if mode in (EditMode.CREATE, EditMode.EDIT):
                 favorite = FavoriteDlg.get_favorite(
                     parent=self.favorite_tree, favorite=current_favorite if mode == EditMode.EDIT else None
@@ -139,7 +175,7 @@ class FavoriteTree(QTreeWidget):
             if favorite or mode == EditMode.DELETE:
                 if current_favorite and mode == EditMode.CREATE:
                     current_favorite.expanded = True
-                func(favorite=current_favorite, parent_favorite=parent_favorite, new_favorite=favorite)
+                func(current_favorite=current_favorite, parent_favorite=parent_favorite, new_favorite=favorite)
                 if mode == EditMode.DELETE:
                     selected = parent_favorite
                 elif mode == EditMode.EDIT:
@@ -200,17 +236,3 @@ class FavoriteTree(QTreeWidget):
                     )
                 )
             self.exec_(self.favorite_tree.viewport().mapToGlobal(position))
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    app.setStyle("Fusion")  # Style needed for palette to work
-    app.setPalette(dark_palette)
-    with FavoriteTree(
-        parent=None,
-        favorites=Favorites(
-            items=[Favorite(name="First", description="desc", path="c:", children=[Favorite(name="Second")])]
-        ),
-    ) as tree:
-        tree.show()
-        sys.exit(app.exec_())

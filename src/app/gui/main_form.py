@@ -1,15 +1,25 @@
 from typing import Optional, List
 
-from PySide2.QtGui import QIcon
+from PySide2.QtCore import QTextCodec
+from PySide2.QtGui import QIcon, Qt
 from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox
 
-from src.app.gui.action import create_folder_action, create_open_file_action, FileAction, create_file_action, \
-    create_select_folder_action, create_pin_action, create_open_folder_externally_action, \
-    create_open_folder_in_new_tab_action
+from src.app.gui.action import (
+    create_folder_action,
+    create_open_file_action,
+    FileAction,
+    create_file_action,
+    create_select_folder_action,
+    create_pin_action,
+    create_open_folder_externally_action,
+    create_open_folder_in_new_tab_action,
+    FolderAction,
+    create_open_console_action,
+)
 from src.app.gui.favorite_view import FavoriteTree
-from src.app.gui.tree import TreeView
+from src.app.gui.tree_view import TreeView
 from src.app.gui.tree_box import TreeBox
-from src.app.model.schema import App, CONFIG_FILE, Tree
+from src.app.model.schema import App, CONFIG_FILE, WindowState
 from src.app.utils.constant import APP_NAME
 from src.app.utils.serializer import json_to_file
 
@@ -18,13 +28,14 @@ class MainForm(QMainWindow):
     def __init__(self, app: App):
         super().__init__()
         self.app = app
+        self.codec = QTextCodec.codecForName(b"UTF-8")
         self.actions = {}
-        splitter = QSplitter(self)
-        self.favorite_tree = FavoriteTree(parent=splitter, favorites=app.favorites)
-        self.tree_box = TreeBox(parent=splitter, app_model=app)
-        splitter.addWidget(self.favorite_tree)
-        splitter.addWidget(self.tree_box)
-        self.setCentralWidget(splitter)
+        self.splitter = QSplitter(self)
+        self.favorite_tree = FavoriteTree(parent=self.splitter, app_model=app)
+        self.tree_box = TreeBox(parent=self.splitter, app_model=app)
+        self.splitter.addWidget(self.favorite_tree)
+        self.splitter.addWidget(self.tree_box)
+        self.setCentralWidget(self.splitter)
         self.init_ui()
         self.init_menu()
 
@@ -32,7 +43,22 @@ class MainForm(QMainWindow):
         self.setWindowTitle(self.app.name)
         self.setWindowIcon(QIcon("file_system.ico"))
         if not self.app.pages:
-            self.tree_box.add_page()
+            self.tree_box.open_tree_page(pinned_path=None)
+        state: WindowState = self.app.win_state
+        if state:
+            self.setGeometry(state.x, state.y, state.width, state.height)
+            if state.state:
+                self.setWindowState(state.state)
+            if state.on_top:
+                self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+            else:
+                self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
+            if state.splitter_sizes:
+                self.splitter.setSizes(state.splitter_sizes)
+        self.splitter.splitterMoved.connect(self.on_splitter_moved)
+
+    def on_splitter_moved(self, pos, index):
+        self.app.win_state.splitter_sizes = self.splitter.sizes()
 
     def current_tree(self) -> Optional[TreeView]:
         current_tree = self.tree_box.current_tree()
@@ -57,26 +83,41 @@ class MainForm(QMainWindow):
         # folder menu
         folder_menu = self.menuBar().addMenu("Fol&der")
         # Create
-        folder_menu.addAction(create_folder_action(parent=self, path_func=self.path_func))
+        self.actions[FolderAction.CREATE] = create_folder_action(parent=self, path_func=self.path_func)
+        folder_menu.addAction(self.actions[FolderAction.CREATE])
         # Select
-        folder_menu.addAction(create_select_folder_action(parent=self.current_tree()))
+        self.actions[FolderAction.SELECT] = create_select_folder_action(parent=self.current_tree())
+        folder_menu.addAction(self.actions[FolderAction.SELECT])
         # Pin
-        folder_menu.addAction(create_pin_action(parent=self.current_tree(), path_func=self.path_func, pin=True))
+        self.actions[FolderAction.PIN] = create_pin_action(
+            parent=self.current_tree(), path_func=self.path_func, pin=True
+        )
+        folder_menu.addAction(self.actions[FolderAction.PIN])
         # Unpin
-        folder_menu.addAction(create_pin_action(parent=self.current_tree(), path_func=self.path_func, pin=False))
+        self.actions[FolderAction.UNPIN] = create_pin_action(
+            parent=self.current_tree(), path_func=self.path_func, pin=False
+        )
+        folder_menu.addAction(self.actions[FolderAction.UNPIN])
         # Open (externally)
-        folder_menu.addAction(create_open_folder_externally_action(
+        self.actions[FolderAction.OPEN_EXT] = create_open_folder_externally_action(
             parent=self.current_tree(), path_func=self.path_func
-        ))
+        )
+        folder_menu.addAction(self.actions[FolderAction.OPEN_EXT])
         # Open (new tab)
-        folder_menu.addAction(create_open_folder_in_new_tab_action(
+        self.actions[FolderAction.OPEN_TAB] = create_open_folder_in_new_tab_action(
             parent=self.current_tree(), path_func=self.path_func
-        ))
+        )
+        folder_menu.addAction(self.actions[FolderAction.OPEN_TAB])
 
         # Open (new window)
         # Open (VS Code)
         # Open Console
+        self.actions[FolderAction.OPEN_CONSOLE] = create_open_console_action(
+            parent=self.current_tree(), path_func=self.path_func
+        )
+        folder_menu.addAction(self.actions[FolderAction.OPEN_CONSOLE])
         # Command menu
+        command_menu = self.menuBar().addMenu("&Command")
         # Copy
         # Paste
         # Duplicate
@@ -84,15 +125,29 @@ class MainForm(QMainWindow):
         # Delete
         # Compare
         # Selection menu
+        selection_menu = self.menuBar().addMenu("&Selection")
         # Copy full path
         # Copy name
         #  -----------
         # Select children/siblings
         # Invert selection
+        # Tab menu
+        tab_menu = self.menuBar().addMenu("&Tab")
         # View menu
-    #     show favorite
-    # show buttons
-    #
+        view_menu = self.menuBar().addMenu("&View")
+        # show favorite
+        # show buttons
+        # file filter
+        # always on top
 
     def closeEvent(self, event):
+        self.app.win_state = WindowState(
+            x=self.pos().x(),
+            y=self.pos().y(),
+            width=self.size().width(),
+            height=self.size().height(),
+            state=self.windowState(),
+            on_top=(self.windowFlags() & ~Qt.WindowStaysOnTopHint) == Qt.WindowStaysOnTopHint,
+            splitter_sizes=self.splitter.sizes(),
+        )
         json_to_file(json_dict=self.app.dict(), file_name=CONFIG_FILE)

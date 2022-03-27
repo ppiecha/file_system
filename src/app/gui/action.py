@@ -7,7 +7,7 @@ from PySide2.QtCore import Qt
 from PySide2.QtGui import QIcon, QKeySequence
 from PySide2.QtWidgets import QAction, QMenu, QWidget
 
-from src.app.model.path import create_folder, create_file, only_folders, only_files
+from src.app.model import path_util
 from src.app.utils.logger import get_console_logger
 from src.app.utils.shell import start_file, open_folder
 
@@ -69,7 +69,7 @@ def create_folder_action(parent: QWidget, path_func: Callable) -> Action:
         parent=parent,
         caption=FolderAction.CREATE.value,
         shortcut=QKeySequence(Qt.Key_F7),
-        slot=partial(create_folder, parent, path_func),
+        slot=partial(path_util.create_folder, parent, path_func),
         tip="Creates sub-folder under current folder",
     )
 
@@ -79,7 +79,7 @@ def create_file_action(parent: QWidget, path_func: Callable) -> Action:
         parent=parent,
         caption=FileAction.CREATE.value,
         shortcut=QKeySequence(Qt.Key_F9),
-        slot=partial(create_file, parent, path_func),
+        slot=partial(path_util.create_file, parent, path_func),
         tip="Creates new file under current folder",
     )
 
@@ -105,9 +105,8 @@ def create_pin_action(parent: QWidget, path_func: Callable, pin: bool = True) ->
 
 
 def create_open_file_action(parent: QWidget, path_func: Callable) -> Action:
-
     def open_paths():
-        for path in only_files(paths=path_func()):
+        for path in path_util.only_files(paths=path_func()):
             start_file(file_name=path)
 
     return Action(
@@ -121,7 +120,7 @@ def create_open_file_action(parent: QWidget, path_func: Callable) -> Action:
 
 def create_open_folder_externally_action(parent: QWidget, path_func: Callable) -> Action:
     def open_paths():
-        for path in only_folders(paths=path_func()):
+        for path in path_util.only_folders(paths=path_func()):
             open_folder(dir_name=path)
 
     return Action(
@@ -135,8 +134,7 @@ def create_open_folder_externally_action(parent: QWidget, path_func: Callable) -
 
 def create_open_folder_in_new_tab_action(parent: QWidget, path_func: Callable) -> Action:
     def open_paths():
-        for path in only_folders(paths=path_func()):
-            logger.debug(f"new tab path {path}")
+        for path in path_util.only_folders(paths=path_func()):
             parent.tree_box.open_tree_page(pinned_path=path)
 
     return Action(
@@ -148,11 +146,16 @@ def create_open_folder_in_new_tab_action(parent: QWidget, path_func: Callable) -
     )
 
 
-def create_open_console_action(parent: QWidget, path: str) -> Action:
+# pylint: disable=consider-using-with
+def create_open_console_action(parent: QWidget, path_func: Callable) -> Action:
+    def open_paths():
+        for path in path_util.only_folders(paths=path_func()):
+            subprocess.Popen(["start", "cmd", "/k", f"cd {path} & deactivate"], shell=True)
+
     return Action(
         parent=parent,
         caption=FolderAction.OPEN_CONSOLE.value,
         shortcut=None,
-        slot=lambda: subprocess.Popen(["start", "cmd", "/k", f"cd {path} & deactivate"], shell=True),
-        tip=f"Open console in {path}",
+        slot=open_paths,
+        tip="Open console in selected locations",
     )
