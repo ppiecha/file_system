@@ -1,5 +1,4 @@
 import os
-import sys
 from enum import Enum
 from typing import List, Optional, Callable, Set
 
@@ -8,15 +7,14 @@ from PySide2.QtGui import Qt
 from PySide2.QtWidgets import (
     QTreeView,
     QFileSystemModel,
-    QApplication,
     QMenu,
     QAbstractItemView,
     QFileDialog,
 )
 
 from src.app.gui.action import FolderAction, FileAction
-from src.app.gui.palette import dark_palette
 from src.app.model import path_util
+from src.app.model.path_util import path_caption
 from src.app.model.schema import Tree
 from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger
@@ -47,16 +45,6 @@ class TreeView(QTreeView):
         self.tree_model = tree_model
         self.filtered_indexes = []
         self.init_ui()
-        # logger.debug(f"root index {self.rootIndex()} {self.rootIndex().isValid()}")
-        # logger.debug(f"root index path {self.sys_model.filePath(self.sys_index(proxy_index=self.rootIndex()))}")
-
-    # def get_root_index(self) -> QModelIndex:
-    #     root_sys_index = self.sys_model.index(QDir.rootPath())
-    #     root_proxy_index = self.proxy_index(sys_index=root_sys_index)
-    #     logger.debug(f"root_proxy_index {root_proxy_index}")
-    #     logger.debug(f"root_proxy_index parent {root_proxy_index.parent()}")
-    #     # self.setRootIndex(c_proxy_index.parent())
-    #     return root_proxy_index.parent()
 
     def init_ui(self):
         self.hide_header(hide=self.tree_model.hide_header)
@@ -100,8 +88,10 @@ class TreeView(QTreeView):
             self.pinned_path = path
 
     @property
-    def current_path(self) -> str:
-        return self.sys_model.fileInfo(self.sys_index(proxy_index=self.currentIndex())).absoluteFilePath()
+    def current_path(self) -> Optional[str]:
+        if self.currentIndex().isValid():
+            return self.sys_model.fileInfo(self.sys_index(proxy_index=self.currentIndex())).absoluteFilePath()
+        return None
 
     @current_path.setter
     def current_path(self, path: str):
@@ -123,6 +113,7 @@ class TreeView(QTreeView):
         if path not in self.loaded_paths:
             self.sys_model.setRootPath(path)
         self.tree_model.pinned_path = path
+        self.tree_box.setTabText(self.tree_box.indexOf(self), path_caption(path=path))
         self._pin(path=path, pin=path is not None)
 
     def select_folder(self):
@@ -136,18 +127,6 @@ class TreeView(QTreeView):
             self.pinned_path = path if pin else None
 
     def _pin(self, path: str, pin: bool) -> bool:
-        # def show_children(ind: QModelIndex):
-        #     sys_ind = self.sys_index(proxy_index=ind)
-        #     sys_path = self.sys_model.filePath(sys_ind)
-        #     logger.debug(f"{sys_path}")
-        #     logger.debug(f"rows to show {range(self.proxy.rowCount(ind))}")
-        #     for row in range(self.proxy.rowCount(ind)):
-        #         row_index = self.proxy.index(row, 0, ind)
-        #         sys_index = self.sys_index(proxy_index=row_index)
-        #         file_path = self.sys_model.filePath(sys_index)
-        #         logger.debug(f"show child {file_path}")
-        #         self.setRowHidden(row, index, False)
-
         def show_children(path: QModelIndex):
             ind = self.proxy_index(sys_index=self.sys_model.index(path))
             # sys_ind = self.sys_index(proxy_index=ind)
@@ -283,14 +262,3 @@ class SortFilterModel(QSortFilterProxyModel):
         left_path = self.sourceModel().filePath(left)
         right_path = self.sourceModel().filePath(right)
         return (not os.path.isdir(left_path), left_path.lower()) < (not os.path.isdir(right_path), right_path.lower())
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    app.setStyle("Fusion")  # Style needed for palette to work
-    app.setPalette(dark_palette)
-    # tree = TreeView(parent=None, tree_model=Tree(root_path="c:\\", current_path="c:\\Users\\piotr\\temp"))
-    tree = TreeView(parent=None, tree_model=Tree())
-    tree.show()
-    tree.current_path = tree.current_path
-    sys.exit(app.exec_())

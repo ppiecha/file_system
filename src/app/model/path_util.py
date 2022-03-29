@@ -50,7 +50,8 @@ def path_caption(path: str) -> str:
     directory = QDir(path)
     if directory.isRoot():
         return path.lower()
-    return directory.dirName()
+    # logger.debug(f"path_caption '{directory.dirName()}'")
+    return directory.dirName() if directory.dirName() != "." else "/"
 
 
 def validate_single_path(parent, paths: List[str]) -> Tuple[bool, Optional[str]]:

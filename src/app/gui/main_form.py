@@ -1,6 +1,5 @@
 from typing import Optional, List
 
-from PySide2.QtCore import QTextCodec
 from PySide2.QtGui import QIcon, Qt
 from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox
 
@@ -79,7 +78,7 @@ class MainForm(QMainWindow):
         self.actions[FileAction.CREATE] = create_file_action(parent=self, path_func=self.path_func)
         file_menu.addAction(self.actions[FileAction.CREATE])
         # Open
-        self.actions[FileAction.OPEN] = create_open_file_action(parent=self, path_func=self.path_func)
+        self.actions[FileAction.OPEN] = create_open_file_action(parent_func=self.current_tree, path_func=self.path_func)
         file_menu.addAction(self.actions[FileAction.OPEN])
         # Open file in VS code
         # folder menu
@@ -88,26 +87,26 @@ class MainForm(QMainWindow):
         self.actions[FolderAction.CREATE] = create_folder_action(parent=self, path_func=self.path_func)
         folder_menu.addAction(self.actions[FolderAction.CREATE])
         # Select
-        self.actions[FolderAction.SELECT] = create_select_folder_action(parent=self.current_tree())
+        self.actions[FolderAction.SELECT] = create_select_folder_action(parent_func=self.current_tree)
         folder_menu.addAction(self.actions[FolderAction.SELECT])
         # Pin
         self.actions[FolderAction.PIN] = create_pin_action(
-            parent=self.current_tree(), path_func=self.path_func, pin=True
+            parent_func=self.current_tree, path_func=self.path_func, pin=True
         )
         folder_menu.addAction(self.actions[FolderAction.PIN])
         # Unpin
         self.actions[FolderAction.UNPIN] = create_pin_action(
-            parent=self.current_tree(), path_func=self.path_func, pin=False
+            parent_func=self.current_tree, path_func=self.path_func, pin=False
         )
         folder_menu.addAction(self.actions[FolderAction.UNPIN])
         # Open (externally)
         self.actions[FolderAction.OPEN_EXT] = create_open_folder_externally_action(
-            parent=self.current_tree(), path_func=self.path_func
+            parent_func=self.current_tree, path_func=self.path_func
         )
         folder_menu.addAction(self.actions[FolderAction.OPEN_EXT])
         # Open (new tab)
         self.actions[FolderAction.OPEN_TAB] = create_open_folder_in_new_tab_action(
-            parent=self.current_tree(), path_func=self.path_func
+            parent_func=self.current_tree, path_func=self.path_func
         )
         folder_menu.addAction(self.actions[FolderAction.OPEN_TAB])
 
@@ -115,7 +114,7 @@ class MainForm(QMainWindow):
         # Open (VS Code)
         # Open Console
         self.actions[FolderAction.OPEN_CONSOLE] = create_open_console_action(
-            parent=self.current_tree(), path_func=self.path_func
+            parent_func=self.current_tree, path_func=self.path_func
         )
         folder_menu.addAction(self.actions[FolderAction.OPEN_CONSOLE])
         # Command menu
@@ -138,7 +137,7 @@ class MainForm(QMainWindow):
         self.actions[TabAction.NEW] = create_new_tab_action(parent=self.tree_box)
         tab_menu.addAction(self.actions[TabAction.NEW])
         self.actions[TabAction.CLOSE] = create_close_tab_action(
-            parent=self.tree_box, index=self.tree_box.currentIndex()
+            parent_func=lambda: self.tree_box, index_func=self.tree_box.currentIndex
         )
         tab_menu.addAction(self.actions[TabAction.CLOSE])
         # View menu

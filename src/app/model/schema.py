@@ -50,4 +50,3 @@ class App(BaseModel):
     def remove_page(self, page: Tree):
         self.pages.remove(page)
         logger.debug(f"Page removed {page}")
-

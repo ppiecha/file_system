@@ -15,8 +15,9 @@ logger = get_console_logger(name=__name__)
 
 
 class FileAction(Enum):
-    CREATE = "Create"
-    OPEN = "Open"
+    CREATE = "Create file"
+    CREATE_CLIP = "Create from clipboard"
+    OPEN = "Open file"
     OPEN_VS = "Open (VS Code)"
 
 
@@ -24,7 +25,7 @@ class FolderAction(Enum):
     SELECT = "Select"
     PIN = "Pin"
     UNPIN = "Unpin"
-    CREATE = "Create"
+    CREATE = "Create folder"
     OPEN_EXT = "Open (externally)"
     OPEN_TAB = "Open (new tab)"
     OPEN_WIN = "Open (new window)"
@@ -89,33 +90,33 @@ def create_file_action(parent: QWidget, path_func: Callable) -> Action:
     )
 
 
-def create_select_folder_action(parent: QWidget) -> Action:
+def create_select_folder_action(parent_func: Callable) -> Action:
     return Action(
-        parent=parent,
+        parent=parent_func().main_form,
         caption=FolderAction.SELECT.value,
         shortcut=QKeySequence(Qt.CTRL + Qt.Key_D),
-        slot=parent.select_folder,
+        slot=lambda: parent_func().select_folder(),
         tip="Pins tree to selected folder",
     )
 
 
-def create_pin_action(parent: QWidget, path_func: Callable, pin: bool = True) -> Action:
+def create_pin_action(parent_func: Callable, path_func: Callable, pin: bool = True) -> Action:
     return Action(
-        parent=parent,
+        parent=parent_func().main_form,
         caption=FolderAction.PIN.value if pin else FolderAction.UNPIN.value,
         shortcut=None,
-        slot=partial(parent.pin, path_func, pin),
+        slot=lambda: parent_func().pin(path_func=path_func, pin=pin),
         tip="Pins tree to current folder" if pin else "Unpins tree",
     )
 
 
-def create_open_file_action(parent: QWidget, path_func: Callable) -> Action:
+def create_open_file_action(parent_func: Callable, path_func: Callable) -> Action:
     def open_paths():
         for path in path_util.only_files(paths=path_func()):
             start_file(file_name=path)
 
     return Action(
-        parent=parent,
+        parent=parent_func().main_form,
         caption=FileAction.OPEN.value,
         shortcut=None,
         slot=open_paths,
@@ -123,13 +124,13 @@ def create_open_file_action(parent: QWidget, path_func: Callable) -> Action:
     )
 
 
-def create_open_folder_externally_action(parent: QWidget, path_func: Callable) -> Action:
+def create_open_folder_externally_action(parent_func: Callable, path_func: Callable) -> Action:
     def open_paths():
         for path in path_util.only_folders(paths=path_func()):
             open_folder(dir_name=path)
 
     return Action(
-        parent=parent,
+        parent=parent_func().main_form,
         caption=FolderAction.OPEN_EXT.value,
         shortcut=QKeySequence(Qt.CTRL + Qt.Key_E),
         slot=open_paths,
@@ -137,13 +138,13 @@ def create_open_folder_externally_action(parent: QWidget, path_func: Callable) -
     )
 
 
-def create_open_folder_in_new_tab_action(parent: QWidget, path_func: Callable) -> Action:
+def create_open_folder_in_new_tab_action(parent_func: Callable, path_func: Callable) -> Action:
     def open_paths():
         for path in path_util.only_folders(paths=path_func()):
-            parent.tree_box.open_tree_page(pinned_path=path)
+            parent_func().tree_box.open_tree_page(pinned_path=path, find_existing=False)
 
     return Action(
-        parent=parent,
+        parent=parent_func().main_form,
         caption=FolderAction.OPEN_TAB.value,
         shortcut=QKeySequence(Qt.CTRL + Qt.Key_T),
         slot=open_paths,
@@ -152,13 +153,13 @@ def create_open_folder_in_new_tab_action(parent: QWidget, path_func: Callable) -
 
 
 # pylint: disable=consider-using-with
-def create_open_console_action(parent: QWidget, path_func: Callable) -> Action:
+def create_open_console_action(parent_func: Callable, path_func: Callable) -> Action:
     def open_paths():
         for path in path_util.only_folders(paths=path_func()):
             subprocess.Popen(["start", "cmd", "/k", f"cd {path} & deactivate"], shell=True)
 
     return Action(
-        parent=parent,
+        parent=parent_func().main_form,
         caption=FolderAction.OPEN_CONSOLE.value,
         shortcut=None,
         slot=open_paths,
@@ -175,10 +176,10 @@ def create_new_tab_action(parent: QWidget) -> Action:
     )
 
 
-def create_close_tab_action(parent: QWidget, index: int) -> Action:
+def create_close_tab_action(parent_func: Callable, index_func: Callable) -> Action:
     return Action(
-        parent=parent,
+        parent=parent_func().main_form,
         caption=TabAction.CLOSE.value,
         shortcut=QKeySequence(Qt.SHIFT + Qt.CTRL + Qt.Key_T),
-        slot=partial(parent.close_page, index),
+        slot=lambda: parent_func().close_page(index_func=index_func),
     )
