@@ -38,8 +38,9 @@ class TreeBox(QTabWidget):
     def open_tree_page(self, pinned_path: str = None, create: bool = True, find_existing: bool = False):
         if find_existing:
             page = self.page(path=pinned_path)
-            self.setCurrentIndex(self.indexOf(page))
-            return
+            if page:
+                self.setCurrentIndex(self.indexOf(page))
+                return
         if create:
             tree_model = self.app_model.add_page(pinned_path=pinned_path)
         else:

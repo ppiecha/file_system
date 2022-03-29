@@ -51,6 +51,7 @@ class FavoriteTree(QTreeWidget):
         favorite = self.get_favorite(item)
         if not favorite:
             raise ValueError(f"Cannot get favorite from item {item}")
+        logger.debug(f"Open favorite path {favorite.path}")
         self.main_form.tree_box.open_tree_page(pinned_path=favorite.path, find_existing=True)
 
     def selection_changed(self):

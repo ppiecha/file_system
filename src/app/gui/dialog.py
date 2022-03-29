@@ -1,3 +1,4 @@
+from PySide2.QtCore import QDir
 from PySide2.QtGui import Qt, QMouseEvent
 from PySide2.QtWidgets import (
     QDialog,
@@ -10,6 +11,7 @@ from PySide2.QtWidgets import (
 
 from src.app.gui.widget import Layout
 from src.app.model.favorite import Favorite
+from src.app.model.path_util import path_caption
 
 
 class FavoriteDlg(QDialog):
@@ -46,7 +48,12 @@ class FavoriteDlg(QDialog):
             self.reject()
 
     def on_get_dir(self, e: QMouseEvent):
-        self.path.setText(QFileDialog.getExistingDirectory(self, "Select directory"))
+        path = QFileDialog.getExistingDirectory(
+            self, "Select directory", self.path.text() if self.path.text() else QDir.homePath()
+        )
+        self.path.setText(path)
+        if not self.name.text():
+            self.name.setText(path_caption(path=path))
 
     @classmethod
     def get_favorite(cls, parent, favorite: Favorite = None) -> Favorite:
