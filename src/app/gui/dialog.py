@@ -1,3 +1,5 @@
+from typing import Callable
+
 from PySide2.QtCore import QDir
 from PySide2.QtGui import Qt, QMouseEvent
 from PySide2.QtWidgets import (
@@ -6,12 +8,27 @@ from PySide2.QtWidgets import (
     QLineEdit,
     QDialogButtonBox,
     QFileDialog,
-    QAbstractButton,
+    QAbstractButton, QApplication, QStyle,
 )
 
 from src.app.gui.widget import Layout
 from src.app.model.favorite import Favorite
 from src.app.model.path_util import path_caption
+
+
+class PathEdit(QLineEdit):
+    def __init__(self, text: str = None, post_action: Callable = None, parent=None):
+        super().__init__(text, parent)
+        self.post_action = post_action
+        icon = QApplication.style().standardIcon(QStyle.SP_DirIcon)
+        self.action = self.addAction(icon, QLineEdit.TrailingPosition)
+        self.action.triggered.connect(self.select_folder)
+
+    def select_folder(self):
+        path = self.text() if self.text() else QDir.homePath()
+        path = QFileDialog.getExistingDirectory(self, "Select directory", path)
+        self.setText(path)
+        self.post_action(path)
 
 
 class FavoriteDlg(QDialog):
@@ -24,8 +41,7 @@ class FavoriteDlg(QDialog):
         self.form.setSpacing(5)
         self.name = QLineEdit(favorite.name if favorite else "")
         self.description = QLineEdit(favorite.description if favorite else "")
-        self.path = QLineEdit(favorite.path if favorite else "")
-        self.path.mousePressEvent = self.on_get_dir
+        self.path = PathEdit(text=favorite.path if favorite else "", post_action=self.path_post_action)
         self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal)
         self.form.addRow("Name", self.name)
         self.form.addRow("Description", self.description)
@@ -47,11 +63,7 @@ class FavoriteDlg(QDialog):
         else:
             self.reject()
 
-    def on_get_dir(self, e: QMouseEvent):
-        path = QFileDialog.getExistingDirectory(
-            self, "Select directory", self.path.text() if self.path.text() else QDir.homePath()
-        )
-        self.path.setText(path)
+    def path_post_action(self, path: str):
         if not self.name.text():
             self.name.setText(path_caption(path=path))
 
