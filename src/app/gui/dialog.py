@@ -1,14 +1,16 @@
 from typing import Callable
 
 from PySide2.QtCore import QDir
-from PySide2.QtGui import Qt, QMouseEvent
+from PySide2.QtGui import Qt
 from PySide2.QtWidgets import (
     QDialog,
     QFormLayout,
     QLineEdit,
     QDialogButtonBox,
     QFileDialog,
-    QAbstractButton, QApplication, QStyle,
+    QAbstractButton,
+    QApplication,
+    QStyle,
 )
 
 from src.app.gui.widget import Layout

@@ -16,7 +16,7 @@ logger = get_console_logger(name=__name__)
 
 class FileAction(Enum):
     CREATE = "Create file"
-    CREATE_CLIP = "Create from clipboard"
+    CREATE_CLIP = "Create from clipboard text"
     OPEN = "Open file"
     OPEN_VS = "Open (VS Code)"
 
@@ -87,6 +87,16 @@ def create_file_action(parent: QWidget, path_func: Callable) -> Action:
         shortcut=QKeySequence(Qt.Key_F9),
         slot=partial(path_util.create_file, parent, path_func),
         tip="Creates new file under current folder",
+    )
+
+
+def create_file_from_clipboard_text_action(parent: QWidget, path_func: Callable) -> Action:
+    return Action(
+        parent=parent,
+        caption=FileAction.CREATE_CLIP.value,
+        shortcut=QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_V),
+        slot=partial(path_util.create_text_file_from_clip, parent, path_func),
+        tip="Creates new file from clipboard text under current folder",
     )
 
 

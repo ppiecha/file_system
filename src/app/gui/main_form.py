@@ -17,6 +17,7 @@ from src.app.gui.action import (
     TabAction,
     create_new_tab_action,
     create_close_tab_action,
+    create_file_from_clipboard_text_action,
 )
 from src.app.gui.favorite_view import FavoriteTree
 from src.app.gui.tree_view import TreeView
@@ -80,6 +81,11 @@ class MainForm(QMainWindow):
         # Open
         self.actions[FileAction.OPEN] = create_open_file_action(parent_func=self.current_tree, path_func=self.path_func)
         file_menu.addAction(self.actions[FileAction.OPEN])
+        # Create from clipboard text
+        self.actions[FileAction.CREATE_CLIP] = create_file_from_clipboard_text_action(
+            parent=self, path_func=self.path_func
+        )
+        file_menu.addAction(self.actions[FileAction.CREATE_CLIP])
         # Open file in VS code
         # folder menu
         folder_menu = self.menuBar().addMenu("Fol&der")
