@@ -1,7 +1,9 @@
+import sys
+import traceback
 from typing import Optional, List
 
 from PySide2.QtGui import QIcon, Qt
-from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox
+from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox, QStyle
 
 from src.app.gui.action import (
     create_folder_action,
@@ -30,6 +32,7 @@ from src.app.utils.serializer import json_to_file
 class MainForm(QMainWindow):
     def __init__(self, app: App):
         super().__init__()
+        self.process_args()
         self.app = app
         self.actions = {}
         self.splitter = QSplitter(self)
@@ -40,6 +43,21 @@ class MainForm(QMainWindow):
         self.setCentralWidget(self.splitter)
         self.init_ui()
         self.init_menu()
+
+    def process_args(self):
+        if len(sys.argv) > 1:
+            opts = [opt for opt in sys.argv[1:] if opt.startswith("-")]
+            # args = [arg for arg in sys.argv[1:] if not arg.startswith("-")]
+            if "-w" in opts:
+                sys.excepthook = self.except_hook
+        else:
+            pass
+
+    def except_hook(self, type, value, tb):
+        message = "".join(traceback.format_exception(type, value, tb))
+        box = QMessageBox(QMessageBox.Critical, APP_NAME, "Unhandled exception", QMessageBox.Ok, self)
+        box.setDetailedText(message)
+        box.exec_()
 
     def init_ui(self):
         self.setWindowTitle(self.app.name)
