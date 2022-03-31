@@ -3,7 +3,7 @@ import traceback
 from typing import Optional, List
 
 from PySide2.QtGui import QIcon, Qt
-from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox, QStyle
+from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox
 
 from src.app.gui.action import (
     create_folder_action,
@@ -89,7 +89,14 @@ class MainForm(QMainWindow):
 
     def path_func(self) -> Optional[List[str]]:
         current_tree = self.current_tree()
-        return current_tree.get_selected_paths() if current_tree else None
+        if current_tree:
+            paths = current_tree.get_selected_paths()
+            if len(paths) > 0:
+                return paths
+            else:
+                QMessageBox.information(self, APP_NAME, "No path selected")
+                return []
+        return []
 
     def init_menu(self):
         file_menu = self.menuBar().addMenu("&File")

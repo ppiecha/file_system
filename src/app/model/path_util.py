@@ -24,8 +24,19 @@ def all_folders(paths: PathList) -> bool:
     return all((QFileInfo(path).isDir() for path in paths))
 
 
+def extract_path(item: str) -> str:
+    if QFileInfo(item).isFile():
+        path = item
+    else:
+        if item.endswith(os.sep):
+            path = item
+        else:
+            path = "".join([item, os.sep])
+    return QFileInfo(path).path()
+
+
 def only_folders(paths: PathList) -> PathList:
-    return [path for path in paths if QFileInfo(path).isDir()]
+    return [extract_path(item=path) for path in paths]
 
 
 def all_files(paths: PathList) -> bool:
@@ -56,7 +67,7 @@ def path_caption(path: str) -> str:
 
 def validate_single_path(parent, paths: List[str]) -> Tuple[bool, Optional[str]]:
     if len(paths) == 0:
-        QMessageBox.information(parent, APP_NAME, "No path selected")
+        # QMessageBox.information(parent, APP_NAME, "No path selected")
         return False, None
     if len(paths) > 1:
         QMessageBox.information(parent, APP_NAME, "More than one path selected")
