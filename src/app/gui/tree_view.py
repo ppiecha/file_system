@@ -12,9 +12,10 @@ from PySide2.QtWidgets import (
     QFileDialog,
 )
 
-from src.app.gui.action import FolderAction, FileAction
-from src.app.model import path_util
-from src.app.model.path_util import path_caption
+from src.app.gui.action.file import FileAction
+from src.app.gui.action.folder import FolderAction
+from src.app.utils import path_util
+from src.app.utils.path_util import path_caption
 from src.app.model.schema import Tree
 from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger

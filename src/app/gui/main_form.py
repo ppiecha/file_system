@@ -5,28 +5,37 @@ from typing import Optional, List
 from PySide2.QtGui import QIcon, Qt
 from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox
 
-from src.app.gui.action import (
-    create_folder_action,
-    create_open_file_action,
+from src.app.gui.action.common import (
+    CommonAction,
+    create_copy_files_to_clipboard_action,
+    create_paste_files_from_clipboard_action,
+)
+from src.app.gui.action.file import (
     FileAction,
+    create_open_file_action,
     create_file_action,
+    create_file_from_clipboard_text_action,
+)
+from src.app.gui.action.folder import (
+    FolderAction,
+    create_folder_action,
     create_select_folder_action,
     create_pin_action,
     create_open_folder_externally_action,
     create_open_folder_in_new_tab_action,
-    FolderAction,
     create_open_console_action,
-    TabAction,
-    create_new_tab_action,
-    create_close_tab_action,
-    create_file_from_clipboard_text_action,
 )
+from src.app.gui.action.tab import create_new_tab_action, TabAction, create_close_tab_action
 from src.app.gui.favorite_view import FavoriteTree
 from src.app.gui.tree_view import TreeView
 from src.app.gui.tree_box import TreeBox
 from src.app.model.schema import App, CONFIG_FILE, WindowState
 from src.app.utils.constant import APP_NAME
+from src.app.utils.logger import get_console_logger, get_file_handler
 from src.app.utils.serializer import json_to_file
+
+logger = get_console_logger(name=__name__)
+logger.addHandler(get_file_handler())
 
 
 class MainForm(QMainWindow):
@@ -35,6 +44,7 @@ class MainForm(QMainWindow):
         self.process_args()
         self.app = app
         self.actions = {}
+        self.threads = []
         self.splitter = QSplitter(self)
         self.favorite_tree = FavoriteTree(parent=self.splitter, app_model=app)
         self.tree_box = TreeBox(parent=self.splitter, app_model=app)
@@ -53,11 +63,12 @@ class MainForm(QMainWindow):
         else:
             pass
 
-    def except_hook(self, type, value, tb):
-        message = "".join(traceback.format_exception(type, value, tb))
+    def except_hook(self, type_, value, tb):
+        message = "".join(traceback.format_exception(type_, value, tb))
         box = QMessageBox(QMessageBox.Critical, APP_NAME, "Unhandled exception", QMessageBox.Ok, self)
         box.setDetailedText(message)
         box.exec_()
+        logger.error(message)
 
     def init_ui(self):
         self.setWindowTitle(self.app.name)
@@ -92,13 +103,21 @@ class MainForm(QMainWindow):
         if current_tree:
             paths = current_tree.get_selected_paths()
             if len(paths) > 0:
+                # return [path for path in paths if QFileInfo(path).exists()]
                 return paths
-            else:
-                QMessageBox.information(self, APP_NAME, "No path selected")
-                return []
+            QMessageBox.information(self, APP_NAME, "No path selected")
+            return []
         return []
 
     def init_menu(self):
+        self.init_file_menu()
+        self.init_folder_menu()
+        self.init_command_menu()
+        self.init_selection_menu()
+        self.init_tab_menu()
+        self.init_view_menu()
+
+    def init_file_menu(self):
         file_menu = self.menuBar().addMenu("&File")
         # Create
         self.actions[FileAction.CREATE] = create_file_action(parent=self, path_func=self.path_func)
@@ -112,7 +131,8 @@ class MainForm(QMainWindow):
         )
         file_menu.addAction(self.actions[FileAction.CREATE_CLIP])
         # Open file in VS code
-        # folder menu
+
+    def init_folder_menu(self):
         folder_menu = self.menuBar().addMenu("Fol&der")
         # Create
         self.actions[FolderAction.CREATE] = create_folder_action(parent=self, path_func=self.path_func)
@@ -148,30 +168,44 @@ class MainForm(QMainWindow):
             parent_func=self.current_tree, path_func=self.path_func
         )
         folder_menu.addAction(self.actions[FolderAction.OPEN_CONSOLE])
-        # Command menu
+
+    def init_command_menu(self):
         command_menu = self.menuBar().addMenu("&Command")
         # Copy
+        self.actions[CommonAction.COPY] = create_copy_files_to_clipboard_action(
+            parent_func=self.current_tree, path_func=self.path_func
+        )
+        command_menu.addAction(self.actions[CommonAction.COPY])
         # Paste
-        # Duplicate
-        # Rename
+        self.actions[CommonAction.PASTE] = create_paste_files_from_clipboard_action(
+            parent_func=self.current_tree, path_func=self.path_func
+        )
+        command_menu.addAction(self.actions[CommonAction.PASTE])
         # Delete
+        # Rename
+        # Duplicate
         # Compare
-        # Selection menu
+
+    def init_selection_menu(self):
         selection_menu = self.menuBar().addMenu("&Selection")
         # Copy full path
         # Copy name
         #  -----------
         # Select children/siblings
         # Invert selection
-        # Tab menu
+
+    def init_tab_menu(self):
         tab_menu = self.menuBar().addMenu("&Tab")
+        # New
         self.actions[TabAction.NEW] = create_new_tab_action(parent=self.tree_box)
         tab_menu.addAction(self.actions[TabAction.NEW])
+        # Close
         self.actions[TabAction.CLOSE] = create_close_tab_action(
             parent_func=lambda: self.tree_box, index_func=self.tree_box.currentIndex
         )
         tab_menu.addAction(self.actions[TabAction.CLOSE])
-        # View menu
+
+    def init_view_menu(self):
         view_menu = self.menuBar().addMenu("&View")
         # show favorite
         # show buttons

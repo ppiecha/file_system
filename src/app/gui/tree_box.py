@@ -3,9 +3,9 @@ from typing import List, Optional, Callable
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QTabWidget, QMenu, QMessageBox
 
-from src.app.gui.action import create_close_tab_action
+from src.app.gui.action.tab import create_close_tab_action
 from src.app.gui.tree_view import TreeView
-from src.app.model.path_util import path_caption
+from src.app.utils.path_util import path_caption
 from src.app.model.schema import App, Tree
 from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger

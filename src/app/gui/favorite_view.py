@@ -7,10 +7,10 @@ from PySide2.QtCore import QPoint
 from PySide2.QtGui import Qt
 from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem, QAbstractItemView, QMenu, QStyle
 
-from src.app.gui.action import Action
+from src.app.gui.action.common import Action
 from src.app.gui.dialog import FavoriteDlg
 from src.app.model.favorite import Favorite, Favorites
-from src.app.model.path_util import all_folders, path_caption
+from src.app.utils.path_util import all_folders, path_caption
 from src.app.model.schema import App
 from src.app.utils.logger import get_console_logger
 from src.app.utils.serializer import json_to_file

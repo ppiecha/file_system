@@ -15,7 +15,7 @@ from PySide2.QtWidgets import (
 
 from src.app.gui.widget import Layout
 from src.app.model.favorite import Favorite
-from src.app.model.path_util import path_caption
+from src.app.utils.path_util import path_caption
 
 
 class PathEdit(QLineEdit):
