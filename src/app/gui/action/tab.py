@@ -10,6 +10,8 @@ from src.app.gui.action.common import Action
 
 class TabAction(Enum):
     NEW = "New"
+    CLOSE_ALL = "Close all tabs"
+    CLOSE_OTHER = "Close other tabs"
     CLOSE = "Close"
 
 
@@ -19,6 +21,15 @@ def create_new_tab_action(parent: QWidget) -> Action:
         caption=TabAction.NEW.value,
         shortcut=QKeySequence(Qt.CTRL + Qt.Key_N),
         slot=parent.open_root_page,
+    )
+
+
+def create_close_all_tabs_action(parent_func: Callable) -> Action:
+    return Action(
+        parent=parent_func().main_form,
+        caption=TabAction.CLOSE_ALL.value,
+        shortcut=QKeySequence(Qt.CTRL + Qt.Key_F4),
+        slot=lambda: parent_func().close_all_pages(),
     )
 
 

@@ -1,5 +1,6 @@
 # pylint: skip-file
 import os
+from enum import Enum
 from pathlib import Path
 from win32com.shell import shell, shellcon
 import win32file
@@ -15,7 +16,7 @@ from src.app.utils.logger import get_console_logger
 logger = get_console_logger(name=__name__)
 
 
-def copy(src, dst: str, auto_rename: bool = False) -> bool:
+def copy(src, dst: str, auto_rename: bool) -> bool:
     """
     Copy files and directories using Windows shell.
 
@@ -206,11 +207,12 @@ def get_new_name(full_name: str) -> str:
                 return str(path.parent.joinpath(path.stem)) + "(1)" + path.suffix
 
 
-def copy_file(src: str, tgt: str, _rename: bool) -> None:
-    if _rename:
+def copy_file(src: str, tgt: str, auto_rename) -> bool:
+    if auto_rename:
         tgt = get_new_name(tgt)
     try:
         win32file.CopyFile(src, tgt, 0)
+        return True
     except Exception as e:
         raise e
 
@@ -227,7 +229,14 @@ def move_file(src: str, tgt: str, _rename: bool) -> None:
         raise e
 
 
-def paste_file(path):
+class Command(Enum):
+    CUT = "Cut"
+    COPY = "Copy"
+    PASTE = "Paste"
+    DELETE = "Delete"
+
+
+def shell_command(path, command: Command):
     desktop_folder = shell.SHGetDesktopFolder()
     hwnd = win32gui.GetForegroundWindow()
     item = Path(path)
@@ -243,7 +252,7 @@ def paste_file(path):
     ci = (
         0,  # Mask
         hwnd,  # hwnd
-        "Paste",  # Verb
+        command.value,  # Verb
         "",  # Parameters
         "",  # Directory
         win32con.SW_SHOWNORMAL,  # Show
@@ -251,6 +260,18 @@ def paste_file(path):
         None,  # Icon
     )
     context_menu.InvokeCommand(ci)
+
+
+def paste_file(path):
+    shell_command(path=path, command=Command.PASTE)
+
+
+def cut_file(path):
+    shell_command(path=path, command=Command.CUT)
+
+
+def delete_file(path):
+    shell_command(path=path, command=Command.DELETE)
 
 
 def start_file(file_name: str):
@@ -411,4 +432,9 @@ class ShellThread(threading.Thread):
             logger.error(str(e))
 
 
-# class SHException(Exception):
+# C:\temp\p2\p22\new.sql
+
+if __name__ == "__main__":
+    delete_file(path=r'C:\temp\p2\p22\new.sql')
+
+

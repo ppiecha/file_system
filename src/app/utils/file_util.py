@@ -4,7 +4,7 @@ from typing import Callable
 from PySide2.QtCore import QFileInfo
 from PySide2.QtWidgets import QMessageBox, QInputDialog, QApplication
 
-from src.app.utils.path_util import logger, validate_single_path
+from src.app.utils.path_util import logger, validate_single_path, extract_path
 from src.app.utils.constant import APP_NAME
 from src.app.utils.shell import new_file
 
@@ -26,20 +26,20 @@ def create_file(parent, path_func: Callable, text: str = None) -> bool:
     if not is_ok:
         return False
     label = "New file name"
-    info = QFileInfo(path if QFileInfo(path).isFile() else path if path.endswith(os.sep) else "".join([path, os.sep]))
-    logger.debug(f"info {info.path()}")
+    # info = QFileInfo(path if QFileInfo(path).isFile() else path if path.endswith(os.sep) else "".join([path, os.sep]))
+    path = extract_path(item=path)
     input_text = QFileInfo(path).fileName() if QFileInfo(path).isFile() else "new.sql"
     names, ok = QInputDialog.getText(parent, label, label, text=input_text)
     if ok and names:
         for name in names.split(";"):
-            file = QFileInfo(os.path.join(info.path(), name))
+            file = QFileInfo(os.path.join(path, name))
             logger.info(f"new file {file.absoluteFilePath()}")
             if file.exists():
-                QMessageBox.information(parent, APP_NAME, f"File {name} already exists in {info.path()}")
+                QMessageBox.information(parent, APP_NAME, f"File {name} already exists in {path}")
                 return False
             file_name = file.absoluteFilePath()
             if text:
-                create_text_file(parent=parent, file_name=file_name, text=text)
+                return create_text_file(parent=parent, file_name=file_name, text=text)
             new_file(file_name=file_name)
         return True
     return False
