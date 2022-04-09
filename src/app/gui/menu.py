@@ -1,7 +1,7 @@
 from src.app.gui.action.common import (
     CommonAction,
     create_copy_items_to_clipboard_action,
-    create_paste_items_from_clipboard_action, create_cut_items_to_clipboard_action,
+    create_paste_items_from_clipboard_action, create_cut_items_to_clipboard_action, create_delete_items_action,
 )
 from src.app.gui.action.file import (
     FileAction,
@@ -104,8 +104,13 @@ def init_command_menu(main_form):
         parent_func=main_form.current_tree, path_func=main_form.path_func
     )
     command_menu.addAction(main_form.actions[CommonAction.PASTE])
-    # Rename
     # Delete
+    # create_delete_items_action
+    main_form.actions[CommonAction.DELETE] = create_delete_items_action(
+        parent_func=main_form.current_tree, path_func=main_form.path_func
+    )
+    command_menu.addAction(main_form.actions[CommonAction.DELETE])
+    # Rename
     # Duplicate
     # Compare
 

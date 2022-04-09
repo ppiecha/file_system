@@ -4,7 +4,8 @@ from typing import Callable
 from PySide2.QtGui import QIcon, QKeySequence, Qt
 from PySide2.QtWidgets import QAction, QMenu, QWidget
 
-from src.app.utils.path_util import copy_items_to_clipboard, paste_items_from_clipboard, cut_items_to_clipboard
+from src.app.utils.path_util import copy_items_to_clipboard, paste_items_from_clipboard, cut_items_to_clipboard, \
+    delete_items
 from src.app.utils.logger import get_console_logger
 
 logger = get_console_logger(name=__name__)
@@ -36,7 +37,9 @@ class Action(QAction):
         super().__init__(caption, parent)
         if icon:
             self.setIcon(icon)
-        if shortcut:
+        if isinstance(shortcut, list):
+            self.setShortcuts(shortcut)
+        else:
             self.setShortcut(shortcut)
         self.setToolTip(tip or caption)
         self.setStatusTip(status_tip or caption)
@@ -81,4 +84,14 @@ def create_paste_items_from_clipboard_action(parent_func: Callable, path_func: C
         shortcut=Qt.CTRL + Qt.Key_V,
         slot=lambda: paste_items_from_clipboard(parent=parent_func().main_form, path_func=path_func),
         tip="Paste item from clipboard into selected path",
+    )
+
+
+def create_delete_items_action(parent_func: Callable, path_func: Callable) -> Action:
+    return Action(
+        parent=parent_func().main_form,
+        caption=CommonAction.DELETE.value,
+        shortcut=[QKeySequence(Qt.Key_Delete), QKeySequence(Qt.CTRL + Qt.Key_Delete)],
+        slot=lambda: delete_items(parent=parent_func().main_form, path_func=path_func),
+        tip="Deletes selected items",
     )

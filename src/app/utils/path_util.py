@@ -1,12 +1,12 @@
 import os.path
 from typing import List, Callable, Tuple, Optional
 
-from PySide2.QtCore import QDir, QFileInfo, QMimeData, QUrl
+from PySide2.QtCore import QDir, QFileInfo, QMimeData, QUrl, Qt
 from PySide2.QtWidgets import QMessageBox, QApplication
 
 from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger
-from src.app.utils.shell import paste, copy_file, copy, delete_file, cut
+from src.app.utils.shell import paste, copy_file, copy, delete_file, cut, delete
 from src.app.utils.thread import run_in_thread
 
 logger = get_console_logger(name=__name__)
@@ -117,7 +117,10 @@ def paste_items_from_clipboard(parent, path_func: Callable) -> bool:
 
 
 def delete_items(parent, path_func: Callable) -> bool:
-    pass
+    paths = path_func()
+    modifiers = QApplication.keyboardModifiers()
+    run_in_thread(parent=parent, target=delete, args=[paths, modifiers == Qt.ControlModifier], lst=parent.threads)
+    return True
 
 
 def rename_item(parent, path_func: Callable) -> bool:
