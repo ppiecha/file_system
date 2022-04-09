@@ -1,4 +1,5 @@
 # pylint: skip-file
+import ctypes.wintypes
 import os
 from enum import Enum
 from pathlib import Path
@@ -11,9 +12,37 @@ import winshell
 import win32gui
 import threading
 import fnmatch
+
 from src.app.utils.logger import get_console_logger
 
 logger = get_console_logger(name=__name__)
+
+_SEE_MASK_NOCLOSEPROCESS = 0x00000040
+_SEE_MASK_INVOKEIDLIST = 0x0000000C
+
+
+class SHELLEXECUTEINFO(ctypes.Structure):
+    _fields_ = (
+        ("cbSize", ctypes.wintypes.DWORD),
+        ("fMask", ctypes.c_ulong),
+        ("hwnd", ctypes.wintypes.HANDLE),
+        ("lpVerb", ctypes.c_wchar_p),
+        ("lpFile", ctypes.c_wchar_p),
+        ("lpParameters", ctypes.c_char_p),
+        ("lpDirectory", ctypes.c_char_p),
+        ("nShow", ctypes.c_int),
+        ("hInstApp", ctypes.wintypes.HINSTANCE),
+        ("lpIDList", ctypes.c_void_p),
+        ("lpClass", ctypes.c_char_p),
+        ("hKeyClass", ctypes.wintypes.HKEY),
+        ("dwHotKey", ctypes.wintypes.DWORD),
+        ("hIconOrMonitor", ctypes.wintypes.HANDLE),
+        ("hProcess", ctypes.wintypes.HANDLE),
+    )
+
+
+ShellExecuteEx = ctypes.windll.shell32.ShellExecuteExW
+ShellExecuteEx.restype = ctypes.wintypes.BOOL
 
 
 def copy(src, dst: str, auto_rename: bool) -> bool:
@@ -230,10 +259,11 @@ def move_file(src: str, tgt: str, _rename: bool) -> None:
 
 
 class Command(Enum):
-    CUT = "Cut"
-    COPY = "Copy"
-    PASTE = "Paste"
-    DELETE = "Delete"
+    CUT = "cut"
+    COPY = "copy"
+    PASTE = "paste"
+    DELETE = "delete"
+    PROPS = "properties"
 
 
 def shell_command(path, command: Command):
@@ -262,12 +292,32 @@ def shell_command(path, command: Command):
     context_menu.InvokeCommand(ci)
 
 
-def paste_file(path):
-    shell_command(path=path, command=Command.PASTE)
+def shell_execute(path, command: Command):
+    sei = SHELLEXECUTEINFO()
+    sei.cbSize = ctypes.sizeof(sei)
+    sei.fMask = _SEE_MASK_NOCLOSEPROCESS | _SEE_MASK_INVOKEIDLIST
+    sei.lpVerb = command.value  # "properties"
+    item = path if path.endswith(os.sep) else "".join([path, os.sep])
+    logger.debug(f"item cut to clipboard {item}")
+    sei.lpFile = item
+    sei.nShow = 1
+    ShellExecuteEx(ctypes.byref(sei))
 
 
-def cut_file(path):
-    shell_command(path=path, command=Command.CUT)
+def paste(path: str):
+    shell_execute(path=path, command=Command.PASTE)
+
+
+def cut(path: str):
+    shell_execute(path=path, command=Command.CUT)
+
+
+# def delete(path: str):
+#     shell_execute(path=path, command=Command.DELETE)
+
+
+def properties(path: str):
+    shell_execute(path=path, command=Command.PROPS)
 
 
 def delete_file(path):
@@ -430,11 +480,3 @@ class ShellThread(threading.Thread):
             self._real_run()
         except Exception as e:
             logger.error(str(e))
-
-
-# C:\temp\p2\p22\new.sql
-
-if __name__ == "__main__":
-    delete_file(path=r'C:\temp\p2\p22\new.sql')
-
-

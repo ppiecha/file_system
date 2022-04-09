@@ -6,7 +6,7 @@ from PySide2.QtWidgets import QMessageBox, QApplication
 
 from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger
-from src.app.utils.shell import paste_file, copy_file, copy, delete_file, cut_file
+from src.app.utils.shell import paste, copy_file, copy, delete_file, cut
 from src.app.utils.thread import run_in_thread
 
 logger = get_console_logger(name=__name__)
@@ -89,11 +89,11 @@ def validate_single_path(parent, paths: List[str]) -> Tuple[bool, Optional[str]]
 
 
 def cut_items_to_clipboard(parent, path_func: Callable) -> bool:
-    # is_ok, path = validate_single_path(parent=parent, paths=path_func())
-    # path = extract_path(item=path)
-    paths = path_func()
-    for path in paths:
-        run_in_thread(parent=parent, target=cut_file, args=[path], lst=parent.threads)
+    is_ok, path = validate_single_path(parent=parent, paths=path_func())
+    path = extract_path(item=path)
+    if is_ok:
+        run_in_thread(parent=parent, target=cut, args=[path], lst=parent.threads)
+        return True
     return True
 
 
@@ -111,14 +111,19 @@ def paste_items_from_clipboard(parent, path_func: Callable) -> bool:
     is_ok, path = validate_single_path(parent=parent, paths=path_func())
     path = extract_path(item=path)
     if is_ok:
-        run_in_thread(parent=parent, target=paste_file, args=[path], lst=parent.threads)
+        run_in_thread(parent=parent, target=paste, args=[path], lst=parent.threads)
         return True
     return False
+
+
+def delete_items(parent, path_func: Callable) -> bool:
+    pass
+
+
+def rename_item(parent, path_func: Callable) -> bool:
+    pass
 
 
 def duplicate_item(source_path: str, target_path):
     pass
 
-
-def copy_path_in_thread(parent, source, target_path: str) -> bool:
-    pass

@@ -1,7 +1,7 @@
 from src.app.gui.action.common import (
     CommonAction,
     create_copy_items_to_clipboard_action,
-    create_paste_items_from_clipboard_action,
+    create_paste_items_from_clipboard_action, create_cut_items_to_clipboard_action,
 )
 from src.app.gui.action.file import (
     FileAction,
@@ -89,6 +89,11 @@ def init_folder_menu(main_form):
 
 def init_command_menu(main_form):
     command_menu = main_form.menuBar().addMenu("&Command")
+    # Cut
+    main_form.actions[CommonAction.CUT] = create_cut_items_to_clipboard_action(
+        parent_func=main_form.current_tree, path_func=main_form.path_func
+    )
+    command_menu.addAction(main_form.actions[CommonAction.CUT])
     # Copy
     main_form.actions[CommonAction.COPY] = create_copy_items_to_clipboard_action(
         parent_func=main_form.current_tree, path_func=main_form.path_func
@@ -99,8 +104,8 @@ def init_command_menu(main_form):
         parent_func=main_form.current_tree, path_func=main_form.path_func
     )
     command_menu.addAction(main_form.actions[CommonAction.PASTE])
-    # Delete
     # Rename
+    # Delete
     # Duplicate
     # Compare
 

@@ -80,13 +80,13 @@ class MainForm(QMainWindow):
 
     def path_func(self) -> Optional[List[str]]:
         current_tree = self.current_tree()
-        if current_tree:
-            paths = current_tree.get_selected_paths()
-            if len(paths) > 0:
-                # return [path for path in paths if QFileInfo(path).exists()]
-                return paths
-            QMessageBox.information(self, APP_NAME, "No path selected")
+        if not current_tree:
             return []
+        paths = current_tree.get_selected_paths()
+        if len(paths) > 0:
+            # return [path for path in paths if QFileInfo(path).exists()]
+            return paths
+        QMessageBox.information(self, APP_NAME, "No path selected")
         return []
 
     def closeEvent(self, event):
