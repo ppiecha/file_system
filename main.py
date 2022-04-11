@@ -20,4 +20,5 @@ if __name__ == "__main__":
     app.setApplicationName(app_model.name)
     app.setApplicationDisplayName(app_model.name)
     main_form.show()
+    main_form.current_tree().setFocus()
     sys.exit(app.exec_())

@@ -4,8 +4,12 @@ from typing import Callable
 from PySide2.QtGui import QIcon, QKeySequence, Qt
 from PySide2.QtWidgets import QAction, QMenu, QWidget
 
-from src.app.utils.path_util import copy_items_to_clipboard, paste_items_from_clipboard, cut_items_to_clipboard, \
-    delete_items
+from src.app.utils.path_util import (
+    copy_items_to_clipboard,
+    paste_items_from_clipboard,
+    cut_items_to_clipboard,
+    delete_items,
+)
 from src.app.utils.logger import get_console_logger
 
 logger = get_console_logger(name=__name__)

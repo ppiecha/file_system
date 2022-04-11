@@ -4,7 +4,7 @@ from typing import Callable
 from PySide2.QtCore import QFileInfo
 from PySide2.QtWidgets import QMessageBox, QInputDialog, QApplication
 
-from src.app.utils.path_util import logger, validate_single_path, extract_path
+from src.app.utils.path_util import logger, validate_single_path, extract_path, rename_if_exists
 from src.app.utils.constant import APP_NAME
 from src.app.utils.shell import new_file
 
@@ -21,21 +21,23 @@ def create_text_file(parent, file_name: str, text: str = None) -> bool:
 
 
 def create_file(parent, path_func: Callable, text: str = None) -> bool:
-    is_ok, path = validate_single_path(parent=parent, paths=path_func())
-    logger.debug(f"single path {path}")
+    is_ok, org_path = validate_single_path(parent=parent, paths=path_func())
+    logger.debug(f"single path {org_path}")
     if not is_ok:
         return False
     label = "New file name"
-    # info = QFileInfo(path if QFileInfo(path).isFile() else path if path.endswith(os.sep) else "".join([path, os.sep]))
-    path = extract_path(item=path)
-    input_text = QFileInfo(path).fileName() if QFileInfo(path).isFile() else "new.sql"
+    path = extract_path(item=org_path)
+    input_text = QFileInfo(org_path).fileName() if QFileInfo(org_path).isFile() else "new.sql"
     names, ok = QInputDialog.getText(parent, label, label, text=input_text)
     if ok and names:
         for name in names.split(";"):
-            file = QFileInfo(os.path.join(path, name))
+            new_file_path = os.path.join(path, name)
+            file_path = rename_if_exists(parent=parent, path=new_file_path)
+            file = QFileInfo(file_path)
             logger.info(f"new file {file.absoluteFilePath()}")
             if file.exists():
-                QMessageBox.information(parent, APP_NAME, f"File {name} already exists in {path}")
+                if file_path != new_file_path:
+                    QMessageBox.information(parent, APP_NAME, f"File {name} already exists in {path}")
                 return False
             file_name = file.absoluteFilePath()
             if text:

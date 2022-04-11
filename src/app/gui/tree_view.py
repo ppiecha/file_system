@@ -10,6 +10,7 @@ from PySide2.QtWidgets import (
     QMenu,
     QAbstractItemView,
     QFileDialog,
+    QApplication,
 )
 
 from src.app.gui.action.file import FileAction
@@ -19,7 +20,7 @@ from src.app.utils.path_util import path_caption
 from src.app.model.schema import Tree
 from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger
-from src.app.utils.shell import start_file
+from src.app.utils.shell import start_file, open_folder
 
 logger = get_console_logger(name=__name__)
 
@@ -63,8 +64,15 @@ class TreeView(QTreeView):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
 
         self.clicked.connect(self.on_clicked)
-        self.doubleClicked.connect(self.on_double_clicked)
+        self.activated.connect(self.on_activated)
         self.customContextMenuRequested.connect(self.open_menu)
+
+    # def focusOutEvent(self, event: QFocusEvent) -> None:
+    #     super().focusOutEvent(event)
+    #     logger.debug(f"focus lost {event.reason()}")
+    #
+    # def selectionChanged(self, selected: QItemSelection, deselected: QItemSelection) -> None:
+    #     pass
 
     def proxy_index(self, sys_index: QModelIndex) -> QModelIndex:
         if not sys_index.isValid():
@@ -208,11 +216,6 @@ class TreeView(QTreeView):
         path = self.sys_model.fileInfo(self.proxy.mapToSource(index)).absoluteFilePath()
         logger.debug(f"Tree selected path {path}")
 
-    def on_double_clicked(self, index):
-        path = QFileInfo(self.sys_model.fileInfo(self.proxy.mapToSource(index)).absoluteFilePath())
-        if path.isFile():
-            start_file(file_name=path.absoluteFilePath())
-
     def open_menu(self, position):
         paths = self.get_selected_paths()
         if paths is not None and len(paths) > 0:
@@ -256,6 +259,26 @@ class TreeView(QTreeView):
         files = [u.toLocalFile() for u in event.mimeData().urls()]
         for f in files:
             logger.debug(f"dropped file {f}")
+
+    def on_activated(self, index: QModelIndex):
+        item_path = self.sys_model.fileInfo(self.proxy.mapToSource(index)).absoluteFilePath()
+        logger.debug(f"activated item path {item_path}")
+        path = QFileInfo(item_path)
+        if path.isFile():
+            start_file(file_name=path.absoluteFilePath())
+            return
+        if path.isDir():
+            modifiers = QApplication.keyboardModifiers()
+            if modifiers == Qt.ControlModifier:
+                open_folder(dir_name=item_path)
+            else:
+                ind = self.proxy_index(sys_index=self.sys_model.index(item_path))
+                logger.debug(f"activated proxy index valid {ind.isValid()} children {self.proxy.rowCount(ind)}")
+                # if self.proxy.rowCount(ind) > 0:
+                if self.isExpanded(index):
+                    self.collapse(index)
+                else:
+                    self.expand(index)
 
 
 class SortFilterModel(QSortFilterProxyModel):

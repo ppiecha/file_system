@@ -37,7 +37,7 @@ class TreeBox(QTabWidget):
             self.open_tree_page(pinned_path=page.pinned_path, create=False, find_existing=False)
 
     def open_tree_page(
-            self, pinned_path: str = None, create: bool = True, find_existing: bool = False, go_to_page: bool = False
+        self, pinned_path: str = None, create: bool = True, find_existing: bool = False, go_to_page: bool = False
     ):
         if find_existing:
             page = self.page(path=pinned_path)
@@ -93,7 +93,7 @@ class TreeBox(QTabWidget):
     def close_all_pages(self):
         if self.count() > 0:
             for index in range(self.count() - 1, -1, -1):
-                self.close_page(index_func=lambda: index)
+                self.close_page(index_func=lambda x=index: x)
 
     def tabRemoved(self, index):
         logger.debug(f"Deleted widget with index {index}")

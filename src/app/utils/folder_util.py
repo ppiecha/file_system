@@ -4,7 +4,7 @@ from typing import Callable
 from PySide2.QtCore import QDir
 from PySide2.QtWidgets import QInputDialog, QMessageBox
 
-from src.app.utils.path_util import validate_single_path, logger
+from src.app.utils.path_util import validate_single_path, logger, rename_if_exists
 from src.app.utils.constant import APP_NAME
 
 
@@ -16,10 +16,13 @@ def create_folder(parent, path_func: Callable) -> bool:
     names, ok = QInputDialog.getText(parent, label, label, text=QDir(path).dirName())
     if ok and names:
         for name in names.split(";"):
-            directory = QDir(os.path.join(path, name))
+            new_dir_path = os.path.join(path, name)
+            dir_path = rename_if_exists(parent=parent, path=new_dir_path)
+            directory = QDir(dir_path)
             logger.info(f"new folder {directory.absolutePath()}")
             if directory.exists():
-                QMessageBox.information(parent, APP_NAME, f"Folder {path} already exists")
+                if dir_path != new_dir_path:
+                    QMessageBox.information(parent, APP_NAME, f"Folder {name} already exists in path {path}")
             else:
                 directory.mkpath(directory.absolutePath())
         return True

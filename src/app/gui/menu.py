@@ -1,7 +1,9 @@
 from src.app.gui.action.common import (
     CommonAction,
     create_copy_items_to_clipboard_action,
-    create_paste_items_from_clipboard_action, create_cut_items_to_clipboard_action, create_delete_items_action,
+    create_paste_items_from_clipboard_action,
+    create_cut_items_to_clipboard_action,
+    create_delete_items_action,
 )
 from src.app.gui.action.file import (
     FileAction,
@@ -18,8 +20,12 @@ from src.app.gui.action.folder import (
     create_open_folder_in_new_tab_action,
     create_open_console_action,
 )
-from src.app.gui.action.tab import create_new_tab_action, TabAction, create_close_tab_action, \
-    create_close_all_tabs_action
+from src.app.gui.action.tab import (
+    create_new_tab_action,
+    TabAction,
+    create_close_tab_action,
+    create_close_all_tabs_action,
+)
 
 
 def init_menu(main_form):
@@ -37,7 +43,9 @@ def init_file_menu(main_form):
     main_form.actions[FileAction.CREATE] = create_file_action(parent=main_form, path_func=main_form.path_func)
     file_menu.addAction(main_form.actions[FileAction.CREATE])
     # Open
-    main_form.actions[FileAction.OPEN] = create_open_file_action(parent_func=main_form.current_tree, path_func=main_form.path_func)
+    main_form.actions[FileAction.OPEN] = create_open_file_action(
+        parent_func=main_form.current_tree, path_func=main_form.path_func
+    )
     file_menu.addAction(main_form.actions[FileAction.OPEN])
     # Create from clipboard text
     main_form.actions[FileAction.CREATE_CLIP] = create_file_from_clipboard_text_action(

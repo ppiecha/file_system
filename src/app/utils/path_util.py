@@ -2,11 +2,11 @@ import os.path
 from typing import List, Callable, Tuple, Optional
 
 from PySide2.QtCore import QDir, QFileInfo, QMimeData, QUrl, Qt
-from PySide2.QtWidgets import QMessageBox, QApplication
+from PySide2.QtWidgets import QMessageBox, QApplication, QInputDialog
 
 from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger
-from src.app.utils.shell import paste, copy_file, copy, delete_file, cut, delete
+from src.app.utils.shell import paste, cut, delete, rename
 from src.app.utils.thread import run_in_thread
 
 logger = get_console_logger(name=__name__)
@@ -88,6 +88,35 @@ def validate_single_path(parent, paths: List[str]) -> Tuple[bool, Optional[str]]
     return True, paths[0]
 
 
+def rename_if_exists(parent, path: str, user_is_aware: bool = False) -> str:
+    item = QFileInfo(path)
+    item_name = file_name(path=path) if item.isFile() else folder_name(path=path)
+    parent_item_path = parent_path(path=path)
+    item_type_name = "File" if item.isFile() else "Folder"
+    while item.exists():
+        resp = QMessageBox.Yes
+        if not user_is_aware:
+            resp = QMessageBox.question(
+                parent,
+                APP_NAME,
+                f"{item_type_name} <b> {item_name} </b> already exists in {parent_item_path} <br> Rename?",
+            )
+        print(resp)
+        if resp == QMessageBox.Yes:
+            label = f"New {item_type_name} name"
+            name, ok = QInputDialog.getText(parent, label, label, text=item_name)
+            if ok:
+                if name:
+                    new_path = os.path.join(parent_item_path, name)
+                    if not QFileInfo(new_path).exists():
+                        return new_path
+                else:
+                    QMessageBox.information(parent, APP_NAME, "Name cannot be empty")
+        else:
+            return path
+    return path
+
+
 def cut_items_to_clipboard(parent, path_func: Callable) -> bool:
     is_ok, path = validate_single_path(parent=parent, paths=path_func())
     path = extract_path(item=path)
@@ -124,9 +153,12 @@ def delete_items(parent, path_func: Callable) -> bool:
 
 
 def rename_item(parent, path_func: Callable) -> bool:
-    pass
+    is_ok, path = validate_single_path(parent=parent, paths=path_func())
+    if is_ok:
+        new_path = rename_if_exists(parent=parent, path=path, user_is_aware=True)
+        run_in_thread(parent=parent, target=rename, args=[path, new_path, False], lst=parent.threads)
+    return True
 
 
 def duplicate_item(source_path: str, target_path):
     pass
-
