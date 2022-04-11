@@ -9,6 +9,7 @@ from src.app.utils.path_util import (
     paste_items_from_clipboard,
     cut_items_to_clipboard,
     delete_items,
+    rename_item,
 )
 from src.app.utils.logger import get_console_logger
 
@@ -98,4 +99,14 @@ def create_delete_items_action(parent_func: Callable, path_func: Callable) -> Ac
         shortcut=[QKeySequence(Qt.Key_Delete), QKeySequence(Qt.CTRL + Qt.Key_Delete)],
         slot=lambda: delete_items(parent=parent_func().main_form, path_func=path_func),
         tip="Deletes selected items",
+    )
+
+
+def create_rename_action(parent_func: Callable, path_func: Callable) -> Action:
+    return Action(
+        parent=parent_func().main_form,
+        caption=CommonAction.RENAME.value,
+        shortcut=QKeySequence(Qt.Key_F2),
+        slot=lambda: rename_item(parent=parent_func().main_form, path_func=path_func),
+        tip="Renames item",
     )

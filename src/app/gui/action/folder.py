@@ -63,7 +63,7 @@ def create_open_folder_externally_action(parent_func: Callable, path_func: Calla
     return Action(
         parent=parent_func().main_form,
         caption=FolderAction.OPEN_EXT.value,
-        shortcut=QKeySequence(Qt.CTRL + Qt.Key_E),
+        shortcut=QKeySequence(Qt.CTRL + Qt.Key_Enter),
         slot=open_paths,
         tip="Opens selected folder in external browser",
     )
@@ -92,7 +92,7 @@ def create_open_console_action(parent_func: Callable, path_func: Callable) -> Ac
     return Action(
         parent=parent_func().main_form,
         caption=FolderAction.OPEN_CONSOLE.value,
-        shortcut=None,
+        shortcut=QKeySequence(Qt.CTRL + Qt.Key_P),
         slot=open_paths,
         tip="Open console in selected locations",
     )
