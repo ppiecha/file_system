@@ -6,26 +6,26 @@ from PySide2.QtWidgets import QMessageBox, QApplication, QInputDialog
 
 from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger
-from src.app.utils.shell import paste, cut, delete, rename
+from src.app.utils.shell import paste, cut, delete, rename, copy, copy_file
 from src.app.utils.thread import run_in_thread
 
 logger = get_console_logger(name=__name__)
-PathList = List[str]
+Paths = List[str]
 
 
-def is_single(paths: PathList) -> bool:
+def is_single(paths: Paths) -> bool:
     return len(paths) == 1
 
 
-def has_common_parent(paths: PathList) -> bool:
+def has_common_parent(paths: Paths) -> bool:
     pass
 
 
-def all_folders(paths: PathList) -> bool:
+def all_folders(paths: Paths) -> bool:
     return all((QFileInfo(path).isDir() for path in paths))
 
 
-def all_files(paths: PathList) -> bool:
+def all_files(paths: Paths) -> bool:
     return all((QFileInfo(path).isFile() for path in paths))
 
 
@@ -41,11 +41,11 @@ def extract_path(item: str) -> str:
     # info = QFileInfo(path if QFileInfo(path).isFile() else path if path.endswith(os.sep) else "".join([path, os.sep]))
 
 
-def only_folders(paths: PathList) -> PathList:
+def only_folders(paths: Paths) -> Paths:
     return [extract_path(item=path) for path in paths]
 
 
-def only_files(paths: PathList) -> PathList:
+def only_files(paths: Paths) -> Paths:
     return [path for path in paths if QFileInfo(path).isFile()]
 
 
@@ -88,7 +88,7 @@ def validate_single_path(parent, paths: List[str]) -> Tuple[bool, Optional[str]]
     return True, paths[0]
 
 
-def rename_if_exists(parent, path: str, user_is_aware: bool = False) -> str:
+def rename_if_exists(parent, path: str, user_is_aware: bool = False) -> Optional[str]:
     item = QFileInfo(path)
     item_name = file_name(path=path) if item.isFile() else folder_name(path=path)
     parent_item_path = parent_path(path=path)
@@ -99,7 +99,7 @@ def rename_if_exists(parent, path: str, user_is_aware: bool = False) -> str:
             resp = QMessageBox.question(
                 parent,
                 APP_NAME,
-                f"{item_type_name} <b> {item_name} </b> already exists in {parent_item_path} <br> Rename?",
+                f"{item_type_name} <b> {item_name} </b> already exists in {parent_item_path} <br> Use another name?",
             )
         print(resp)
         if resp == QMessageBox.Yes:
@@ -112,6 +112,8 @@ def rename_if_exists(parent, path: str, user_is_aware: bool = False) -> str:
                         return new_path
                 else:
                     QMessageBox.information(parent, APP_NAME, "Name cannot be empty")
+            else:
+                return None
         else:
             return path
     return path
@@ -156,9 +158,26 @@ def rename_item(parent, path_func: Callable) -> bool:
     is_ok, path = validate_single_path(parent=parent, paths=path_func())
     if is_ok:
         new_path = rename_if_exists(parent=parent, path=path, user_is_aware=True)
+        if not new_path:
+            return False
         run_in_thread(parent=parent, target=rename, args=[path, new_path, False], lst=parent.threads)
     return True
 
 
-def duplicate_item(source_path: str, target_path):
-    pass
+def duplicate_item(parent, path_func: Callable) -> bool:
+    is_ok, path = validate_single_path(parent=parent, paths=path_func())
+    if is_ok:
+        new_path = rename_if_exists(parent=parent, path=path, user_is_aware=True)
+        if not new_path:
+            return False
+        info = QFileInfo(path)
+        if info.isFile():
+            run_in_thread(parent=parent, target=copy_file, args=[path, new_path, False], lst=parent.threads)
+        else:
+            run_in_thread(
+                parent=parent,
+                target=copy,
+                args=[os.path.join(path, "*.*"), new_path, False],
+                lst=parent.threads,
+            )
+    return True

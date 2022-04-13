@@ -5,6 +5,7 @@ from src.app.gui.action.common import (
     create_cut_items_to_clipboard_action,
     create_delete_items_action,
     create_rename_action,
+    create_duplicate_action,
 )
 from src.app.gui.action.file import (
     FileAction,
@@ -120,6 +121,10 @@ def init_command_menu(main_form):
     )
     command_menu.addAction(main_form.actions[CommonAction.RENAME])
     # Duplicate
+    main_form.actions[CommonAction.DUPLICATE] = create_duplicate_action(
+        parent_func=main_form.current_tree, path_func=main_form.path_func
+    )
+    command_menu.addAction(main_form.actions[CommonAction.DUPLICATE])
     # Compare
     # Delete
     command_menu.addSeparator()

@@ -33,6 +33,8 @@ def create_file(parent, path_func: Callable, text: str = None) -> bool:
         for name in names.split(";"):
             new_file_path = os.path.join(path, name)
             file_path = rename_if_exists(parent=parent, path=new_file_path)
+            if not file_path:
+                return False
             file = QFileInfo(file_path)
             logger.info(f"new file {file.absoluteFilePath()}")
             if file.exists():

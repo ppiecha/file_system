@@ -10,6 +10,7 @@ from src.app.utils.path_util import (
     cut_items_to_clipboard,
     delete_items,
     rename_item,
+    duplicate_item,
 )
 from src.app.utils.logger import get_console_logger
 
@@ -109,4 +110,14 @@ def create_rename_action(parent_func: Callable, path_func: Callable) -> Action:
         shortcut=QKeySequence(Qt.Key_F2),
         slot=lambda: rename_item(parent=parent_func().main_form, path_func=path_func),
         tip="Renames item",
+    )
+
+
+def create_duplicate_action(parent_func: Callable, path_func: Callable) -> Action:
+    return Action(
+        parent=parent_func().main_form,
+        caption=CommonAction.DUPLICATE.value,
+        shortcut=QKeySequence(Qt.Key_F5),
+        slot=lambda: duplicate_item(parent=parent_func().main_form, path_func=path_func),
+        tip="Duplicate item",
     )

@@ -3,13 +3,14 @@ from functools import partial
 from typing import List, Callable
 from enum import Enum, auto
 
-from PySide2.QtCore import QPoint
-from PySide2.QtGui import Qt
-from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem, QAbstractItemView, QMenu, QStyle
+from PySide2.QtCore import QPoint, QEvent
+from PySide2.QtGui import Qt, QFocusEvent
+from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem, QAbstractItemView, QMenu, QStyle, QMessageBox
 
 from src.app.gui.action.common import Action
 from src.app.gui.dialog import FavoriteDlg
 from src.app.model.favorite import Favorite, Favorites
+from src.app.utils.constant import APP_NAME
 from src.app.utils.path_util import all_folders, path_caption
 from src.app.model.schema import App
 from src.app.utils.logger import get_console_logger
@@ -45,6 +46,25 @@ class FavoriteTree(QTreeWidget):
         self.itemExpanded.connect(self.expanded)
         self.itemCollapsed.connect(self.collapsed)
         self.itemSelectionChanged.connect(self.selection_changed)
+
+    def remove_dead_entries(self):
+        removed = self.favorites.remove_dead_entries()
+        if removed:
+            path_lst = "\n".join(removed)
+            QMessageBox().information(
+                self, APP_NAME, f"The following paths are not longer valid and have been removed \n{path_lst}"
+            )
+            self.recreate()
+
+    def focusInEvent(self, event: QFocusEvent) -> None:
+        super().focusInEvent(event)
+        logger.debug("focusInEvent")
+        self.remove_dead_entries()
+
+    def enterEvent(self, event: QEvent) -> None:
+        super().enterEvent(event)
+        logger.debug("enterEvent")
+        self.remove_dead_entries()
 
     # pylint: disable=unused-argument)
     def on_item_activated(self, item: QTreeWidgetItem, column: int):

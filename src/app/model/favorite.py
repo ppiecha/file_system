@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from typing import List, Optional
 
+from PySide2.QtCore import QFileInfo
 from pydantic import BaseModel
 
 from src.app.utils.logger import get_console_logger
+from src.app.utils.path_util import Paths
 
 logger = get_console_logger(name=__name__)
 
@@ -57,3 +59,27 @@ class Favorites(BaseModel):
         self.items = sorted(self.items, key=lambda i: i.name.lower())
         for item in self.items:
             sort_child(current_favorite=item)
+
+    # def __iter__(self):
+    #     return self
+
+    def get_flatten_items(self):
+        def add_child(parent: Favorite, items: List[Favorite]):
+            items.append(parent)
+            for child in parent.children:
+                add_child(parent=child, items=items)
+
+        favorites = []
+        for item in self.items:
+            add_child(parent=item, items=favorites)
+
+        return favorites
+
+    def remove_dead_entries(self) -> Paths:
+        deleted = []
+        for favorite in self.get_flatten_items():
+            info = QFileInfo(favorite.path)
+            if not info.exists():
+                deleted.append(favorite.path)
+                self.delete_item(current_favorite=favorite)
+        return deleted

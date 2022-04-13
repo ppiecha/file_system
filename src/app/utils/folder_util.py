@@ -18,6 +18,8 @@ def create_folder(parent, path_func: Callable) -> bool:
         for name in names.split(";"):
             new_dir_path = os.path.join(path, name)
             dir_path = rename_if_exists(parent=parent, path=new_dir_path)
+            if not dir_path:
+                return False
             directory = QDir(dir_path)
             logger.info(f"new folder {directory.absolutePath()}")
             if directory.exists():

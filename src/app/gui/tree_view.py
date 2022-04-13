@@ -13,6 +13,7 @@ from PySide2.QtWidgets import (
     QApplication,
 )
 
+from src.app.gui.action.common import CommonAction
 from src.app.gui.action.file import FileAction
 from src.app.gui.action.folder import FolderAction
 from src.app.utils import path_util
@@ -228,13 +229,17 @@ class TreeView(QTreeView):
                     menu.addAction(self.main_form.actions[FolderAction.PIN])
                     menu.addAction(self.main_form.actions[FolderAction.UNPIN])
                     menu.addSeparator()
-                    menu.addAction(self.main_form.actions[FolderAction.OPEN_CONSOLE])
+                    menu.addAction(self.main_form.actions[CommonAction.RENAME])
+                    menu.addAction(self.main_form.actions[CommonAction.DUPLICATE])
                 menu.addAction(self.main_form.actions[FolderAction.OPEN_EXT])
+                menu.addAction(self.main_form.actions[FolderAction.OPEN_TAB])
+                menu.addAction(self.main_form.actions[FolderAction.OPEN_CONSOLE])
             elif path_util.all_files(paths=paths):
                 menu.addAction(self.main_form.actions[FileAction.CREATE])
                 menu.addAction(self.main_form.actions[FileAction.OPEN])
-            else:
-                pass
+            menu.addSeparator()
+            menu.addAction(self.main_form.actions[CommonAction.RENAME])
+            menu.addAction(self.main_form.actions[CommonAction.DUPLICATE])
             menu.exec_(self.viewport().mapToGlobal(position))
 
     def dragEnterEvent(self, event):
