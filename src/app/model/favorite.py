@@ -38,11 +38,22 @@ class Favorites(BaseModel):
         current_favorite.path = new_favorite.path
 
     def delete_item(self, current_favorite: Favorite, parent_favorite: Favorite = None, new_favorite: Favorite = None):
-        def delete_child(current_favorite: Favorite):
-            current_favorite.children = [child for child in current_favorite.children if child is not current_favorite]
-            for child in current_favorite.children:
-                delete_child(current_favorite=child)
+        def delete_child(current_item: Favorite, to_delete: Favorite):
+            current_item.children = [child for child in current_item.children if child is not to_delete]
+            for child in current_item.children:
+                delete_child(current_item=child, to_delete=to_delete)
 
         self.items = [item for item in self.items if item is not current_favorite]
+        logger.debug(f"top level state {self.items}")
         for item in self.items:
-            delete_child(current_favorite=item)
+            delete_child(current_item=item, to_delete=current_favorite)
+
+    def sort(self):
+        def sort_child(current_favorite: Favorite):
+            current_favorite.children = sorted(current_favorite.children, key=lambda i: i.name.lower())
+            for child in current_favorite.children:
+                sort_child(current_favorite=child)
+
+        self.items = sorted(self.items, key=lambda i: i.name.lower())
+        for item in self.items:
+            sort_child(current_favorite=item)

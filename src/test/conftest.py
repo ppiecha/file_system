@@ -3,12 +3,12 @@ import pytest
 from src.app.model.favorite import Favorite, Favorites
 
 
-@pytest.fixture(scope="session", name="favorite1")
+@pytest.fixture(name="favorite1")
 def fixture_favorite1() -> Favorite:
     return Favorite(name="test_favorite1", description="test_favorite1", path="c:\\")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def favorite2() -> Favorite:
     return Favorite(name="test_favorite2", description="test_favorite2", path="d:\\")
 

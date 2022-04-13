@@ -76,6 +76,7 @@ class FavoriteTree(QTreeWidget):
 
     def recreate(self):
         self.clear()
+        self.favorites.sort()
         self.insertTopLevelItems(0, self.create_items(self.favorites))
 
     def create_items(self, favorites: Favorites) -> List[QTreeWidgetItem]:
