@@ -78,6 +78,10 @@ def folder_name(path: str) -> str:
     return QDir(path).dirName()
 
 
+def join(items: List[str]) -> str:
+    return "/".join(items)
+
+
 def validate_single_path(parent, paths: List[str]) -> Tuple[bool, Optional[str]]:
     if len(paths) == 0:
         # QMessageBox.information(parent, APP_NAME, "No path selected")

@@ -22,6 +22,12 @@ from src.app.gui.action.folder import (
     create_open_folder_in_new_tab_action,
     create_open_console_action,
 )
+from src.app.gui.action.selection import (
+    SelectionAction,
+    create_copy_path_action,
+    create_copy_path_with_name_action,
+    create_copy_name_action,
+)
 from src.app.gui.action.tab import (
     create_new_tab_action,
     TabAction,
@@ -136,8 +142,21 @@ def init_command_menu(main_form):
 
 def init_selection_menu(main_form):
     selection_menu = main_form.menuBar().addMenu("&Selection")
-    # Copy full path
+    # Copy path
+    main_form.actions[SelectionAction.COPY_PATH] = create_copy_path_action(
+        parent_func=main_form.current_tree, path_func=main_form.path_func
+    )
+    selection_menu.addAction(main_form.actions[SelectionAction.COPY_PATH])
+    # Copy path with name
+    main_form.actions[SelectionAction.COPY_PATH_WITH_NAME] = create_copy_path_with_name_action(
+        parent_func=main_form.current_tree, path_func=main_form.path_func
+    )
+    selection_menu.addAction(main_form.actions[SelectionAction.COPY_PATH_WITH_NAME])
     # Copy name
+    main_form.actions[SelectionAction.COPY_NAME] = create_copy_name_action(
+        parent_func=main_form.current_tree, path_func=main_form.path_func
+    )
+    selection_menu.addAction(main_form.actions[SelectionAction.COPY_NAME])
     #  -----------
     # Select children/siblings
     # Invert selection
