@@ -11,6 +11,7 @@ from src.app.utils.path_util import (
     delete_items,
     rename_item,
     duplicate_item,
+    view_item,
 )
 from src.app.utils.logger import get_console_logger
 
@@ -25,6 +26,8 @@ class CommonAction(str, Enum):
     PASTE = "Paste"
     DELETE = "Delete"
     RENAME = "Rename"
+    VIEW = "View"
+    EDIT = "Edit"
     DUPLICATE = "Duplicate"
     COMPARE = "Compare/Diff"
 
@@ -119,5 +122,15 @@ def create_duplicate_action(parent_func: Callable, path_func: Callable) -> Actio
         caption=CommonAction.DUPLICATE.value,
         shortcut=QKeySequence(Qt.Key_F5),
         slot=lambda: duplicate_item(parent=parent_func().main_form, path_func=path_func),
+        tip="Duplicate item",
+    )
+
+
+def create_view_action(parent_func: Callable, path_func: Callable) -> Action:
+    return Action(
+        parent=parent_func().main_form,
+        caption=CommonAction.VIEW.value,
+        shortcut=QKeySequence(Qt.Key_F3),
+        slot=lambda: view_item(parent=parent_func().main_form, path_func=path_func),
         tip="Duplicate item",
     )

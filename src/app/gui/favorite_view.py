@@ -8,7 +8,7 @@ from PySide2.QtGui import Qt, QFocusEvent
 from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem, QAbstractItemView, QMenu, QStyle, QMessageBox
 
 from src.app.gui.action.common import Action
-from src.app.gui.dialog import FavoriteDlg
+from src.app.gui.dialog.favorite_edit import FavoriteDialog
 from src.app.model.favorite import Favorite, Favorites
 from src.app.utils.constant import APP_NAME
 from src.app.utils.path_util import all_folders, path_caption
@@ -191,7 +191,7 @@ class FavoriteTree(QTreeWidget):
             current_favorite = self.favorite_tree.get_favorite(current_item) if current_item else None
             parent_favorite = self.favorite_tree.get_favorite(parent_item) if parent_item else None
             if mode in (EditMode.CREATE, EditMode.EDIT):
-                favorite = FavoriteDlg.get_favorite(
+                favorite = FavoriteDialog.get_favorite(
                     parent=self.favorite_tree, favorite=current_favorite if mode == EditMode.EDIT else None
                 )
             if favorite or mode == EditMode.DELETE:

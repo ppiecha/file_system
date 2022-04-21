@@ -6,15 +6,14 @@ from PySide2.QtCore import QFileInfo
 from pydantic import BaseModel
 
 from src.app.utils.logger import get_console_logger
-from src.app.utils.path_util import Paths
 
 logger = get_console_logger(name=__name__)
 
 
 class Favorite(BaseModel):
-    name: str
+    name: str = ""
     description: str = None
-    path: str = None
+    path: str = ""
     expanded: bool = False
     children: List[Favorite] = []
 
@@ -75,7 +74,7 @@ class Favorites(BaseModel):
 
         return favorites
 
-    def remove_dead_entries(self) -> Paths:
+    def remove_dead_entries(self) -> List[str]:
         deleted = []
         for favorite in self.get_flatten_items():
             info = QFileInfo(favorite.path)

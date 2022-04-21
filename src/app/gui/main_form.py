@@ -50,23 +50,37 @@ class MainForm(QMainWindow):
         box.exec_()
         logger.error(message)
 
+    def set_geometry_and_show(self):
+        state: WindowState = self.app.win_state
+        self.setGeometry(state.x, state.y, state.width, state.height)
+        if state.on_top:
+            self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        else:
+            self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
+        if state.is_maximized:
+            self.showMaximized()
+        else:
+            self.show()
+
     def init_ui(self):
         self.setWindowTitle(self.app.name)
         self.setWindowIcon(QIcon("file_system.ico"))
         if not self.app.pages:
             self.tree_box.open_root_page()
-        state: WindowState = self.app.win_state
-        if state:
-            self.setGeometry(state.x, state.y, state.width, state.height)
-            if state.state:
-                self.setWindowState(state.state)
-            if state.on_top:
-                self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
-            else:
-                self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
-            if state.splitter_sizes:
-                self.splitter.setSizes(state.splitter_sizes)
+        if self.app.win_state and self.app.win_state.splitter_sizes:
+            self.splitter.setSizes(self.app.win_state.splitter_sizes)
         self.splitter.splitterMoved.connect(self.on_splitter_moved)
+
+    def closeEvent(self, event):
+        if not self.isMaximized():
+            self.app.win_state.x = self.pos().x()
+            self.app.win_state.y = self.pos().y()
+            self.app.win_state.width = self.size().width()
+            self.app.win_state.height = self.size().height()
+        self.app.win_state.is_maximized = self.isMaximized()
+        self.app.win_state.on_top = (self.windowFlags() & ~Qt.WindowStaysOnTopHint) == Qt.WindowStaysOnTopHint
+        self.app.win_state.splitter_sizes = self.splitter.sizes()
+        json_to_file(json_dict=self.app.dict(), file_name=CONFIG_FILE)
 
     def on_splitter_moved(self, pos, index):
         self.app.win_state.splitter_sizes = self.splitter.sizes()
@@ -88,15 +102,3 @@ class MainForm(QMainWindow):
             return paths
         QMessageBox.information(self, APP_NAME, "No path selected")
         return []
-
-    def closeEvent(self, event):
-        self.app.win_state = WindowState(
-            x=self.pos().x(),
-            y=self.pos().y(),
-            width=self.size().width(),
-            height=self.size().height(),
-            state=self.windowState(),
-            on_top=(self.windowFlags() & ~Qt.WindowStaysOnTopHint) == Qt.WindowStaysOnTopHint,
-            splitter_sizes=self.splitter.sizes(),
-        )
-        json_to_file(json_dict=self.app.dict(), file_name=CONFIG_FILE)

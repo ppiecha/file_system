@@ -26,10 +26,22 @@ class WindowState(BaseModel):
     y: int = 200
     width: int = 500
     height: int = 300
-    state: int = None
+    is_maximized: bool = False
     on_top: bool = False
     splitter_sizes: Optional[List[int]] = None
     show_favorites: bool = True
+
+
+class SysPath(BaseModel):
+    path: str = None
+    view: bool = True
+    edit: bool = True
+
+
+class SysPaths(BaseModel):
+    notepad: SysPath = SysPath()
+    vs_code: SysPath = SysPath()
+    chrome: SysPath = SysPath()
 
 
 class App(BaseModel):
@@ -37,6 +49,7 @@ class App(BaseModel):
     pages: List[Tree] = []
     favorites: Favorites = Favorites()
     win_state: WindowState = WindowState()
+    sys_paths: Optional[SysPaths] = SysPaths()
 
     def add_page(self, pinned_path: str = None) -> Tree:
         tree = Tree(pinned_path=pinned_path)

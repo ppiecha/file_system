@@ -19,6 +19,6 @@ if __name__ == "__main__":
     main_form = MainForm(app=app_model)
     app.setApplicationName(app_model.name)
     app.setApplicationDisplayName(app_model.name)
-    main_form.show()
+    main_form.set_geometry_and_show()
     main_form.current_tree().setFocus()
     sys.exit(app.exec_())

@@ -1,9 +1,11 @@
 import os.path
+import subprocess
 from typing import List, Callable, Tuple, Optional
 
 from PySide2.QtCore import QDir, QFileInfo, QMimeData, QUrl, Qt
 from PySide2.QtWidgets import QMessageBox, QApplication, QInputDialog
 
+from src.app.gui.dialog.sys_path_edit import SysPathDialog
 from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger
 from src.app.utils.shell import paste, cut, delete, rename, copy, copy_file
@@ -80,6 +82,12 @@ def folder_name(path: str) -> str:
 
 def join(items: List[str]) -> str:
     return "/".join(items)
+
+
+def quote_path(text: str) -> str:
+    if QFileInfo(text).exists():
+        return f'"{text}"'
+    return text
 
 
 def validate_single_path(parent, paths: List[str]) -> Tuple[bool, Optional[str]]:
@@ -185,3 +193,22 @@ def duplicate_item(parent, path_func: Callable) -> bool:
                 lst=parent.threads,
             )
     return True
+
+
+# pylint: disable=consider-using-with
+def exec_item(sys_path: str, args: List[str]):
+    sys_path = quote_path(text=sys_path)
+    args = [quote_path(text=arg) for arg in args]
+    cmd = [sys_path] + args
+    cmd = " ".join(cmd)
+    logger.debug(f"cmd {cmd}")
+    subprocess.Popen(cmd)
+
+
+def view_item(parent, path_func: Callable) -> bool:
+    if not parent.app.sys_paths.vs_code.path:
+        SysPathDialog.exec(parent=parent, sys_paths=parent.app.sys_paths.vs_code.path)
+    if parent.app.sys_paths.vs_code.path:
+        exec_item(sys_path=parent.app.sys_paths.vs_code.path, args=["-n"] + path_func())
+        return True
+    return False

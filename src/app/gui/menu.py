@@ -6,6 +6,7 @@ from src.app.gui.action.common import (
     create_delete_items_action,
     create_rename_action,
     create_duplicate_action,
+    create_view_action,
 )
 from src.app.gui.action.file import (
     FileAction,
@@ -126,6 +127,11 @@ def init_command_menu(main_form):
         parent_func=main_form.current_tree, path_func=main_form.path_func
     )
     command_menu.addAction(main_form.actions[CommonAction.RENAME])
+    # View
+    main_form.actions[CommonAction.VIEW] = create_view_action(
+        parent_func=main_form.current_tree, path_func=main_form.path_func
+    )
+    command_menu.addAction(main_form.actions[CommonAction.VIEW])
     # Duplicate
     main_form.actions[CommonAction.DUPLICATE] = create_duplicate_action(
         parent_func=main_form.current_tree, path_func=main_form.path_func
