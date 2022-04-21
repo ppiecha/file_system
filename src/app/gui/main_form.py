@@ -3,7 +3,7 @@ import traceback
 from typing import Optional, List
 
 from PySide2.QtGui import QIcon, Qt
-from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox
+from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox, QApplication, QStyle
 
 from src.app.gui.favorite_view import FavoriteTree
 from src.app.gui.menu import init_menu
@@ -50,9 +50,28 @@ class MainForm(QMainWindow):
         box.exec_()
         logger.error(message)
 
-    def set_geometry_and_show(self):
+    def set_geometry_and_show(self, app: QApplication):
         state: WindowState = self.app.win_state
-        self.setGeometry(state.x, state.y, state.width, state.height)
+        new_state: WindowState = self.app.win_state
+        # title_bar_height = app.style().pixelMetric(QStyle.PM_TitleBarHeight)
+        # frame_width = app.style().pixelMetric(QStyle.PM_DefaultFrameWidth)
+        # title_bar_height = title_bar_height + frame_width
+        screen_rect = app.desktop().availableGeometry(self)
+        if state.x < screen_rect.x():
+            new_state.x = screen_rect.x()
+        if state.y < screen_rect.y():
+            new_state.y = screen_rect.y()
+        if state.width > screen_rect.width():
+            new_state.width = screen_rect.width() // 2
+        if new_state.x + state.width > screen_rect.width():
+            new_state.x = max(new_state.x - new_state.width, screen_rect.x())
+        if state.height > screen_rect.height():
+            new_state.height = screen_rect.height() // 2
+        if new_state.y + state.height > screen_rect.height():
+            new_state.y = max(new_state.y - new_state.height, screen_rect.y())
+        logger.debug(f"available geo {screen_rect} {new_state}")
+        self.resize(new_state.width, new_state.height)
+        self.move(new_state.x, new_state.y)
         if state.on_top:
             self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         else:
@@ -73,8 +92,8 @@ class MainForm(QMainWindow):
 
     def closeEvent(self, event):
         if not self.isMaximized():
-            self.app.win_state.x = self.pos().x()
-            self.app.win_state.y = self.pos().y()
+            self.app.win_state.x = self.frameGeometry().x()
+            self.app.win_state.y = self.frameGeometry().y()
             self.app.win_state.width = self.size().width()
             self.app.win_state.height = self.size().height()
         self.app.win_state.is_maximized = self.isMaximized()
