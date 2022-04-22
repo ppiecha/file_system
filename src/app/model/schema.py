@@ -1,14 +1,22 @@
 from typing import Optional, List
 
+from PySide2.QtCore import QDir
 from pydantic import BaseModel
 
 from src.app.model.favorite import Favorites
-from src.app.utils.constant import APP_NAME
+from src.app.utils.constant import APP_NAME, USER_NAME
 from src.app.utils.logger import get_console_logger
-
-CONFIG_FILE = "file_system.json"
+from src.app.utils.shell import join, get_app_data_path
 
 logger = get_console_logger(name=__name__)
+
+
+def get_config_file() -> str:
+    path = join(items=[get_app_data_path(), USER_NAME, APP_NAME])
+    app_data = QDir(path)
+    if not app_data.exists():
+        app_data.mkpath(path)
+    return join(items=[path, "file_system.json"])
 
 
 class Tree(BaseModel):

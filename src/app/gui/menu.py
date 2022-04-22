@@ -7,6 +7,8 @@ from src.app.gui.action.common import (
     create_rename_action,
     create_duplicate_action,
     create_view_action,
+    create_go_to_action,
+    create_go_to_repo_action,
 )
 from src.app.gui.action.file import (
     FileAction,
@@ -106,7 +108,18 @@ def init_folder_menu(main_form):
 
 def init_command_menu(main_form):
     command_menu = main_form.menuBar().addMenu("&Command")
+    # Go to
+    main_form.actions[CommonAction.GO_TO] = create_go_to_action(
+        parent_func=main_form.current_tree, path_func=main_form.path_func
+    )
+    command_menu.addAction(main_form.actions[CommonAction.GO_TO])
+    # Go to repo
+    main_form.actions[CommonAction.GO_TO_REPO] = create_go_to_repo_action(
+        parent_func=main_form.current_tree, path_func=main_form.path_func
+    )
+    command_menu.addAction(main_form.actions[CommonAction.GO_TO_REPO])
     # Cut
+    command_menu.addSeparator()
     main_form.actions[CommonAction.CUT] = create_cut_items_to_clipboard_action(
         parent_func=main_form.current_tree, path_func=main_form.path_func
     )

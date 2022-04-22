@@ -33,7 +33,7 @@ class TreeColumn(int, Enum):
 
 
 class TreeView(QTreeView):
-    def __init__(self, parent, tree_model: Tree):
+    def __init__(self, parent, tree_model: Tree, selection: List[str] = None):
         super().__init__(parent)
         self.tree_box = parent
         self.main_form = self.tree_box.parent().parent()
@@ -48,6 +48,11 @@ class TreeView(QTreeView):
         self.tree_model = tree_model
         self.filtered_indexes = []
         self.init_ui()
+        if selection:
+            if len(selection) == 1:
+                self.current_path = selection[0]
+            else:
+                raise RuntimeError("Only one selection supported")
 
     def init_ui(self):
         self.hide_header(hide=self.tree_model.hide_header)

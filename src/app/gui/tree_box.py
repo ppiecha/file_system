@@ -37,25 +37,34 @@ class TreeBox(QTabWidget):
             self.open_tree_page(pinned_path=page.pinned_path, create=False, find_existing=False)
 
     def open_tree_page(
-        self, pinned_path: str = None, create: bool = True, find_existing: bool = False, go_to_page: bool = False
+        self,
+        pinned_path: str = None,
+        create: bool = True,
+        find_existing: bool = False,
+        go_to_page: bool = False,
+        selection: List[str] = None,
     ):
         if find_existing:
             page = self.page(path=pinned_path)
             if page:
                 self.setCurrentIndex(self.indexOf(page))
+                if selection and len(selection) == 1:
+                    current_tree = self.current_tree()
+                    if current_tree:
+                        current_tree.current_path = selection[0]
                 return
         if create:
             tree_model = self.app_model.add_page(pinned_path=pinned_path)
         else:
             tree_model = self.app_model.get_page_by_pinned_path(pinned_path=pinned_path)
             tree_model = tree_model or Tree(pinned_path=pinned_path)
-        self.add_page(tree_model=tree_model, go_to_page=go_to_page)
+        self.add_page(tree_model=tree_model, go_to_page=go_to_page, selection=selection)
 
     def open_root_page(self):
         self.open_tree_page(pinned_path=None, find_existing=False)
 
-    def add_page(self, tree_model: Tree, go_to_page: bool = False):
-        page = TreeView(parent=self, tree_model=tree_model)
+    def add_page(self, tree_model: Tree, go_to_page: bool = False, selection: List[str] = None):
+        page = TreeView(parent=self, tree_model=tree_model, selection=selection)
         dir_name = path_caption(path=tree_model.pinned_path) if tree_model.pinned_path else "/"
         self.addTab(page, dir_name)
         if go_to_page:

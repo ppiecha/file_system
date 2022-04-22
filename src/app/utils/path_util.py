@@ -80,10 +80,6 @@ def folder_name(path: str) -> str:
     return QDir(path).dirName()
 
 
-def join(items: List[str]) -> str:
-    return "/".join(items)
-
-
 def quote_path(text: str) -> str:
     if QFileInfo(text).exists():
         return f'"{text}"'
@@ -192,7 +188,23 @@ def duplicate_item(parent, path_func: Callable) -> bool:
                 args=[os.path.join(path, "*.*"), new_path, False],
                 lst=parent.threads,
             )
-    return True
+        return True
+    return False
+
+
+def run_command(args: List[str]) -> str:
+    logger.debug(f"cmd {args}")
+    # return subprocess.run(args, stdout=subprocess.PIPE).stdout.decode('utf-8')
+    # return subprocess.check_output(args)
+    #     capture_output=True, shell=True
+    return subprocess.run(args, capture_output=True, shell=True).stdout.decode("utf-8")
+
+
+def get_repo_url(path: str) -> Optional[str]:
+    args = f"cd {path} & git config --get remote.origin.url".split()
+    resp = run_command(args=args)
+    logger.debug(f"{path} repo url {resp}")
+    return resp if resp else None
 
 
 # pylint: disable=consider-using-with
@@ -205,10 +217,44 @@ def exec_item(sys_path: str, args: List[str]):
     subprocess.Popen(cmd)
 
 
+def open_in_chrome(parent, urls: List[str]) -> bool:
+    if not parent.app.sys_paths.chrome.path:
+        SysPathDialog.exec(parent=parent, sys_paths=parent.app.sys_paths)
+    if parent.app.sys_paths.chrome.path:
+        exec_item(sys_path=parent.app.sys_paths.chrome.path, args=urls)
+        return True
+    return False
+
+
+def go_to_repo(parent, path_func: Callable) -> bool:
+    is_ok, path = validate_single_path(parent=parent, paths=path_func())
+    if is_ok:
+        path = extract_path(item=path)
+        url = get_repo_url(path=path)
+        if url:
+            open_in_chrome(parent=parent, urls=[url])
+            return True
+    return False
+
+
 def view_item(parent, path_func: Callable) -> bool:
     if not parent.app.sys_paths.vs_code.path:
-        SysPathDialog.exec(parent=parent, sys_paths=parent.app.sys_paths.vs_code.path)
+        SysPathDialog.exec(parent=parent, sys_paths=parent.app.sys_paths)
     if parent.app.sys_paths.vs_code.path:
         exec_item(sys_path=parent.app.sys_paths.vs_code.path, args=["-n"] + path_func())
+        return True
+    return False
+
+
+def go_to_item(parent, path_func: Callable) -> bool:
+    # is_ok, path = validate_single_path(parent=parent, paths=path_func())
+    path, is_ok = QInputDialog.getText(parent, "Go to item", "Specify file or folder", text="")
+    if is_ok:
+        info = QFileInfo(path)
+        folder = extract_path(item=path)
+        selection = None
+        if info.isFile():
+            selection = [path]
+        parent.tree_box.open_tree_page(pinned_path=folder, find_existing=True, go_to_page=True, selection=selection)
         return True
     return False

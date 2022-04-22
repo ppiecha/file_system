@@ -12,6 +12,8 @@ from src.app.utils.path_util import (
     rename_item,
     duplicate_item,
     view_item,
+    go_to_item,
+    go_to_repo,
 )
 from src.app.utils.logger import get_console_logger
 
@@ -19,6 +21,8 @@ logger = get_console_logger(name=__name__)
 
 
 class CommonAction(str, Enum):
+    GO_TO = "Go to..."
+    GO_TO_REPO = "Go to Git repository"
     CUT = "Cut"
     COPY = "Copy"
     COPY_TO = "Copy to..."
@@ -133,4 +137,24 @@ def create_view_action(parent_func: Callable, path_func: Callable) -> Action:
         shortcut=QKeySequence(Qt.Key_F3),
         slot=lambda: view_item(parent=parent_func().main_form, path_func=path_func),
         tip="Duplicate item",
+    )
+
+
+def create_go_to_action(parent_func: Callable, path_func: Callable) -> Action:
+    return Action(
+        parent=parent_func().main_form,
+        caption=CommonAction.GO_TO.value,
+        shortcut=QKeySequence(Qt.CTRL + Qt.Key_G),
+        slot=lambda: go_to_item(parent=parent_func().main_form, path_func=path_func),
+        tip="Go to specified item",
+    )
+
+
+def create_go_to_repo_action(parent_func: Callable, path_func: Callable) -> Action:
+    return Action(
+        parent=parent_func().main_form,
+        caption=CommonAction.GO_TO_REPO.value,
+        shortcut=QKeySequence(Qt.CTRL + Qt.Key_R),
+        slot=lambda: go_to_repo(parent=parent_func().main_form, path_func=path_func),
+        tip="Go to related Git repository URL",
     )

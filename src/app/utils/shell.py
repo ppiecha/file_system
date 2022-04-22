@@ -3,6 +3,8 @@ import ctypes.wintypes
 import os
 from enum import Enum
 from pathlib import Path
+from typing import List
+
 from win32com.shell import shell, shellcon
 import win32file
 import win32api
@@ -480,3 +482,11 @@ class ShellThread(threading.Thread):
             self._real_run()
         except Exception as e:
             logger.error(str(e))
+
+
+def join(items: List[str]) -> str:
+    return "/".join(items)
+
+
+def get_app_data_path() -> str:
+    return os.getenv("APPDATA")

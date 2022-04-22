@@ -3,13 +3,13 @@ import traceback
 from typing import Optional, List
 
 from PySide2.QtGui import QIcon, Qt
-from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox, QApplication, QStyle
+from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox, QApplication
 
 from src.app.gui.favorite_view import FavoriteTree
 from src.app.gui.menu import init_menu
 from src.app.gui.tree_view import TreeView
 from src.app.gui.tree_box import TreeBox
-from src.app.model.schema import App, CONFIG_FILE, WindowState
+from src.app.model.schema import App, get_config_file, WindowState
 from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger, get_file_handler
 from src.app.utils.serializer import json_to_file
@@ -53,9 +53,6 @@ class MainForm(QMainWindow):
     def set_geometry_and_show(self, app: QApplication):
         state: WindowState = self.app.win_state
         new_state: WindowState = self.app.win_state
-        # title_bar_height = app.style().pixelMetric(QStyle.PM_TitleBarHeight)
-        # frame_width = app.style().pixelMetric(QStyle.PM_DefaultFrameWidth)
-        # title_bar_height = title_bar_height + frame_width
         screen_rect = app.desktop().availableGeometry(self)
         if state.x < screen_rect.x():
             new_state.x = screen_rect.x()
@@ -99,7 +96,7 @@ class MainForm(QMainWindow):
         self.app.win_state.is_maximized = self.isMaximized()
         self.app.win_state.on_top = (self.windowFlags() & ~Qt.WindowStaysOnTopHint) == Qt.WindowStaysOnTopHint
         self.app.win_state.splitter_sizes = self.splitter.sizes()
-        json_to_file(json_dict=self.app.dict(), file_name=CONFIG_FILE)
+        json_to_file(json_dict=self.app.dict(), file_name=get_config_file())
 
     def on_splitter_moved(self, pos, index):
         self.app.win_state.splitter_sizes = self.splitter.sizes()
