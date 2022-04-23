@@ -1,7 +1,7 @@
 import os
 from typing import Callable
 
-from PySide2.QtCore import QFileInfo
+from PySide2.QtCore import QFileInfo, QDir
 from PySide2.QtWidgets import QMessageBox, QInputDialog, QApplication
 
 from src.app.utils.path_util import logger, validate_single_path, extract_path, rename_if_exists
@@ -27,7 +27,7 @@ def create_file(parent, path_func: Callable, text: str = None) -> bool:
         return False
     label = "New file name"
     path = extract_path(item=org_path)
-    input_text = QFileInfo(org_path).fileName() if QFileInfo(org_path).isFile() else "new.sql"
+    input_text = QFileInfo(org_path).fileName() if QFileInfo(org_path).suffix() else "new.sql"
     names, ok = QInputDialog.getText(parent, label, label, text=input_text)
     if ok and names:
         for name in names.split(";"):
@@ -42,6 +42,11 @@ def create_file(parent, path_func: Callable, text: str = None) -> bool:
                     QMessageBox.information(parent, APP_NAME, f"File {name} already exists in {path}")
                 return False
             file_name = file.absoluteFilePath()
+            folder_path = extract_path(item=file_name)
+            logger.debug(f"folder path {folder_path}")
+            folder = QDir(folder_path)
+            if not folder.exists():
+                folder.mkpath(folder_path)
             if text:
                 return create_text_file(parent=parent, file_name=file_name, text=text)
             new_file(file_name=file_name)

@@ -3,14 +3,14 @@ from enum import Enum
 from typing import List, Optional, Callable, Set
 
 from PySide2.QtCore import QDir, QFileInfo, QModelIndex, QSortFilterProxyModel
-from PySide2.QtGui import Qt
+from PySide2.QtGui import Qt, QPainter
 from PySide2.QtWidgets import (
     QTreeView,
     QFileSystemModel,
     QMenu,
     QAbstractItemView,
     QFileDialog,
-    QApplication,
+    QApplication, QStyleOptionViewItem,
 )
 
 from src.app.gui.action.common import CommonAction
@@ -73,12 +73,9 @@ class TreeView(QTreeView):
         self.activated.connect(self.on_activated)
         self.customContextMenuRequested.connect(self.open_menu)
 
-    # def focusOutEvent(self, event: QFocusEvent) -> None:
-    #     super().focusOutEvent(event)
-    #     logger.debug(f"focus lost {event.reason()}")
-    #
-    # def selectionChanged(self, selected: QItemSelection, deselected: QItemSelection) -> None:
-    #     pass
+    def drawRow(self, painter: QPainter, options: QStyleOptionViewItem, index: QModelIndex) -> None:
+
+        super().drawRow(painter, options, index)
 
     def proxy_index(self, sys_index: QModelIndex) -> QModelIndex:
         if not sys_index.isValid():

@@ -32,7 +32,9 @@ def all_files(paths: Paths) -> bool:
 
 
 def extract_path(item: str) -> str:
-    if QFileInfo(item).isFile():
+    info = QFileInfo(item)
+    logger.debug(f"extract_path {item} {info.suffix()} {info.absolutePath()} {info.absoluteFilePath()}")
+    if info.suffix():
         path = item
     else:
         if item.endswith(os.sep):
@@ -40,7 +42,6 @@ def extract_path(item: str) -> str:
         else:
             path = "".join([item, os.sep])
     return QFileInfo(path).path()
-    # info = QFileInfo(path if QFileInfo(path).isFile() else path if path.endswith(os.sep) else "".join([path, os.sep]))
 
 
 def extract_folders(paths: Paths) -> Paths:
@@ -75,7 +76,7 @@ def path_caption(path: str) -> str:
 
 def file_name(path: str) -> str:
     file = QFileInfo(path)
-    if not file.isFile():
+    if not file.suffix():
         raise ValueError(f"Specified path {path} is not a file")
     return file.fileName()
 
@@ -102,9 +103,9 @@ def validate_single_path(parent, paths: List[str]) -> Tuple[bool, Optional[str]]
 
 def rename_if_exists(parent, path: str, user_is_aware: bool = False) -> Optional[str]:
     item = QFileInfo(path)
-    item_name = file_name(path=path) if item.isFile() else folder_name(path=path)
+    item_name = file_name(path=path) if item.suffix() else folder_name(path=path)
     parent_item_path = parent_path(path=path)
-    item_type_name = "File" if item.isFile() else "Folder"
+    item_type_name = "File" if item.suffix() else "Folder"
     while item.exists():
         resp = QMessageBox.Yes
         if not user_is_aware:
@@ -183,7 +184,7 @@ def duplicate_item(parent, path_func: Callable) -> bool:
         if not new_path:
             return False
         info = QFileInfo(path)
-        if info.isFile():
+        if info.suffix():
             run_in_thread(parent=parent, target=copy_file, args=[path, new_path, False], lst=parent.threads)
         else:
             run_in_thread(
@@ -272,6 +273,9 @@ def go_to_item(parent, path_func: Callable) -> bool:
         info = QFileInfo(path)
         folder = extract_path(item=path)
         selection = None
+        if not info.exists():
+            QMessageBox.information(parent, APP_NAME, "Specified file or folder doesn't exist")
+            return False
         if info.isFile():
             selection = [path]
         parent.tree_box.open_tree_page(pinned_path=folder, find_existing=True, go_to_page=True, selection=selection)
