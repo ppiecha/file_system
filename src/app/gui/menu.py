@@ -9,6 +9,7 @@ from src.app.gui.action.common import (
     create_view_action,
     create_go_to_action,
     create_go_to_repo_action,
+    create_edit_action,
 )
 from src.app.gui.action.file import (
     FileAction,
@@ -145,6 +146,11 @@ def init_command_menu(main_form):
         parent_func=main_form.current_tree, path_func=main_form.path_func
     )
     command_menu.addAction(main_form.actions[CommonAction.VIEW])
+    # Edit
+    main_form.actions[CommonAction.EDIT] = create_edit_action(
+        parent_func=main_form.current_tree, path_func=main_form.path_func
+    )
+    command_menu.addAction(main_form.actions[CommonAction.EDIT])
     # Duplicate
     main_form.actions[CommonAction.DUPLICATE] = create_duplicate_action(
         parent_func=main_form.current_tree, path_func=main_form.path_func

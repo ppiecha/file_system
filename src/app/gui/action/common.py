@@ -14,6 +14,7 @@ from src.app.utils.path_util import (
     view_item,
     go_to_item,
     go_to_repo,
+    edit_item,
 )
 from src.app.utils.logger import get_console_logger
 
@@ -136,7 +137,17 @@ def create_view_action(parent_func: Callable, path_func: Callable) -> Action:
         caption=CommonAction.VIEW.value,
         shortcut=QKeySequence(Qt.Key_F3),
         slot=lambda: view_item(parent=parent_func().main_form, path_func=path_func),
-        tip="Duplicate item",
+        tip="View item",
+    )
+
+
+def create_edit_action(parent_func: Callable, path_func: Callable) -> Action:
+    return Action(
+        parent=parent_func().main_form,
+        caption=CommonAction.EDIT.value,
+        shortcut=QKeySequence(Qt.Key_F4),
+        slot=lambda: edit_item(parent=parent_func().main_form, path_func=path_func),
+        tip="Edit item",
     )
 
 

@@ -43,8 +43,12 @@ def extract_path(item: str) -> str:
     # info = QFileInfo(path if QFileInfo(path).isFile() else path if path.endswith(os.sep) else "".join([path, os.sep]))
 
 
-def only_folders(paths: Paths) -> Paths:
+def extract_folders(paths: Paths) -> Paths:
     return [extract_path(item=path) for path in paths]
+
+
+def only_folders(paths: Paths) -> Paths:
+    return [path for path in paths if QFileInfo(path).isDir()]
 
 
 def only_files(paths: Paths) -> Paths:
@@ -246,8 +250,23 @@ def view_item(parent, path_func: Callable) -> bool:
     return False
 
 
+def edit_item(parent, path_func: Callable) -> bool:
+    if not parent.app.sys_paths.notepad.path or not parent.app.sys_paths.vs_code.path:
+        SysPathDialog.exec(parent=parent, sys_paths=parent.app.sys_paths)
+    paths = path_func()
+    folders = only_folders(paths=paths)
+    files = only_files(paths=paths)
+    logger.debug(f"folders {folders} files {files}")
+    if parent.app.sys_paths.vs_code.path and parent.app.sys_paths.notepad.path:
+        if folders:
+            exec_item(sys_path=parent.app.sys_paths.vs_code.path, args=["-n"] + folders)
+        if files:
+            exec_item(sys_path=parent.app.sys_paths.notepad.path, args=files)
+        return True
+    return False
+
+
 def go_to_item(parent, path_func: Callable) -> bool:
-    # is_ok, path = validate_single_path(parent=parent, paths=path_func())
     path, is_ok = QInputDialog.getText(parent, "Go to item", "Specify file or folder", text="")
     if is_ok:
         info = QFileInfo(path)

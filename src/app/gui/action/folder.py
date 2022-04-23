@@ -57,7 +57,7 @@ def create_pin_action(parent_func: Callable, path_func: Callable, pin: bool = Tr
 
 def create_open_folder_externally_action(parent_func: Callable, path_func: Callable) -> Action:
     def open_paths():
-        for path in path_util.only_folders(paths=path_func()):
+        for path in path_util.extract_folders(paths=path_func()):
             open_folder(dir_name=path)
 
     return Action(
@@ -71,7 +71,7 @@ def create_open_folder_externally_action(parent_func: Callable, path_func: Calla
 
 def create_open_folder_in_new_tab_action(parent_func: Callable, path_func: Callable) -> Action:
     def open_paths():
-        for path in path_util.only_folders(paths=path_func()):
+        for path in path_util.extract_folders(paths=path_func()):
             parent_func().tree_box.open_tree_page(pinned_path=path, find_existing=False, go_to_page=True)
 
     return Action(
@@ -86,7 +86,7 @@ def create_open_folder_in_new_tab_action(parent_func: Callable, path_func: Calla
 # pylint: disable=consider-using-with
 def create_open_console_action(parent_func: Callable, path_func: Callable) -> Action:
     def open_paths():
-        for path in path_util.only_folders(paths=path_func()):
+        for path in path_util.extract_folders(paths=path_func()):
             subprocess.Popen(["start", "cmd", "/k", f"cd {path} & deactivate"], shell=True)
 
     return Action(
