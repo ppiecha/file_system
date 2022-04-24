@@ -15,8 +15,11 @@ from src.app.utils.path_util import (
     go_to_item,
     go_to_repo,
     edit_item,
+    validate_single_path,
+    copy_move,
 )
 from src.app.utils.logger import get_console_logger
+from src.app.utils.shell import properties
 
 logger = get_console_logger(name=__name__)
 
@@ -34,6 +37,7 @@ class CommonAction(str, Enum):
     VIEW = "View"
     EDIT = "Edit"
     DUPLICATE = "Duplicate"
+    PROPERTIES = "Properties..."
     COMPARE = "Compare/Diff"
 
 
@@ -168,4 +172,39 @@ def create_go_to_repo_action(parent_func: Callable, path_func: Callable) -> Acti
         shortcut=QKeySequence(Qt.CTRL + Qt.Key_R),
         slot=lambda: go_to_repo(parent=parent_func().main_form, path_func=path_func),
         tip="Go to related Git repository URL",
+    )
+
+
+def create_properties_action(parent_func: Callable, path_func: Callable) -> Action:
+    def properties_fun(parent=parent_func().main_form, path_func=path_func):
+        is_ok, path = validate_single_path(parent=parent, paths=path_func())
+        if is_ok:
+            properties(path=path)
+
+    return Action(
+        parent=parent_func().main_form,
+        caption=CommonAction.PROPERTIES.value,
+        shortcut=QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_Return),
+        slot=lambda: properties_fun(parent=parent_func().main_form, path_func=path_func),
+        tip="Show item properties",
+    )
+
+
+def create_copy_to_action(parent_func: Callable, path_func: Callable) -> Action:
+    return Action(
+        parent=parent_func().main_form,
+        caption=CommonAction.COPY_TO.value,
+        shortcut=QKeySequence(Qt.CTRL + Qt.Key_F5),
+        slot=lambda: copy_move(parent=parent_func().main_form, path_func=path_func, move_flag=False),
+        tip="Copy items to selected location",
+    )
+
+
+def create_move_to_action(parent_func: Callable, path_func: Callable) -> Action:
+    return Action(
+        parent=parent_func().main_form,
+        caption=CommonAction.MOVE_TO.value,
+        shortcut=QKeySequence(Qt.Key_F6),
+        slot=lambda: copy_move(parent=parent_func().main_form, path_func=path_func, move_flag=True),
+        tip="Move items to selected location",
     )

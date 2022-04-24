@@ -6,10 +6,11 @@ from typing import List, Callable, Tuple, Optional
 from PySide2.QtCore import QDir, QFileInfo, QMimeData, QUrl, Qt, QDirIterator
 from PySide2.QtWidgets import QMessageBox, QApplication, QInputDialog
 
+from src.app.gui.dialog.base import select_folder
 from src.app.gui.dialog.sys_path_edit import SysPathDialog
 from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger
-from src.app.utils.shell import paste, cut, delete, rename, copy, copy_file, fail
+from src.app.utils.shell import paste, cut, delete, rename, copy, copy_file, fail, move
 from src.app.utils.thread import run_in_thread
 
 logger = get_console_logger(name=__name__)
@@ -135,6 +136,9 @@ def validate_single_path(parent, paths: List[str]) -> Tuple[bool, Optional[str]]
     if len(paths) > 1:
         QMessageBox.information(parent, APP_NAME, "More than one path selected")
         return False, None
+    if not paths[0]:
+        QMessageBox.information(parent, APP_NAME, "Empty path selected")
+        return False, None
     return True, paths[0]
 
 
@@ -232,6 +236,22 @@ def duplicate_item(parent, path_func: Callable) -> bool:
             )
         return True
     return False
+
+
+def copy_move(parent, path_func: Callable, move_flag: bool = True) -> bool:
+    paths = path_func()
+    path = extract_path(paths[0])
+    action = "Move" if move_flag else "Copy"
+    caption = action + " to location"
+    path = select_folder(parent=parent, text=path, caption=caption)
+    if path:
+        func = move if move_flag else copy
+        run_in_thread(
+            parent=parent,
+            target=func,
+            args=[paths, path, False],
+            lst=parent.threads,
+        )
 
 
 def run_command(args: List[str]) -> str:

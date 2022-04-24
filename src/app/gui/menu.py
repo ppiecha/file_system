@@ -10,6 +10,9 @@ from src.app.gui.action.common import (
     create_go_to_action,
     create_go_to_repo_action,
     create_edit_action,
+    create_properties_action,
+    create_copy_to_action,
+    create_move_to_action,
 )
 from src.app.gui.action.file import (
     FileAction,
@@ -156,7 +159,22 @@ def init_command_menu(main_form):
         parent_func=main_form.current_tree, path_func=main_form.path_func
     )
     command_menu.addAction(main_form.actions[CommonAction.DUPLICATE])
+    # Copy to
+    main_form.actions[CommonAction.COPY_TO] = create_copy_to_action(
+        parent_func=main_form.current_tree, path_func=main_form.path_func
+    )
+    command_menu.addAction(main_form.actions[CommonAction.COPY_TO])
+    # Move to
+    main_form.actions[CommonAction.MOVE_TO] = create_move_to_action(
+        parent_func=main_form.current_tree, path_func=main_form.path_func
+    )
+    command_menu.addAction(main_form.actions[CommonAction.MOVE_TO])
     # Compare
+    # Properties
+    main_form.actions[CommonAction.PROPERTIES] = create_properties_action(
+        parent_func=main_form.current_tree, path_func=main_form.path_func
+    )
+    command_menu.addAction(main_form.actions[CommonAction.PROPERTIES])
     # Delete
     command_menu.addSeparator()
     main_form.actions[CommonAction.DELETE] = create_delete_items_action(

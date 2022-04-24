@@ -17,9 +17,9 @@ from pydantic import BaseModel
 from src.app.gui.widget import Layout
 
 
-def select_folder(parent, text: str = None) -> str:
+def select_folder(parent, text: str = None, caption: str = "Select folder") -> str:
     path = text if text else QDir.homePath()
-    return QFileDialog.getExistingDirectory(parent, "Select folder", path)
+    return QFileDialog.getExistingDirectory(parent, caption, path)
 
 
 def select_file(parent, text: str = None) -> str:
