@@ -1,4 +1,3 @@
-import math
 import os
 from enum import Enum
 from typing import List, Optional, Callable, Set, Any
@@ -19,7 +18,7 @@ from src.app.gui.action.common import CommonAction
 from src.app.gui.action.file import FileAction
 from src.app.gui.action.folder import FolderAction
 from src.app.utils import path_util
-from src.app.utils.path_util import path_caption
+from src.app.utils.path_util import path_caption, convert_size, file_first_lines, dir_list
 from src.app.model.schema import Tree
 from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger
@@ -311,23 +310,22 @@ class SortFilterModel(QSortFilterProxyModel):
         right_path = self.sourceModel().filePath(right)
         return (not os.path.isdir(left_path), left_path.lower()) < (not os.path.isdir(right_path), right_path.lower())
 
-    def convert_size(self, size_bytes: int):
-        if size_bytes == 0:
-            return "0B"
-        size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
-        i = int(math.floor(math.log(size_bytes, 1024)))
-        p = math.pow(1024, i)
-        s = round(size_bytes / p, 2)
-        return "%s %s" % (s, size_name[i])
-
     def data(self, index: QModelIndex, role: int = ...) -> Any:
         if role == Qt.ToolTipRole:
             sys_index = self.mapToSource(index)
             file_path = self.sourceModel().filePath(sys_index)
             info = QFileInfo(file_path)
             last_modified = info.lastModified().toString("yyyy/MM/dd hh:mm:ss")
-            parts = [f"Path: {info.absoluteFilePath()}", f"Last modified: {last_modified}"]
-            if info.isFile():
-                parts.append(f"Size: {self.convert_size(info.size())}")
+            modifiers = QApplication.keyboardModifiers()
+            parts = []
+            if modifiers == Qt.ShiftModifier:
+                if info.isFile():
+                    parts = file_first_lines(file_path=info.absoluteFilePath(), count=20)
+                elif info.isDir():
+                    parts = dir_list(path=info.absoluteFilePath())
+            else:
+                parts = [f"Path: {info.absoluteFilePath()}", f"Last modified: {last_modified}"]
+                if info.isFile():
+                    parts.append(f"Size: {convert_size(info.size())}")
             return "\n".join(parts)
         return super().data(index, role)

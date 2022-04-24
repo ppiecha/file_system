@@ -1,14 +1,15 @@
+import math
 import os.path
 import subprocess
 from typing import List, Callable, Tuple, Optional
 
-from PySide2.QtCore import QDir, QFileInfo, QMimeData, QUrl, Qt
+from PySide2.QtCore import QDir, QFileInfo, QMimeData, QUrl, Qt, QDirIterator
 from PySide2.QtWidgets import QMessageBox, QApplication, QInputDialog
 
 from src.app.gui.dialog.sys_path_edit import SysPathDialog
 from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger
-from src.app.utils.shell import paste, cut, delete, rename, copy, copy_file
+from src.app.utils.shell import paste, cut, delete, rename, copy, copy_file, fail
 from src.app.utils.thread import run_in_thread
 
 logger = get_console_logger(name=__name__)
@@ -79,6 +80,42 @@ def file_name(path: str) -> str:
     if not file.suffix():
         raise ValueError(f"Specified path {path} is not a file")
     return file.fileName()
+
+
+def file_first_lines(file_path: str, count: int) -> List[str]:
+    info = QFileInfo(file_path)
+    parts = []
+    if not info.isFile():
+        fail(f"{file_path} is not a file")
+    with open(info.absoluteFilePath(), "r", encoding="utf-8") as file:
+        for line_no, line in enumerate(file):
+            parts.append(line.rstrip())
+            if line_no >= count:
+                break
+    return parts
+
+
+def dir_list(path: str) -> List[str]:
+    info = QFileInfo(path)
+    parts = []
+    if not info.isDir():
+        fail(f"{path} is not a directory")
+    it = QDirIterator(path)
+    while it.hasNext():
+        full_path = it.next()
+        if it.fileName() not in (".", ".."):
+            parts.append(full_path)
+    return parts
+
+
+def convert_size(size_bytes: int):
+    if size_bytes == 0:
+        return "0B"
+    size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+    i = int(math.floor(math.log(size_bytes, 1024)))
+    p = math.pow(1024, i)
+    s = round(size_bytes / p, 2)
+    return "%s %s" % (s, size_name[i])
 
 
 def folder_name(path: str) -> str:

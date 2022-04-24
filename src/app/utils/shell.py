@@ -19,6 +19,12 @@ from src.app.utils.logger import get_console_logger
 
 logger = get_console_logger(name=__name__)
 
+
+def fail(text: str):
+    logger.critical(text)
+    raise RuntimeError(text)
+
+
 _SEE_MASK_NOCLOSEPROCESS = 0x00000040
 _SEE_MASK_INVOKEIDLIST = 0x0000000C
 
