@@ -1,16 +1,18 @@
+import math
 import os
 from enum import Enum
-from typing import List, Optional, Callable, Set
+from typing import List, Optional, Callable, Set, Any
 
 from PySide2.QtCore import QDir, QFileInfo, QModelIndex, QSortFilterProxyModel
-from PySide2.QtGui import Qt, QPainter
+from PySide2.QtGui import Qt, QPainter, QPalette, QDropEvent, QDragMoveEvent, QDragEnterEvent
 from PySide2.QtWidgets import (
     QTreeView,
     QFileSystemModel,
     QMenu,
     QAbstractItemView,
     QFileDialog,
-    QApplication, QStyleOptionViewItem,
+    QApplication,
+    QStyleOptionViewItem,
 )
 
 from src.app.gui.action.common import CommonAction
@@ -21,7 +23,8 @@ from src.app.utils.path_util import path_caption
 from src.app.model.schema import Tree
 from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger
-from src.app.utils.shell import start_file, open_folder
+from src.app.utils.shell import start_file, open_folder, copy, move
+from src.app.utils.thread import run_in_thread
 
 logger = get_console_logger(name=__name__)
 
@@ -55,6 +58,7 @@ class TreeView(QTreeView):
                 raise RuntimeError("Only one selection supported")
 
     def init_ui(self):
+        self.setToolTipDuration(5000)
         self.hide_header(hide=self.tree_model.hide_header)
         for column in TreeColumn:
             self.hide_column(column=column.value, hide=column.value not in self.tree_model.visible_columns)
@@ -63,7 +67,7 @@ class TreeView(QTreeView):
         self.pinned_path = self.tree_model.pinned_path
         if self.tree_model.current_path:
             self.current_path = self.tree_model.current_path
-        self.filter = TreeView.get_filter()
+        self.filter = self.get_filter()
         self.setAcceptDrops(True)
         self.setDragEnabled(True)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
@@ -74,8 +78,13 @@ class TreeView(QTreeView):
         self.customContextMenuRequested.connect(self.open_menu)
 
     def drawRow(self, painter: QPainter, options: QStyleOptionViewItem, index: QModelIndex) -> None:
-
-        super().drawRow(painter, options, index)
+        new_options = QStyleOptionViewItem(options)
+        sys_index = self.sys_index(proxy_index=index)
+        file_path = self.sys_model.filePath(sys_index)
+        info = QFileInfo(file_path)
+        if info.isHidden():
+            new_options.palette.setColor(QPalette.Text, Qt.darkGray)
+        super().drawRow(painter, new_options, index)
 
     def proxy_index(self, sys_index: QModelIndex) -> QModelIndex:
         if not sys_index.isValid():
@@ -192,8 +201,8 @@ class TreeView(QTreeView):
     def filter(self, filters: QDir.Filters):
         self.sys_model.setFilter(filters)
 
-    @staticmethod
-    def get_filter(files: bool = True, hidden: bool = False, system: bool = False) -> QDir.Filters:
+    def get_filter(self) -> QDir.Filters:
+        files, hidden, system = self.tree_model.show_files, self.tree_model.show_hidden, self.tree_model.show_system
         f = QDir.Drives | QDir.Dirs | QDir.NoDotAndDotDot | QDir.DirsFirst
         if files:
             f = f | QDir.Files
@@ -244,28 +253,36 @@ class TreeView(QTreeView):
             menu.addAction(self.main_form.actions[CommonAction.DUPLICATE])
             menu.exec_(self.viewport().mapToGlobal(position))
 
-    def dragEnterEvent(self, event):
+    def dragEnterEvent(self, event: QDragEnterEvent):
         if event.mimeData().hasUrls():
             event.accept()
         else:
             event.ignore()
 
-    def dragMoveEvent(self, event):
-        # print(type(event))
-        # event.accept()
+    def dragMoveEvent(self, event: QDragMoveEvent):
         index = self.indexAt(event.pos())
         path = self.sys_model.fileInfo(self.proxy.mapToSource(index)).absoluteFilePath()
-        logger.debug(path)
+        logger.debug(f"Drop action {event.dropAction()} {path}")
         if event.mimeData().hasUrls:
-            event.setDropAction(Qt.CopyAction)
             event.accept()
         else:
             event.ignore()
 
-    def dropEvent(self, event):
+    def dropEvent(self, event: QDropEvent):
+        modifiers = event.keyboardModifiers()
+        func = copy if modifiers == Qt.ShiftModifier else move
         files = [u.toLocalFile() for u in event.mimeData().urls()]
-        for f in files:
-            logger.debug(f"dropped file {f}")
+        index = self.indexAt(event.pos())
+        path = self.sys_model.fileInfo(self.proxy.mapToSource(index)).absoluteFilePath()
+        logger.debug(f"dropped files {files} action {func}")
+        if files and path:
+            run_in_thread(
+                parent=self,
+                target=func,
+                args=[files, path, False],
+                lst=self.main_form.threads,
+            )
+            logger.debug(f"action executed {func} files {files}")
 
     def on_activated(self, index: QModelIndex):
         item_path = self.sys_model.fileInfo(self.proxy.mapToSource(index)).absoluteFilePath()
@@ -293,3 +310,24 @@ class SortFilterModel(QSortFilterProxyModel):
         left_path = self.sourceModel().filePath(left)
         right_path = self.sourceModel().filePath(right)
         return (not os.path.isdir(left_path), left_path.lower()) < (not os.path.isdir(right_path), right_path.lower())
+
+    def convert_size(self, size_bytes: int):
+        if size_bytes == 0:
+            return "0B"
+        size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+        i = int(math.floor(math.log(size_bytes, 1024)))
+        p = math.pow(1024, i)
+        s = round(size_bytes / p, 2)
+        return "%s %s" % (s, size_name[i])
+
+    def data(self, index: QModelIndex, role: int = ...) -> Any:
+        if role == Qt.ToolTipRole:
+            sys_index = self.mapToSource(index)
+            file_path = self.sourceModel().filePath(sys_index)
+            info = QFileInfo(file_path)
+            last_modified = info.lastModified().toString("yyyy/MM/dd hh:mm:ss")
+            parts = [f"Path: {info.absoluteFilePath()}", f"Last modified: {last_modified}"]
+            if info.isFile():
+                parts.append(f"Size: {self.convert_size(info.size())}")
+            return "\n".join(parts)
+        return super().data(index, role)
