@@ -194,8 +194,8 @@ def copy_items_to_clipboard(parent, path_func: Callable) -> bool:
 
 def paste_items_from_clipboard(parent, path_func: Callable) -> bool:
     is_ok, path = validate_single_path(parent=parent, paths=path_func())
-    path = extract_path(item=path)
     if is_ok:
+        path = extract_path(item=path)
         run_in_thread(parent=parent, target=paste, args=[path], lst=parent.threads)
         return True
     return False

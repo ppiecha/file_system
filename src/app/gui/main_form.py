@@ -5,6 +5,7 @@ from typing import Optional, List
 from PySide2.QtGui import QIcon, Qt
 from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox, QApplication
 
+from src.app.gui.dialog.base import CustomMessageBox
 from src.app.gui.favorite_view import FavoriteTree
 from src.app.gui.menu import init_menu
 from src.app.gui.tree_view import TreeView
@@ -45,8 +46,16 @@ class MainForm(QMainWindow):
 
     def except_hook(self, type_, value, tb):
         message = "".join(traceback.format_exception(type_, value, tb))
-        box = QMessageBox(QMessageBox.Critical, APP_NAME, "Unhandled exception", QMessageBox.Ok, self)
+        box = CustomMessageBox(
+            QMessageBox.Critical,
+            APP_NAME,
+            f"<b>{str(value)}</b>",
+            QMessageBox.Ok,
+            self,
+        )
+        box.setInformativeText("Abnormal exception has been caught. See details below")
         box.setDetailedText(message)
+        box.setDefaultButton(QMessageBox.Ok)
         box.exec_()
         logger.error(message)
 

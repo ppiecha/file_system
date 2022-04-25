@@ -11,6 +11,9 @@ from PySide2.QtWidgets import (
     QAbstractButton,
     QApplication,
     QStyle,
+    QMessageBox,
+    QTextEdit,
+    QSizePolicy,
 )
 from pydantic import BaseModel
 
@@ -89,3 +92,28 @@ class FormDialog(QDialog):
 
     def get_entity(self) -> BaseModel:
         raise NotImplementedError
+
+
+class CustomMessageBox(QMessageBox):
+    def __init__(self, *args, **kvargs):
+        QMessageBox.__init__(self, *args, **kvargs)
+        self.setSizeGripEnabled(True)
+
+    def event(self, e):
+        result = QMessageBox.event(self, e)
+
+        self.setMinimumHeight(0)
+        self.setMaximumHeight(16777215)
+        self.setMinimumWidth(0)
+        self.setMaximumWidth(16777215)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        text_edit = self.findChild(QTextEdit)
+        if text_edit is not None:
+            text_edit.setMinimumHeight(0)
+            text_edit.setMaximumHeight(16777215)
+            text_edit.setMinimumWidth(0)
+            text_edit.setMaximumWidth(16777215)
+            text_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        return result
