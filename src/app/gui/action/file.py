@@ -7,7 +7,7 @@ from PySide2.QtGui import QKeySequence
 from PySide2.QtWidgets import QWidget
 
 import src.app.utils.file_util
-from src.app.gui.action.common import Action
+from src.app.gui.action.command import Action
 from src.app.utils import path_util
 from src.app.utils.shell import start_file
 
@@ -23,7 +23,7 @@ def create_file_action(parent: QWidget, path_func: Callable) -> Action:
     return Action(
         parent=parent,
         caption=FileAction.CREATE.value,
-        shortcut=QKeySequence(Qt.Key_F9),
+        shortcut=QKeySequence(Qt.CTRL + Qt.Key_N),
         slot=partial(src.app.utils.file_util.create_file, parent, path_func),
         tip="Creates new file under current folder",
     )

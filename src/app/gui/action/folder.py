@@ -8,13 +8,14 @@ from PySide2.QtGui import QKeySequence
 from PySide2.QtWidgets import QWidget
 
 import src.app.utils.folder_util
-from src.app.gui.action.common import Action
+from src.app.gui.action.command import Action
 from src.app.utils import path_util
 from src.app.utils.shell import open_folder
 
 
 class FolderAction(Enum):
-    SELECT = "Select"
+    SELECT = "Open in current tab"
+    SELECT_IN_NEW_TAB = "Open in new tab"
     PIN = "Pin"
     UNPIN = "Unpin"
     CREATE = "Create folder"
@@ -29,7 +30,7 @@ def create_folder_action(parent: QWidget, path_func: Callable) -> Action:
     return Action(
         parent=parent,
         caption=FolderAction.CREATE.value,
-        shortcut=QKeySequence(Qt.Key_F7),
+        shortcut=QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_N),
         slot=partial(src.app.utils.folder_util.create_folder, parent, path_func),
         tip="Creates sub-folder under current folder",
     )
@@ -39,9 +40,19 @@ def create_select_folder_action(parent_func: Callable) -> Action:
     return Action(
         parent=parent_func().main_form,
         caption=FolderAction.SELECT.value,
-        shortcut=QKeySequence(Qt.CTRL + Qt.Key_D),
+        shortcut=QKeySequence(Qt.CTRL + Qt.Key_O),
         slot=lambda: parent_func().select_folder(),
-        tip="Pins tree to selected folder",
+        tip="Open folder in current tab",
+    )
+
+
+def create_select_folder_in_new_tab_action(parent_func: Callable) -> Action:
+    return Action(
+        parent=parent_func().main_form,
+        caption=FolderAction.SELECT_IN_NEW_TAB.value,
+        shortcut=QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_O),
+        slot=lambda: parent_func().tree_box.open_user_defined_page(),
+        tip="Open folder in new tab",
     )
 
 
@@ -63,7 +74,7 @@ def create_open_folder_externally_action(parent_func: Callable, path_func: Calla
     return Action(
         parent=parent_func().main_form,
         caption=FolderAction.OPEN_EXT.value,
-        shortcut=QKeySequence(Qt.CTRL + Qt.Key_Enter),
+        shortcut=QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_Return),
         slot=open_paths,
         tip="Opens selected folder in external browser",
     )
@@ -77,7 +88,7 @@ def create_open_folder_in_new_tab_action(parent_func: Callable, path_func: Calla
     return Action(
         parent=parent_func().main_form,
         caption=FolderAction.OPEN_TAB.value,
-        shortcut=QKeySequence(Qt.CTRL + Qt.Key_T),
+        shortcut=QKeySequence(Qt.CTRL + Qt.Key_M),
         slot=open_paths,
         tip="Opens selected folders in new tabs",
     )

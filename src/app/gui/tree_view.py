@@ -1,8 +1,9 @@
 import os
+import logging
 from enum import Enum
 from typing import List, Optional, Callable, Set, Any
 
-from PySide2.QtCore import QDir, QFileInfo, QModelIndex, QSortFilterProxyModel
+from PySide2.QtCore import QDir, QFileInfo, QModelIndex, QSortFilterProxyModel, QItemSelection
 from PySide2.QtGui import Qt, QPainter, QPalette, QDropEvent, QDragMoveEvent, QDragEnterEvent
 from PySide2.QtWidgets import (
     QTreeView,
@@ -14,7 +15,7 @@ from PySide2.QtWidgets import (
     QStyleOptionViewItem,
 )
 
-from src.app.gui.action.common import CommonAction
+from src.app.gui.action.command import CommonAction
 from src.app.gui.action.file import FileAction
 from src.app.gui.action.folder import FolderAction
 from src.app.utils import path_util
@@ -25,7 +26,7 @@ from src.app.utils.logger import get_console_logger
 from src.app.utils.shell import start_file, open_folder, copy, move
 from src.app.utils.thread import run_in_thread
 
-logger = get_console_logger(name=__name__)
+logger = get_console_logger(name=__name__, log_level=logging.INFO)
 
 
 class TreeColumn(int, Enum):
@@ -50,11 +51,7 @@ class TreeView(QTreeView):
         self.tree_model = tree_model
         self.filtered_indexes = []
         self.init_ui()
-        if selection:
-            if len(selection) == 1:
-                self.current_path = selection[0]
-            else:
-                raise RuntimeError("Only one selection supported")
+        self.set_selection(selection=selection)
 
     def init_ui(self):
         self.setToolTipDuration(5000)
@@ -75,6 +72,13 @@ class TreeView(QTreeView):
         self.clicked.connect(self.on_clicked)
         self.activated.connect(self.on_activated)
         self.customContextMenuRequested.connect(self.open_menu)
+
+    def selectionChanged(self, selected: QItemSelection, deselected: QItemSelection) -> None:
+        super().selectionChanged(selected, deselected)
+        # app = self.main_form.app_qt_object
+        # logger.info(f"is active {app.activeWindow()} {app.focusWidget()}")
+        # if app.activeWindow() != 0 and app.focusWidget() != 0:
+        #     self.setFocus()
 
     def drawRow(self, painter: QPainter, options: QStyleOptionViewItem, index: QModelIndex) -> None:
         new_options = QStyleOptionViewItem(options)
@@ -107,10 +111,13 @@ class TreeView(QTreeView):
         if path == self.tree_model.pinned_path:
             self.pinned_path = path
 
+    def path_from_tree_index(self, proxy_index: QModelIndex):
+        return self.sys_model.fileInfo(self.sys_index(proxy_index=proxy_index)).absoluteFilePath()
+
     @property
     def current_path(self) -> Optional[str]:
         if self.currentIndex().isValid():
-            return self.sys_model.fileInfo(self.sys_index(proxy_index=self.currentIndex())).absoluteFilePath()
+            return self.path_from_tree_index(proxy_index=self.currentIndex())
         return None
 
     @current_path.setter
@@ -118,8 +125,29 @@ class TreeView(QTreeView):
         if path:
             index = self.proxy_index(sys_index=self.sys_model.index(path))
             self.setCurrentIndex(index)
+            selection_model = self.selectionModel()
+            selection_model.select(index, selection_model.Clear | selection_model.Select | selection_model.Current)
             self.scrollTo(index, QAbstractItemView.ScrollHint.PositionAtCenter)
         self.tree_model.current_path = path
+
+    def set_selection(self, selection: List[str] = None):
+        logger.info(
+            f"{path_caption(self.current_path)} "
+            f"selection {selection} "
+            f"has selection {self.selectionModel().hasSelection()} "
+            f"valid {self.rootIndex().isValid()}"
+        )
+        if selection is None and not self.selectionModel().hasSelection():
+            if self.rootIndex() and self.rootIndex().isValid():
+                self.current_path = self.current_path  # self.path_from_tree_index(proxy_index=self.rootIndex())
+                logger.info(f"SELECTING {self.current_path}")
+            else:
+                logger.info(f"rootIndex() not set")
+        elif selection:
+            if len(selection) == 1:
+                self.current_path = selection[0]
+            else:
+                raise RuntimeError(f"Only one selection supported {selection}")
 
     @property
     def pinned_path(self) -> Optional[str]:
@@ -182,6 +210,8 @@ class TreeView(QTreeView):
                         if file_path == path:
                             self.expand(row_index)
                         logger.debug(f"hiding row {file_path}")
+                    self.set_selection(selection=[path])
+                    logger.info(f"should be selected {[path]}")
             else:
                 logger.debug(f"path {path} NOT LOADED YET")
                 return False

@@ -1,7 +1,7 @@
 from typing import List, Optional, Callable
 
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QTabWidget, QMenu, QMessageBox
+from PySide2.QtCore import Qt, QDir
+from PySide2.QtWidgets import QTabWidget, QMenu, QMessageBox, QFileDialog
 
 from src.app.gui.action.tab import create_close_tab_action, create_close_all_tabs_action
 from src.app.gui.tree_view import TreeView
@@ -20,6 +20,7 @@ class TreeBox(QTabWidget):
         self.app_model = app_model
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.open_menu)
+        self.currentChanged.connect(self.on_current_changed)
         self.open_pages()
 
     def open_menu(self, position):
@@ -61,7 +62,12 @@ class TreeBox(QTabWidget):
         self.add_page(tree_model=tree_model, go_to_page=go_to_page, selection=selection)
 
     def open_root_page(self):
-        self.open_tree_page(pinned_path=None, find_existing=False)
+        self.open_tree_page(pinned_path=None, find_existing=False, go_to_page=True)
+
+    def open_user_defined_page(self):
+        path = QFileDialog.getExistingDirectory(self, APP_NAME, QDir.homePath())
+        if path:
+            self.open_tree_page(pinned_path=path, find_existing=True, go_to_page=True)
 
     def add_page(self, tree_model: Tree, go_to_page: bool = False, selection: List[str] = None):
         page = TreeView(parent=self, tree_model=tree_model, selection=selection)
@@ -105,4 +111,8 @@ class TreeBox(QTabWidget):
                 self.close_page(index_func=lambda x=index: x)
 
     def tabRemoved(self, index):
-        logger.debug(f"Deleted widget with index {index}")
+        self.current_tree().setFocus()
+        logger.debug(f"Deleted widget with index {index} focus set to {path_caption(self.current_tree().current_path)}")
+
+    def on_current_changed(self, index: int):
+        self.current_tree().set_selection()

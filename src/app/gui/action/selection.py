@@ -4,7 +4,7 @@ from typing import Callable
 from PySide2.QtCore import QMimeData, QFileInfo, Qt
 from PySide2.QtWidgets import QApplication
 
-from src.app.gui.action.common import Action
+from src.app.gui.action.command import Action
 from src.app.utils.logger import get_console_logger
 from src.app.utils.path_util import extract_path, folder_name, file_name
 
@@ -67,7 +67,7 @@ def create_copy_name_action(parent_func: Callable, path_func: Callable) -> Actio
     return Action(
         parent=parent_func().main_form,
         caption=SelectionAction.COPY_NAME.value,
-        shortcut=Qt.CTRL + Qt.SHIFT + Qt.Key_N,
+        shortcut=Qt.SHIFT + Qt.Key_C,
         slot=lambda: selected_names(path_func=path_func, mode=SelectionAction.COPY_NAME),
         tip="Copies only name(s)",
     )

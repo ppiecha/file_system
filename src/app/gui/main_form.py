@@ -20,10 +20,11 @@ logger.addHandler(get_file_handler())
 
 
 class MainForm(QMainWindow):
-    def __init__(self, app: App):
+    def __init__(self, app: App, app_qt_object: QApplication):
         super().__init__()
         self.process_args()
         self.app = app
+        self.app_qt_object = app_qt_object
         self.actions = {}
         self.threads = []
         self.splitter = QSplitter(self)

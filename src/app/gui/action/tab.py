@@ -5,7 +5,7 @@ from PySide2.QtCore import Qt
 from PySide2.QtGui import QKeySequence
 from PySide2.QtWidgets import QWidget
 
-from src.app.gui.action.common import Action
+from src.app.gui.action.command import Action
 
 
 class TabAction(Enum):
@@ -19,7 +19,7 @@ def create_new_tab_action(parent: QWidget) -> Action:
     return Action(
         parent=parent,
         caption=TabAction.NEW.value,
-        shortcut=QKeySequence(Qt.CTRL + Qt.Key_N),
+        shortcut=QKeySequence(Qt.CTRL + Qt.Key_T),
         slot=parent.open_root_page,
     )
 

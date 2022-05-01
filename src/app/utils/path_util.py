@@ -1,6 +1,7 @@
 import math
 import os.path
 import subprocess
+from logging import ERROR
 from typing import List, Callable, Tuple, Optional
 
 from PySide2.QtCore import QDir, QFileInfo, QMimeData, QUrl, Qt, QDirIterator
@@ -13,7 +14,7 @@ from src.app.utils.logger import get_console_logger
 from src.app.utils.shell import paste, cut, delete, rename, copy, copy_file, fail, move
 from src.app.utils.thread import run_in_thread
 
-logger = get_console_logger(name=__name__)
+logger = get_console_logger(name=__name__, log_level=ERROR)
 Paths = List[str]
 
 
@@ -302,8 +303,12 @@ def go_to_repo(parent, path_func: Callable) -> bool:
 def view_item(parent, path_func: Callable) -> bool:
     if not parent.app.sys_paths.vs_code.path:
         SysPathDialog.exec(parent=parent, sys_paths=parent.app.sys_paths)
-    if parent.app.sys_paths.vs_code.path:
-        exec_item(sys_path=parent.app.sys_paths.vs_code.path, args=["-n"] + path_func())
+    paths = path_func()
+    if paths and parent.app.sys_paths.vs_code.path:
+        files = only_files(paths=paths)
+        if paths != files:
+            paths = ["-n"] + paths
+        exec_item(sys_path=parent.app.sys_paths.vs_code.path, args=paths)
         return True
     return False
 

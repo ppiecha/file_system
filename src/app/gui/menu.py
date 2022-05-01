@@ -1,4 +1,4 @@
-from src.app.gui.action.common import (
+from src.app.gui.action.command import (
     CommonAction,
     create_copy_items_to_clipboard_action,
     create_paste_items_from_clipboard_action,
@@ -27,7 +27,7 @@ from src.app.gui.action.folder import (
     create_pin_action,
     create_open_folder_externally_action,
     create_open_folder_in_new_tab_action,
-    create_open_console_action,
+    create_open_console_action, create_select_folder_in_new_tab_action,
 )
 from src.app.gui.action.selection import (
     SelectionAction,
@@ -75,10 +75,15 @@ def init_folder_menu(main_form):
     # Create
     main_form.actions[FolderAction.CREATE] = create_folder_action(parent=main_form, path_func=main_form.path_func)
     folder_menu.addAction(main_form.actions[FolderAction.CREATE])
-    # Select
+    # Select current
     folder_menu.addSeparator()
     main_form.actions[FolderAction.SELECT] = create_select_folder_action(parent_func=main_form.current_tree)
     folder_menu.addAction(main_form.actions[FolderAction.SELECT])
+    # Select in new tab
+    main_form.actions[FolderAction.SELECT_IN_NEW_TAB] = create_select_folder_in_new_tab_action(
+        parent_func=main_form.current_tree
+    )
+    folder_menu.addAction(main_form.actions[FolderAction.SELECT_IN_NEW_TAB])
     # Pin
     main_form.actions[FolderAction.PIN] = create_pin_action(
         parent_func=main_form.current_tree, path_func=main_form.path_func, pin=True
