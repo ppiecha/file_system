@@ -1,7 +1,7 @@
 import math
 import os.path
 import subprocess
-from logging import ERROR
+import logging
 from typing import List, Callable, Tuple, Optional
 
 from PySide2.QtCore import QDir, QFileInfo, QMimeData, QUrl, Qt, QDirIterator
@@ -14,7 +14,7 @@ from src.app.utils.logger import get_console_logger
 from src.app.utils.shell import paste, cut, delete, rename, copy, copy_file, fail, move
 from src.app.utils.thread import run_in_thread
 
-logger = get_console_logger(name=__name__, log_level=ERROR)
+logger = get_console_logger(name=__name__, log_level=logging.INFO)
 Paths = List[str]
 
 
@@ -315,6 +315,7 @@ def view_item(parent, path_func: Callable) -> bool:
 
 def edit_item(parent, path_func: Callable) -> bool:
     if not parent.app.sys_paths.notepad.path or not parent.app.sys_paths.vs_code.path:
+        logger.info(f"sys paths before edit {parent.app.sys_paths}")
         SysPathDialog.exec(parent=parent, sys_paths=parent.app.sys_paths)
     paths = path_func()
     folders = only_folders(paths=paths)

@@ -97,6 +97,9 @@ class MainForm(QMainWindow):
             self.splitter.setSizes(self.app.win_state.splitter_sizes)
         self.splitter.splitterMoved.connect(self.on_splitter_moved)
 
+    def save_settings(self):
+        json_to_file(json_dict=self.app.dict(), file_name=get_config_file())
+
     def closeEvent(self, event):
         if not self.isMaximized():
             self.app.win_state.x = self.frameGeometry().x()

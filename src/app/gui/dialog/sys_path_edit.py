@@ -1,15 +1,21 @@
+import logging
+
 from PySide2.QtWidgets import QAbstractButton, QDialogButtonBox
 from pydantic import BaseModel
 
 from src.app.gui.dialog.base import FormDialog, Properties, FileEdit
 from src.app.model.schema import SysPath, SysPaths
+from src.app.utils.logger import get_console_logger
+
+logger = get_console_logger(name=__name__, log_level=logging.DEBUG)
 
 
 class SysPathDialog(FormDialog):
     def populate_form(self, properties: Properties):
-        self.components["notepad"] = FileEdit(text=self.properties.get("name"))
-        self.components["vs_code"] = FileEdit(text=self.properties.get("description"))
-        self.components["chrome"] = FileEdit(text=self.properties.get("path"))
+        logger.debug(f"props {properties}")
+        self.components["notepad"] = FileEdit(text=properties.get("notepad")["path"])
+        self.components["vs_code"] = FileEdit(text=properties.get("vs_code")["path"])
+        self.components["chrome"] = FileEdit(text=properties.get("chrome")["path"])
         self.form.addRow("Notepad", self.components["notepad"])
         self.form.addRow("VS Code", self.components["vs_code"])
         self.form.addRow("Chrome", self.components["chrome"])
@@ -28,6 +34,7 @@ class SysPathDialog(FormDialog):
     def on_button_clicked(self, button: QAbstractButton):
         if self.buttons.buttonRole(button) == QDialogButtonBox.AcceptRole:
             self.parent().app.sys_paths = self.get_entity()
+            self.parent().save_settings()
             self.accept()
         else:
             self.reject()

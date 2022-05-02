@@ -92,7 +92,7 @@ class FavoriteTree(QTreeWidget):
         self.get_favorite(item).expanded = False
 
     def save_to_file(self):
-        json_to_file(json_dict=self.favorites.dict(), file_name="favorites.json")
+        self.main_form.save_settings()
 
     def recreate(self):
         self.clear()
@@ -184,6 +184,7 @@ class FavoriteTree(QTreeWidget):
             pass
 
         def save_tree_and_recreate(self):
+            self.favorite_tree.save_to_file()
             self.favorite_tree.recreate()
 
         def modifier(self, current_item: QTreeWidgetItem, parent_item: QTreeWidgetItem, func: Callable, mode: EditMode):

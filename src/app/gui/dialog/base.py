@@ -1,4 +1,5 @@
-from typing import Callable, Dict
+import logging
+from typing import Callable, Dict, Any
 
 from PySide2.QtCore import QDir
 from PySide2.QtGui import Qt
@@ -18,6 +19,9 @@ from PySide2.QtWidgets import (
 from pydantic import BaseModel
 
 from src.app.gui.widget import Layout
+from src.app.utils.logger import get_console_logger
+
+logger = get_console_logger(name=__name__, log_level=logging.DEBUG)
 
 
 def select_folder(parent, text: str = None, caption: str = "Select folder") -> str:
@@ -59,12 +63,13 @@ class FileEdit(BaseEdit):
         super().__init__(action_delegate=select_file, text=text, post_action=post_action, parent=parent)
 
 
-Properties = Dict[str, str]
+Properties = Dict[str, Dict[str, Any]]
 
 
 class FormDialog(QDialog):
     def __init__(self, parent, entity: BaseModel, caption: str):
         super().__init__(parent=parent)
+        self.setWindowTitle(caption)
         self.setSizeGripEnabled(True)
         self.layout = Layout()
         self.form = QFormLayout()
@@ -73,6 +78,7 @@ class FormDialog(QDialog):
         self.entity = entity
         self.properties: Properties = entity.dict()
         self.components = {}
+        # logger.debug(f"props {self.properties}")
         self.populate_form(self.properties)
         self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal)
         self.layout.addLayout(self.form)
