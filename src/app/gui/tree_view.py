@@ -123,11 +123,15 @@ class TreeView(QTreeView):
     @current_path.setter
     def current_path(self, path: str):
         if path:
-            index = self.proxy_index(sys_index=self.sys_model.index(path))
-            self.setCurrentIndex(index)
-            selection_model = self.selectionModel()
-            selection_model.select(index, selection_model.Clear | selection_model.Select | selection_model.Current)
-            self.scrollTo(index, QAbstractItemView.ScrollHint.PositionAtCenter)
+            sys_index = self.sys_model.index(path)
+            if sys_index.isValid():
+                index = self.proxy_index(sys_index=sys_index)
+                self.setCurrentIndex(index)
+                selection_model = self.selectionModel()
+                selection_model.select(index, selection_model.Clear | selection_model.Select | selection_model.Current)
+                self.scrollTo(index, QAbstractItemView.ScrollHint.PositionAtCenter)
+            else:
+                logger.debug(f"Invalid path {path}")
         self.tree_model.current_path = path
 
     def set_selection(self, selection: List[str] = None):

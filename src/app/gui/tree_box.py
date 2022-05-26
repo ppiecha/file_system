@@ -111,8 +111,11 @@ class TreeBox(QTabWidget):
                 self.close_page(index_func=lambda x=index: x)
 
     def tabRemoved(self, index):
-        self.current_tree().setFocus()
-        logger.debug(f"Deleted widget with index {index} focus set to {path_caption(self.current_tree().current_path)}")
+        if current_tree := self.current_tree():
+            current_tree.setFocus()
+            logger.debug(f"Deleted widget with index {index} "
+                         f"focus set to {path_caption(self.current_tree().current_path)}")
 
     def on_current_changed(self, index: int):
-        self.current_tree().set_selection()
+        if current_tree := self.current_tree():
+            current_tree.set_selection()

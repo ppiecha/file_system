@@ -272,6 +272,10 @@ def get_repo_url(path: str) -> Optional[str]:
 
 # pylint: disable=consider-using-with
 def exec_item(sys_path: str, args: List[str]):
+    path = QFileInfo(sys_path)
+    valid_path = path.exists() and path.isFile() and path.isExecutable()
+    if not valid_path:
+        raise RuntimeError(f"Invalid path {sys_path}. It is not existing executable file")
     sys_path = quote_path(text=sys_path)
     args = [quote_path(text=arg) for arg in args]
     cmd = [sys_path] + args
