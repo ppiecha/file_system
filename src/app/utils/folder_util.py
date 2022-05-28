@@ -8,7 +8,8 @@ from src.app.utils.path_util import validate_single_path, logger, rename_if_exis
 from src.app.utils.constant import APP_NAME
 
 
-def create_folder(parent, path_func: Callable) -> bool:
+def create_folder(parent_func: Callable, path_func: Callable) -> bool:
+    parent = parent_func()
     is_ok, path = validate_single_path(parent=parent, paths=path_func())
     if not is_ok:
         return False
@@ -27,5 +28,6 @@ def create_folder(parent, path_func: Callable) -> bool:
                     QMessageBox.information(parent, APP_NAME, f"Folder {name} already exists in path {path}")
             else:
                 directory.mkpath(directory.absolutePath())
+                parent.set_selection([directory.absolutePath()])
         return True
     return False

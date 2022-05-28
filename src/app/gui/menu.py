@@ -56,7 +56,9 @@ def init_menu(main_form):
 def init_file_menu(main_form):
     file_menu = main_form.menuBar().addMenu("&File")
     # Create
-    main_form.actions[FileAction.CREATE] = create_file_action(parent=main_form, path_func=main_form.path_func)
+    main_form.actions[FileAction.CREATE] = create_file_action(
+        parent_func=main_form.current_tree, path_func=main_form.path_func
+    )
     file_menu.addAction(main_form.actions[FileAction.CREATE])
     # Open
     main_form.actions[FileAction.OPEN] = create_open_file_action(
@@ -65,7 +67,7 @@ def init_file_menu(main_form):
     file_menu.addAction(main_form.actions[FileAction.OPEN])
     # Create from clipboard text
     main_form.actions[FileAction.CREATE_CLIP] = create_file_from_clipboard_text_action(
-        parent=main_form, path_func=main_form.path_func
+        parent_func=main_form.current_tree, path_func=main_form.path_func
     )
     file_menu.addAction(main_form.actions[FileAction.CREATE_CLIP])
     # Open file in VS code
@@ -74,7 +76,9 @@ def init_file_menu(main_form):
 def init_folder_menu(main_form):
     folder_menu = main_form.menuBar().addMenu("Fol&der")
     # Create
-    main_form.actions[FolderAction.CREATE] = create_folder_action(parent=main_form, path_func=main_form.path_func)
+    main_form.actions[FolderAction.CREATE] = create_folder_action(
+        parent_func=main_form.current_tree, path_func=main_form.path_func
+    )
     folder_menu.addAction(main_form.actions[FolderAction.CREATE])
     # Select current
     folder_menu.addSeparator()

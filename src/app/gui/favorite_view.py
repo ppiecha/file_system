@@ -14,7 +14,6 @@ from src.app.utils.constant import APP_NAME
 from src.app.utils.path_util import all_folders, path_caption
 from src.app.model.schema import App
 from src.app.utils.logger import get_console_logger
-from src.app.utils.serializer import json_to_file
 
 
 logger = get_console_logger(name=__name__)

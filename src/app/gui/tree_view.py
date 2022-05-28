@@ -3,7 +3,7 @@ import logging
 from enum import Enum
 from typing import List, Optional, Callable, Set, Any
 
-from PySide2.QtCore import QDir, QFileInfo, QModelIndex, QSortFilterProxyModel, QItemSelection, QEvent
+from PySide2.QtCore import QDir, QFileInfo, QModelIndex, QSortFilterProxyModel, QItemSelection
 from PySide2.QtGui import Qt, QPainter, QPalette, QDropEvent, QDragMoveEvent, QDragEnterEvent
 from PySide2.QtWidgets import (
     QTreeView,
@@ -35,8 +35,9 @@ class TreeColumn(int, Enum):
     DATE = 3
 
 
+#pylint: disable=too-many-public-methods
 class TreeView(QTreeView):
-    def __init__(self, parent, tree_model: Tree, last_selected_path: str= None):
+    def __init__(self, parent, tree_model: Tree, last_selected_path: str = None):
         super().__init__(parent)
         self.last_selected_path = last_selected_path
         self.tree_box = parent
@@ -54,6 +55,12 @@ class TreeView(QTreeView):
         self.init_ui()
 
     def init_ui(self):
+        self.setStyleSheet(
+            """QToolTip {background-color: black;
+                                  color: gray;
+                                  border: lightGray solid 1px
+                                  }"""
+        )
         self.setToolTipDuration(5000)
         self.hide_header(hide=self.tree_model.hide_header)
         for column in TreeColumn:
@@ -123,6 +130,10 @@ class TreeView(QTreeView):
     @current_path.setter
     def current_path(self, path: str):
         if path:
+            parent_path = path_util.parent_path(path=path)
+            sys_index = self.sys_model.index(parent_path)
+            if sys_index.isValid():
+                self.expand(sys_index)
             sys_index = self.sys_model.index(path)
             if sys_index.isValid():
                 index = self.proxy_index(sys_index=sys_index)
@@ -146,7 +157,7 @@ class TreeView(QTreeView):
                 self.current_path = self.current_path  # self.path_from_tree_index(proxy_index=self.rootIndex())
                 logger.debug(f"SELECTING {self.current_path}")
             else:
-                logger.debug(f"rootIndex() not set")
+                logger.debug("rootIndex() not set")
         elif selection:
             if len(selection) > 0:
                 self.current_path = selection[0]

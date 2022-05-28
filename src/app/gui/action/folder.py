@@ -5,7 +5,6 @@ from typing import Callable
 
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QKeySequence
-from PySide2.QtWidgets import QWidget
 
 import src.app.utils.folder_util
 from src.app.gui.action.command import Action
@@ -26,12 +25,12 @@ class FolderAction(Enum):
     OPEN_CONSOLE = "Open (console)"
 
 
-def create_folder_action(parent: QWidget, path_func: Callable) -> Action:
+def create_folder_action(parent_func: Callable, path_func: Callable) -> Action:
     return Action(
-        parent=parent,
+        parent=parent_func().main_form,
         caption=FolderAction.CREATE.value,
         shortcut=QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_N),
-        slot=partial(src.app.utils.folder_util.create_folder, parent, path_func),
+        slot=partial(src.app.utils.folder_util.create_folder, parent_func, path_func),
         tip="Creates sub-folder under current folder",
     )
 
@@ -51,7 +50,7 @@ def create_select_folder_in_new_tab_action(parent_func: Callable) -> Action:
         parent=parent_func().main_form,
         caption=FolderAction.SELECT_IN_NEW_TAB.value,
         shortcut=QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_O),
-        slot=lambda: parent_func().tree_box.open_user_defined_page(),
+        slot=parent_func().tree_box.open_user_defined_page,
         tip="Open folder in new tab",
     )
 

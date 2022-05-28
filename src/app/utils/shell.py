@@ -3,7 +3,7 @@ import ctypes.wintypes
 import os
 from enum import Enum
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from win32com.shell import shell, shellcon
 import win32file
@@ -204,7 +204,7 @@ def delete(src, hard_delete: bool) -> bool:
     return not aborted
 
 
-def new_file(file_name: str) -> None:
+def new_file(file_name: str) -> Optional[str]:
     try:
         handle = win32file.CreateFile(
             file_name,
@@ -216,8 +216,9 @@ def new_file(file_name: str) -> None:
             None,
         )
         handle.Close()
+        return None
     except Exception as e:
-        raise e
+        return str(e)
 
 
 def get_new_name(full_name: str) -> str:

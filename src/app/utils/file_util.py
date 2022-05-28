@@ -1,5 +1,5 @@
 import os
-from typing import Callable
+from typing import Callable, Optional
 
 from PySide2.QtCore import QFileInfo, QDir
 from PySide2.QtWidgets import QMessageBox, QInputDialog, QApplication
@@ -9,18 +9,19 @@ from src.app.utils.constant import APP_NAME
 from src.app.utils.shell import new_file
 
 
-def create_text_file(parent, file_name: str, text: str = None) -> bool:
+def create_text_file(parent, file_name: str, text: str = None) -> Optional[str]:
     with open(file=file_name, mode="w", encoding="UTF-8") as file:
         try:
             file.write(text)
-            return True
+            return None
         except Exception as e:
             logger.error(str(e))
-            QMessageBox.information(parent, APP_NAME, str(e))
-            return False
+            # QMessageBox.information(parent, APP_NAME, str(e))
+            return str(e)
 
 
-def create_file(parent, path_func: Callable, text: str = None) -> bool:
+def create_file(parent_func: Callable, path_func: Callable, text: str = None) -> bool:
+    parent = parent_func()
     is_ok, org_path = validate_single_path(parent=parent, paths=path_func())
     logger.debug(f"single path {org_path}")
     if not is_ok:
@@ -30,6 +31,7 @@ def create_file(parent, path_func: Callable, text: str = None) -> bool:
     input_text = QFileInfo(org_path).fileName() if QFileInfo(org_path).suffix() else "new.sql"
     names, ok = QInputDialog.getText(parent, label, label, text=input_text)
     if ok and names:
+        res = None
         for name in names.split(";"):
             new_file_path = os.path.join(path, name)
             file_path = rename_if_exists(parent=parent, path=new_file_path)
@@ -48,19 +50,24 @@ def create_file(parent, path_func: Callable, text: str = None) -> bool:
             if not folder.exists():
                 folder.mkpath(folder_path)
             if text:
-                return create_text_file(parent=parent, file_name=file_name, text=text)
-            new_file(file_name=file_name)
+                res = create_text_file(parent=parent, file_name=file_name, text=text)
+            else:
+                res = new_file(file_name=file_name)
+            if res:
+                QMessageBox.critical(parent, APP_NAME, f"Cannot create file {file_name}")
+            else:
+                parent.set_selection([file_name])
         return True
     return False
 
 
-def create_text_file_from_clip(parent, path_func: Callable) -> bool:
+def create_text_file_from_clip(parent_func: Callable, path_func: Callable) -> bool:
     clipboard = QApplication.clipboard()
     # mime_data = clipboard.mimeData()
     # mime_data.hasText()
     # mime_data.text()
     text = clipboard.text()
     if text:
-        return create_file(parent=parent, path_func=path_func, text=text)
-    QMessageBox.information(parent, APP_NAME, "Clipboard is empty")
+        return create_file(parent_func=parent_func, path_func=path_func, text=text)
+    QMessageBox.information(parent_func(), APP_NAME, "Clipboard is empty")
     return False

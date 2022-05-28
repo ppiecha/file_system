@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Callable
 
 from PySide2.QtGui import QIcon, QKeySequence, Qt
-from PySide2.QtWidgets import QAction, QMenu, QWidget, QShortcut
+from PySide2.QtWidgets import QAction, QMenu, QWidget
 
 from src.app.utils.path_util import (
     copy_items_to_clipboard,

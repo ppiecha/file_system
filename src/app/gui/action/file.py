@@ -4,7 +4,6 @@ from typing import Callable
 
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QKeySequence
-from PySide2.QtWidgets import QWidget
 
 import src.app.utils.file_util
 from src.app.gui.action.command import Action
@@ -19,22 +18,22 @@ class FileAction(Enum):
     OPEN_VS = "Open (VS Code)"
 
 
-def create_file_action(parent: QWidget, path_func: Callable) -> Action:
+def create_file_action(parent_func: Callable, path_func: Callable) -> Action:
     return Action(
-        parent=parent,
+        parent=parent_func().main_form,
         caption=FileAction.CREATE.value,
         shortcut=QKeySequence(Qt.CTRL + Qt.Key_N),
-        slot=partial(src.app.utils.file_util.create_file, parent, path_func),
+        slot=partial(src.app.utils.file_util.create_file, parent_func, path_func),
         tip="Creates new file under current folder",
     )
 
 
-def create_file_from_clipboard_text_action(parent: QWidget, path_func: Callable) -> Action:
+def create_file_from_clipboard_text_action(parent_func: Callable, path_func: Callable) -> Action:
     return Action(
-        parent=parent,
+        parent=parent_func().main_form,
         caption=FileAction.CREATE_CLIP.value,
         shortcut=QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_V),
-        slot=partial(src.app.utils.file_util.create_text_file_from_clip, parent, path_func),
+        slot=partial(src.app.utils.file_util.create_text_file_from_clip, parent_func, path_func),
         tip="Creates new file from clipboard text under current folder",
     )
 
