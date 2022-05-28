@@ -109,6 +109,9 @@ class MainForm(QMainWindow):
         self.app.win_state.is_maximized = self.isMaximized()
         self.app.win_state.on_top = (self.windowFlags() & ~Qt.WindowStaysOnTopHint) == Qt.WindowStaysOnTopHint
         self.app.win_state.splitter_sizes = self.splitter.sizes()
+        self.tree_box.store_pages_layout()
+        if current_tree := self.tree_box.current_tree():
+            self.app.last_page_pinned_path = current_tree.pinned_path
         json_to_file(json_dict=self.app.dict(), file_name=get_config_file())
 
     def on_splitter_moved(self, pos, index):

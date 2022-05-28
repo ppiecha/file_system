@@ -3,7 +3,7 @@ import logging
 from enum import Enum
 from typing import List, Optional, Callable, Set, Any
 
-from PySide2.QtCore import QDir, QFileInfo, QModelIndex, QSortFilterProxyModel, QItemSelection
+from PySide2.QtCore import QDir, QFileInfo, QModelIndex, QSortFilterProxyModel, QItemSelection, QEvent
 from PySide2.QtGui import Qt, QPainter, QPalette, QDropEvent, QDragMoveEvent, QDragEnterEvent
 from PySide2.QtWidgets import (
     QTreeView,
@@ -51,7 +51,6 @@ class TreeView(QTreeView):
         self.tree_model = tree_model
         self.filtered_indexes = []
         self.init_ui()
-        self.set_selection(selection=selection)
 
     def init_ui(self):
         self.setToolTipDuration(5000)
@@ -135,7 +134,7 @@ class TreeView(QTreeView):
         self.tree_model.current_path = path
 
     def set_selection(self, selection: List[str] = None):
-        logger.info(
+        logger.debug(
             f"{path_caption(self.current_path)} "
             f"selection {selection} "
             f"has selection {self.selectionModel().hasSelection()} "
@@ -144,9 +143,9 @@ class TreeView(QTreeView):
         if selection is None and not self.selectionModel().hasSelection():
             if self.rootIndex() and self.rootIndex().isValid():
                 self.current_path = self.current_path  # self.path_from_tree_index(proxy_index=self.rootIndex())
-                logger.info(f"SELECTING {self.current_path}")
+                logger.debug(f"SELECTING {self.current_path}")
             else:
-                logger.info(f"rootIndex() not set")
+                logger.debug(f"rootIndex() not set")
         elif selection:
             if len(selection) == 1:
                 self.current_path = selection[0]
@@ -214,8 +213,9 @@ class TreeView(QTreeView):
                         if file_path == path:
                             self.expand(row_index)
                         logger.debug(f"hiding row {file_path}")
+                    self.restore_layout()
                     self.set_selection(selection=[path])
-                    logger.info(f"should be selected {[path]}")
+                    logger.debug(f"should be selected {[path]}")
             else:
                 logger.debug(f"path {path} NOT LOADED YET")
                 return False
@@ -336,6 +336,27 @@ class TreeView(QTreeView):
                     self.collapse(index)
                 else:
                     self.expand(index)
+
+    def store_layout(self):
+        expanded = []
+        for index in self.proxy.persistentIndexList():
+            if self.isExpanded(index):
+                expanded.append(str(index.data(Qt.DisplayRole)))
+        self.tree_model.expanded_items = expanded
+
+    def restore_layout(self):
+        self.setUpdatesEnabled(False)
+        logger.debug(f"expanding {self.tree_model.expanded_items} for {self.pinned_path} {self.tree_model.pinned_path}")
+        self.expand_items(expanded_items=self.tree_model.expanded_items, start_index=self.rootIndex())
+        self.setUpdatesEnabled(True)
+
+    def expand_items(self, expanded_items: List[str], start_index: QModelIndex):
+        for expanded in expanded_items:
+            matches = self.proxy.match(start_index, Qt.DisplayRole, expanded)
+            for index in matches:
+                logger.debug(f"expanding index {start_index.data(Qt.DisplayRole)}")
+                self.expand(index)
+                self.expand_items(expanded_items, self.proxy.index(0, 0, index))
 
 
 class SortFilterModel(QSortFilterProxyModel):

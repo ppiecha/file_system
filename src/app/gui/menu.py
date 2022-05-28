@@ -27,7 +27,8 @@ from src.app.gui.action.folder import (
     create_pin_action,
     create_open_folder_externally_action,
     create_open_folder_in_new_tab_action,
-    create_open_console_action, create_select_folder_in_new_tab_action,
+    create_open_console_action,
+    create_select_folder_in_new_tab_action,
 )
 from src.app.gui.action.selection import (
     SelectionAction,

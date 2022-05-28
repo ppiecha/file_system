@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional, Callable
 
 from PySide2.QtCore import Qt, QDir
@@ -10,7 +11,7 @@ from src.app.model.schema import App, Tree
 from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger
 
-logger = get_console_logger(name=__name__)
+logger = get_console_logger(name=__name__, log_level=logging.INFO)
 
 
 class TreeBox(QTabWidget):
@@ -34,8 +35,10 @@ class TreeBox(QTabWidget):
     # pylint: disable=unnecessary-comprehension
     def open_pages(self):
         for page in [page for page in self.app_model.pages]:
-            logger.debug(f"Opening page {str(page)}")
+            logger.info(f"Opening page {str(page.pinned_path)} last path {self.app_model.last_page_pinned_path}")
             self.open_tree_page(pinned_path=page.pinned_path, create=False, find_existing=False)
+        if pinned_path := self.app_model.last_page_pinned_path:
+            self.go_to_page(pinned_path=pinned_path)
 
     def open_tree_page(
         self,
@@ -74,7 +77,7 @@ class TreeBox(QTabWidget):
         dir_name = path_caption(path=tree_model.pinned_path) if tree_model.pinned_path else "/"
         self.addTab(page, dir_name)
         if go_to_page:
-            self.setCurrentIndex(self.indexOf(page))
+            self.go_to_page(pinned_path=tree_model.pinned_path)
 
     def pages(self) -> List[TreeView]:
         return [self.widget(i) for i in range(self.count())]
@@ -87,6 +90,11 @@ class TreeBox(QTabWidget):
         if len(pages) > 1:
             raise RuntimeError(f"Found for than one page with path {path}")
         return pages[0]
+
+    def go_to_page(self, pinned_path: str):
+        page = self.page(path=pinned_path)
+        if page:
+            self.setCurrentIndex(self.indexOf(page))
 
     def current_tree(self) -> Optional[TreeView]:
         index = self.currentIndex()
@@ -113,9 +121,14 @@ class TreeBox(QTabWidget):
     def tabRemoved(self, index):
         if current_tree := self.current_tree():
             current_tree.setFocus()
-            logger.debug(f"Deleted widget with index {index} "
-                         f"focus set to {path_caption(self.current_tree().current_path)}")
+            logger.debug(
+                f"Deleted widget with index {index} " f"focus set to {path_caption(self.current_tree().current_path)}"
+            )
 
     def on_current_changed(self, index: int):
         if current_tree := self.current_tree():
             current_tree.set_selection()
+
+    def store_pages_layout(self):
+        for page in self.pages():
+            page.store_layout()

@@ -14,7 +14,7 @@ from src.app.utils.logger import get_console_logger
 from src.app.utils.shell import paste, cut, delete, rename, copy, copy_file, fail, move
 from src.app.utils.thread import run_in_thread
 
-logger = get_console_logger(name=__name__, log_level=logging.INFO)
+logger = get_console_logger(name=__name__, log_level=logging.ERROR)
 Paths = List[str]
 
 

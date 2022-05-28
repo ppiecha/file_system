@@ -27,6 +27,7 @@ class Tree(BaseModel):
     show_files: bool = True
     show_hidden: bool = False
     show_system: bool = False
+    expanded_items: List[str] = []
 
 
 class WindowState(BaseModel):
@@ -55,6 +56,7 @@ class SysPaths(BaseModel):
 class App(BaseModel):
     name: str = APP_NAME
     pages: List[Tree] = []
+    last_page_pinned_path: Optional[str] = None
     favorites: Favorites = Favorites()
     win_state: WindowState = WindowState()
     sys_paths: Optional[SysPaths] = SysPaths()
