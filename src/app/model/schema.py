@@ -28,6 +28,7 @@ class Tree(BaseModel):
     show_hidden: bool = False
     show_system: bool = False
     expanded_items: List[str] = []
+    last_selected_path: Optional[str] = None
 
 
 class WindowState(BaseModel):

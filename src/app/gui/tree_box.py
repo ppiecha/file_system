@@ -62,7 +62,7 @@ class TreeBox(QTabWidget):
         else:
             tree_model = self.app_model.get_page_by_pinned_path(pinned_path=pinned_path)
             tree_model = tree_model or Tree(pinned_path=pinned_path)
-        self.add_page(tree_model=tree_model, go_to_page=go_to_page, selection=selection)
+        self.add_page(tree_model=tree_model, go_to_page=go_to_page, last_selected_path=tree_model.last_selected_path)
 
     def open_root_page(self):
         self.open_tree_page(pinned_path=None, find_existing=False, go_to_page=True)
@@ -72,8 +72,8 @@ class TreeBox(QTabWidget):
         if path:
             self.open_tree_page(pinned_path=path, find_existing=True, go_to_page=True)
 
-    def add_page(self, tree_model: Tree, go_to_page: bool = False, selection: List[str] = None):
-        page = TreeView(parent=self, tree_model=tree_model, selection=selection)
+    def add_page(self, tree_model: Tree, go_to_page: bool = False, last_selected_path: List[str] = None):
+        page = TreeView(parent=self, tree_model=tree_model, last_selected_path=last_selected_path)
         dir_name = path_caption(path=tree_model.pinned_path) if tree_model.pinned_path else "/"
         self.addTab(page, dir_name)
         if go_to_page:

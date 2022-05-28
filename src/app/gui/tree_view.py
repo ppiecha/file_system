@@ -36,8 +36,9 @@ class TreeColumn(int, Enum):
 
 
 class TreeView(QTreeView):
-    def __init__(self, parent, tree_model: Tree, selection: List[str] = None):
+    def __init__(self, parent, tree_model: Tree, last_selected_path: str= None):
         super().__init__(parent)
+        self.last_selected_path = last_selected_path
         self.tree_box = parent
         self.main_form = self.tree_box.parent().parent()
         self.sys_model = QFileSystemModel()
@@ -147,10 +148,10 @@ class TreeView(QTreeView):
             else:
                 logger.debug(f"rootIndex() not set")
         elif selection:
-            if len(selection) == 1:
+            if len(selection) > 0:
                 self.current_path = selection[0]
-            else:
-                raise RuntimeError(f"Only one selection supported {selection}")
+            # else:
+            #     raise RuntimeError(f"Only one selection supported {selection}")
 
     @property
     def pinned_path(self) -> Optional[str]:
@@ -214,7 +215,7 @@ class TreeView(QTreeView):
                             self.expand(row_index)
                         logger.debug(f"hiding row {file_path}")
                     self.restore_layout()
-                    self.set_selection(selection=[path])
+                    self.set_selection(selection=[self.last_selected_path] if self.last_selected_path else [path])
                     logger.debug(f"should be selected {[path]}")
             else:
                 logger.debug(f"path {path} NOT LOADED YET")
@@ -343,6 +344,7 @@ class TreeView(QTreeView):
             if self.isExpanded(index):
                 expanded.append(str(index.data(Qt.DisplayRole)))
         self.tree_model.expanded_items = expanded
+        self.tree_model.last_selected_path = self.current_path
 
     def restore_layout(self):
         self.setUpdatesEnabled(False)
