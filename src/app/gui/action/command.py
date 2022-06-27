@@ -17,6 +17,7 @@ from src.app.utils.path_util import (
     edit_item,
     validate_single_path,
     copy_move,
+    search_in_path,
 )
 from src.app.utils.logger import get_console_logger
 from src.app.utils.shell import properties
@@ -39,6 +40,7 @@ class CommonAction(str, Enum):
     DUPLICATE = "Duplicate"
     PROPERTIES = "Properties..."
     COMPARE = "Compare/Diff"
+    SEARCH = "Search..."
 
 
 class Action(QAction):
@@ -212,4 +214,14 @@ def create_move_to_action(parent_func: Callable, path_func: Callable) -> Action:
         shortcut=QKeySequence(Qt.Key_F6),
         slot=lambda: copy_move(parent=parent_func().main_form, path_func=path_func, move_flag=True),
         tip="Move items to selected location",
+    )
+
+
+def create_search_action(parent_func: Callable, path_func: Callable) -> Action:
+    return Action(
+        parent=parent_func().main_form,
+        caption=CommonAction.SEARCH.value,
+        shortcut=QKeySequence(Qt.CTRL + Qt.Key_F),
+        slot=lambda: search_in_path(parent=parent_func().main_form, path_func=path_func),
+        tip="Search in specified path",
     )

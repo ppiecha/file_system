@@ -35,7 +35,7 @@ class TreeColumn(int, Enum):
     DATE = 3
 
 
-#pylint: disable=too-many-public-methods
+# pylint: disable=too-many-public-methods
 class TreeView(QTreeView):
     def __init__(self, parent, tree_model: Tree, last_selected_path: str = None):
         super().__init__(parent)

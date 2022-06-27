@@ -348,3 +348,9 @@ def go_to_item(parent, path_func: Callable) -> bool:
         parent.tree_box.open_tree_page(pinned_path=folder, find_existing=True, go_to_page=True, selection=selection)
         return True
     return False
+
+
+def search_in_path(parent, path_func: Callable):
+    parent.search_dlg.show()
+    for path in path_func():
+        parent.search_dlg.search_control.add_search_panel(path=path)

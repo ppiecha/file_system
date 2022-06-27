@@ -13,6 +13,7 @@ from src.app.gui.action.command import (
     create_properties_action,
     create_copy_to_action,
     create_move_to_action,
+    create_search_action,
 )
 from src.app.gui.action.file import (
     FileAction,
@@ -191,6 +192,12 @@ def init_command_menu(main_form):
         parent_func=main_form.current_tree, path_func=main_form.path_func
     )
     command_menu.addAction(main_form.actions[CommonAction.DELETE])
+    # Search
+    command_menu.addSeparator()
+    main_form.actions[CommonAction.SEARCH] = create_search_action(
+        parent_func=main_form.current_tree, path_func=main_form.path_func
+    )
+    command_menu.addAction(main_form.actions[CommonAction.SEARCH])
 
 
 def init_selection_menu(main_form):

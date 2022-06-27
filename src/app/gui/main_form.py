@@ -6,6 +6,7 @@ from PySide2.QtGui import QIcon, Qt
 from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox, QApplication
 
 from src.app.gui.dialog.base import CustomMessageBox
+from src.app.gui.dialog.search.search_dlg import SearchDlg
 from src.app.gui.favorite_view import FavoriteTree
 from src.app.gui.menu import init_menu
 from src.app.gui.tree_view import TreeView
@@ -30,6 +31,7 @@ class MainForm(QMainWindow):
         self.splitter = QSplitter(self)
         self.favorite_tree = FavoriteTree(parent=self.splitter, app_model=app)
         self.tree_box = TreeBox(parent=self.splitter, app_model=app)
+        self.search_dlg = SearchDlg(mf=self)
         self.splitter.addWidget(self.favorite_tree)
         self.splitter.addWidget(self.tree_box)
         self.setCentralWidget(self.splitter)
