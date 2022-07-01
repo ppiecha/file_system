@@ -4,6 +4,9 @@ from typing import Iterator, List
 from PySide2.QtCore import QDirIterator, QDir, QFileInfo
 
 from src.app.model.search import FileSearchResult, SearchParam, open_file
+from src.app.utils.logger import get_console_logger
+
+logger = get_console_logger(name=__name__)
 
 
 def find_keyword(
@@ -36,20 +39,23 @@ def search_file(
 
 def search(
     search_param: SearchParam,
-    filters: QDir.Filters = QDir.AllEntries | QDir.NoSymLinks | QDir.NoDotAndDotDot,
+    filters: QDir.Filters = QDir.AllEntries | QDir.NoSymLinks | QDir.Dirs | QDir.NoDotAndDotDot | QDir.DirsFirst,
 ) -> Iterator[FileSearchResult]:
     flags = QDirIterator.Subdirectories if search_param.subdirectories else QDirIterator.NoIteratorFlags
     it = QDirIterator(search_param.path, search_param.name_filters, filters, flags)
     while it.hasNext():
         file_name = it.next()
+        print("file_name", file_name)
         file_info = QFileInfo(file_name)
         search_result = FileSearchResult(
             keyword=search_param.keyword,
             file_name=file_name,
             is_dir=file_info.isDir(),
         )
-        if not search_result.is_dir:
+        if not search_result.is_dir and search_param.keyword:
             text_lines = open_file(file_name=file_name)
             search_result = search_file(search_param=search_param, text_lines=text_lines, search_result=search_result)
-        if search_result.error is not None or search_result.hits is not None:
+        if search_result.error is not None or search_result.hits is not None or not search_param.keyword:
             yield search_result
+        if search_result.error:
+            logger.error(search_result.error)

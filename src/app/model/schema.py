@@ -42,6 +42,13 @@ class WindowState(BaseModel):
     show_favorites: bool = True
 
 
+class SearchWindowState(BaseModel):
+    x: int = 200
+    y: int = 200
+    width: int = 500
+    height: int = 300
+
+
 class SysPath(BaseModel):
     path: str = None
     view: bool = True
@@ -61,6 +68,7 @@ class App(BaseModel):
     favorites: Favorites = Favorites()
     win_state: WindowState = WindowState()
     sys_paths: Optional[SysPaths] = SysPaths()
+    search_win_state: SearchWindowState = SearchWindowState()
 
     def add_page(self, pinned_path: str = None) -> Tree:
         tree = Tree(pinned_path=pinned_path)

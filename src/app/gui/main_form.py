@@ -103,6 +103,7 @@ class MainForm(QMainWindow):
         json_to_file(json_dict=self.app.dict(), file_name=get_config_file())
 
     def closeEvent(self, event):
+        self.search_dlg.close()
         if not self.isMaximized():
             self.app.win_state.x = self.frameGeometry().x()
             self.app.win_state.y = self.frameGeometry().y()

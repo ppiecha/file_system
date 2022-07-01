@@ -5,6 +5,32 @@ from typing import Sequence, Iterator, Optional, List, Tuple, Dict
 
 from pydantic import BaseModel
 
+from src.app.utils.path_util import extract_folders, path_caption
+
+
+def format_keyword(keyword: str) -> str:
+    return f"""<span style="background-color:transparent;color:gold">{keyword}</span>"""
+
+
+def format_path(path: str) -> str:
+    return f"""<span style="background-color:transparent;color:aqua">{path}</span>"""
+
+
+class SearchConfig(BaseModel):
+    keywords: List[str] = []
+    name_filters: List[str] = [
+        "*.sql;*.pks;*.pkb;*.py;*.txt;*.xml",
+        "*",
+        "*.*",
+        "*.py",
+        "*.sql;*.pks;*.pkb",
+        "*.xml",
+    ]
+    paths: List[str] = []
+    excluded_dirs: List[str] = [
+        "venv;__pycache__",
+    ]
+
 
 class SearchParam(BaseModel):
     keyword: Optional[str] = None
@@ -15,6 +41,21 @@ class SearchParam(BaseModel):
     whole_words: bool = False
     reg_exp: bool = False
     subdirectories: bool = True
+
+    def as_html(self) -> str:
+
+        def search_type() -> str:
+            if self.keyword:
+                return format_keyword(keyword=self.keyword)
+            return "for files and folders"
+
+        return " ".join([
+            "Result(s) of searching",
+            search_type(),
+            "in",
+            format_path(path=self.path),
+            f"using filters {self.name_filters}"
+        ])
 
 
 Range = Tuple[int, int]
@@ -28,14 +69,15 @@ class LineHit(BaseModel):
     line_hit_range: Range
 
     def as_html(self):
-        line_number = f"""<span style="background-color:transparent;color:Gray">Line {self.line_number}:</span>"""
+        line_number = f"""<span style="background-color:transparent;color:Gray">line {self.line_number}: </span>"""
         text_before = self.line_text[0 : self.line_hit_range[0]]
         text_before = f"""<span style="background-color:transparent">{text_before}</span >"""
-        keyword = self.line_text[self.line_hit_range[0] : self.line_hit_range[1]]
-        keyword = f"""<span style="background-color:transparent;color:#FFFF00">{keyword}</span>"""
-        text_after = self.line_text[self.line_hit_range[1] :]
+        keyword = self.line_text[self.line_hit_range[0]:self.line_hit_range[1]]
+        keyword = format_keyword(keyword=keyword)
+        text_after = self.line_text[self.line_hit_range[1]:]
         text_after = f"""<span style="background-color:transparent">{text_after}</span>"""
-        return "".join([line_number, text_before, keyword, text_after])
+        text = "".join([line_number, text_before, keyword, text_after])
+        return f"<pre><code>{text}</code></pre>"
 
 
 def open_file(file_name: str) -> List[str] | str:
@@ -71,7 +113,7 @@ def line_hit(match: re.Match, lines: List[str], line_map: LineRangeMap) -> LineH
         if start_num <= hit_range[0] <= stop_num
     ]
     if len(line_ranges) != 1:
-        raise ValueError(f"Expecting exactly one line range {match} {line_map}")
+        raise ValueError(f"Expecting exactly one line range {match} {line_map} {line_ranges}")
     line_range = line_ranges[0]
     line_number = line_range[2]
     line_range = (line_range[0], line_range[1])
@@ -80,14 +122,14 @@ def line_hit(match: re.Match, lines: List[str], line_map: LineRangeMap) -> LineH
     return LineHit(
         line_range=line_range,
         line_number=line_number,
-        line_text=line_text,
+        line_text=line_text.rstrip("\n"),
         hit_range=hit_range,
         line_hit_range=line_hit_range,
     )
 
 
 class FileSearchResult(BaseModel):
-    keyword: str
+    keyword: Optional[str] = None
     file_name: str
     is_dir: bool
     error: Optional[str] = None
@@ -107,8 +149,11 @@ class FileSearchResult(BaseModel):
         pass
 
     def file_directory(self) -> str:
-        pass
+        return path_caption(path=extract_folders([self.file_name])[0])
 
-    def as_html(self):
-        return f"""<span style="background-color:transparent;color:white" >{self.file_name}</span>"""
-        # return f"""<b>{self.file_name}</b>"""
+    def as_html(self) -> str:
+        if self.error:
+            return self.error
+        return f"""<span style="background-color:transparent;color:LightBlue" >{self.file_name} </span>"""\
+               f"""<b style="background-color:transparent;color:Gray">{self.file_directory()}</b>"""
+

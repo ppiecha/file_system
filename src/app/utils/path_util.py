@@ -352,5 +352,5 @@ def go_to_item(parent, path_func: Callable) -> bool:
 
 def search_in_path(parent, path_func: Callable):
     parent.search_dlg.show()
-    for path in path_func():
+    for path in extract_folders(paths=path_func()):
         parent.search_dlg.search_control.add_search_panel(path=path)
