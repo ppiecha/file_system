@@ -3,7 +3,7 @@ from typing import Iterator, List
 
 from PySide2.QtCore import QDirIterator, QDir, QFileInfo
 
-from src.app.model.search import FileSearchResult, SearchParam, open_file
+from src.app.model.search import FileSearchResult, SearchParam, open_file, SearchState
 from src.app.utils.logger import get_console_logger
 
 logger = get_console_logger(name=__name__)
@@ -45,7 +45,6 @@ def search(
     it = QDirIterator(search_param.path, search_param.name_filters, filters, flags)
     while it.hasNext():
         file_name = it.next()
-        print("file_name", file_name)
         file_info = QFileInfo(file_name)
         search_result = FileSearchResult(
             keyword=search_param.keyword,

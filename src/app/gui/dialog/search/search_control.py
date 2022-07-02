@@ -47,4 +47,3 @@ class SearchControl(QTabWidget):
     def rename_tab(self, search_panel: SearchPanel):
         index = self.indexOf(search_panel)
         self.setTabText(index, search_panel.search_path_caption())
-

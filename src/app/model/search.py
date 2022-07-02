@@ -1,8 +1,12 @@
+from __future__ import annotations
+
 import operator
 import re
+from enum import Enum, auto
 from itertools import accumulate
 from typing import Sequence, Iterator, Optional, List, Tuple, Dict
 
+from PySide2.QtWidgets import QWidget, QStyle
 from pydantic import BaseModel
 
 from src.app.utils.path_util import extract_folders, path_caption
@@ -43,19 +47,20 @@ class SearchParam(BaseModel):
     subdirectories: bool = True
 
     def as_html(self) -> str:
-
         def search_type() -> str:
             if self.keyword:
                 return format_keyword(keyword=self.keyword)
             return "for files and folders"
 
-        return " ".join([
-            "Result(s) of searching",
-            search_type(),
-            "in",
-            format_path(path=self.path),
-            f"using filters {self.name_filters}"
-        ])
+        return " ".join(
+            [
+                "Result(s) of searching",
+                search_type(),
+                "in",
+                format_path(path=self.path),
+                f"using filters {self.name_filters}",
+            ]
+        )
 
 
 Range = Tuple[int, int]
@@ -72,9 +77,9 @@ class LineHit(BaseModel):
         line_number = f"""<span style="background-color:transparent;color:Gray">line {self.line_number}: </span>"""
         text_before = self.line_text[0 : self.line_hit_range[0]]
         text_before = f"""<span style="background-color:transparent">{text_before}</span >"""
-        keyword = self.line_text[self.line_hit_range[0]:self.line_hit_range[1]]
+        keyword = self.line_text[self.line_hit_range[0] : self.line_hit_range[1]]
         keyword = format_keyword(keyword=keyword)
-        text_after = self.line_text[self.line_hit_range[1]:]
+        text_after = self.line_text[self.line_hit_range[1] :]
         text_after = f"""<span style="background-color:transparent">{text_after}</span>"""
         text = "".join([line_number, text_before, keyword, text_after])
         return f"<pre><code>{text}</code></pre>"
@@ -154,6 +159,19 @@ class FileSearchResult(BaseModel):
     def as_html(self) -> str:
         if self.error:
             return self.error
-        return f"""<span style="background-color:transparent;color:LightBlue" >{self.file_name} </span>"""\
-               f"""<b style="background-color:transparent;color:Gray">{self.file_directory()}</b>"""
+        return (
+            f"""<span style="background-color:transparent;color:LightBlue" >{self.file_name} </span>"""
+            f"""<b style="background-color:transparent;color:Gray">{self.file_directory()}</b>"""
+        )
 
+    def icon(self):
+        if self.is_dir:
+            return QWidget().style().standardIcon(getattr(QStyle, "SP_DirIcon"))
+        return QWidget().style().standardIcon(getattr(QStyle, "SP_FileIcon"))
+
+
+class SearchState(Enum):
+    READY = auto()
+    RUNNING = auto()
+    CANCELLED = auto()
+    COMPLETED = auto()
