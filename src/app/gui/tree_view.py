@@ -325,7 +325,7 @@ class TreeView(QTreeView):
                 parent=self,
                 target=func,
                 args=[files, path, False],
-                lst=self.main_form.threads,
+                threads=self.main_form.threads,
             )
             logger.debug(f"action executed {func} files {files}")
 

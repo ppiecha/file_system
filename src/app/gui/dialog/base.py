@@ -41,7 +41,7 @@ class BaseEdit(QLineEdit):
         self.action_delegate = action_delegate
         self.post_action = post_action
         self.main_form = parent
-        icon = QApplication.style().standardIcon(QStyle.SP_DirIcon)
+        icon = self.style().standardIcon(QStyle.SP_DirIcon)
         self.action = self.addAction(icon, QLineEdit.TrailingPosition)
         self.action.triggered.connect(self.on_select)
 

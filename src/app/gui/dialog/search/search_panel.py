@@ -1,18 +1,21 @@
 from __future__ import annotations
 from enum import Enum
+from time import perf_counter
 from typing import List, Dict
 
-from PySide2 import QtCore
 from PySide2.QtCore import QThread, Signal, QObject
-from PySide2.QtWidgets import QWidget, QFormLayout, QComboBox, QCheckBox, QBoxLayout, QLineEdit, QPushButton, QLabel, \
-    QApplication
+from PySide2.QtWidgets import QWidget, QFormLayout, QComboBox, QCheckBox, QBoxLayout, QLineEdit, QPushButton, QLabel
 
 from src.app.gui.dialog.base import PathEdit
 from src.app.gui.dialog.search.search_tree import SearchTree, SearchStat
 from src.app.gui.widget import widget_of_widgets
-from src.app.model.search import SearchParam, SearchConfig, SearchState, FileSearchResult
+from src.app.model.search import SearchParam, SearchConfig, SearchState, FileSearchResult, FileSearchResultList
+from src.app.utils.logger import get_console_logger
 from src.app.utils.path_util import path_caption
 from src.app.utils.search import search
+
+
+logger = get_console_logger(__name__)
 
 
 class SearchButtonCaption(str, Enum):
@@ -54,7 +57,7 @@ class EditableComboBox(QComboBox):
 def split_multiple_values(text: str) -> List[str]:
     if ";" not in text:
         return [text]
-    return text.split(";")
+    return [part.strip() for part in text.split(";")]
 
 
 class SearchPanel(QWidget):
@@ -122,6 +125,10 @@ class SearchPanel(QWidget):
     def enable_search_controls(self, enabled: bool):
         for control in self.widget_map.values():
             control.setEnabled(enabled)
+            # if enabled:
+            #     control.setStyle()
+            # else:
+            #     control.setStyleSheet("background-color:transparent")
 
     def search_path(self) -> str:
         return self.widget_map["path"].text()
@@ -140,13 +147,21 @@ class SearchPanel(QWidget):
         self.search_btn.set_state(search_state=SearchState.RUNNING)
         self.search_tree.pre_search_actions(search_param=search_param)
 
-    def search_on_progress(self, file_search_result: FileSearchResult):
-        self.search_status_label.setText(file_search_result.file_name)
-        self.search_tree.process_result(file_search_result=file_search_result)
+    def search_on_progress(self, file_search_result_list: FileSearchResultList):
+        if file_search_result_list:
+            self.search_status_label.setText(file_search_result_list[0].file_name)
+        self.search_tree.process_result_list(file_search_result_list=file_search_result_list)
 
     def search_on_finished(self, search_stat: SearchStat):
-        self.search_tree.post_search_actions(search_stat=search_stat)
+        self.search_post_actions(search_stat=search_stat)
         self.search_btn.set_state(search_state=SearchState.READY)
+
+    def search_post_actions(self, search_stat: SearchStat):
+        hits = ""
+        # if search_param.keyword:
+        #     hits = format_keyword(keyword=f"hits {str(search_stat.hits)}")
+        text = f"Folders {str(search_stat.dirs)} files {str(search_stat.files)} {hits}"
+        self.search_status_label.setText(text)
 
     def search(self):
         search_param = self.get_search_param()
@@ -183,7 +198,7 @@ class SearchPanel(QWidget):
 
 class SearchWorker(QObject):
     started = Signal(SearchParam)
-    progress = Signal(FileSearchResult)
+    progress = Signal(FileSearchResultList)
     finished = Signal(SearchStat)
 
     def __init__(self, search_param: SearchParam):
@@ -191,16 +206,32 @@ class SearchWorker(QObject):
         self.search_param = search_param
 
     def run(self):
-        # self.started.emit(self.search_param)
-        search_results = search(search_param=self.search_param)
-        search_stat = SearchStat(dirs=0, files=0, hits=0)
-        for search_result in search_results:
-            if QThread.currentThread().isInterruptionRequested():
-                print("TERMINATED IN RUN")
-                break
-            if search_result.is_dir:
-                search_stat.dirs += 1
-            else:
-                search_stat.files += 1
-            self.progress.emit(search_result)
-        self.finished.emit(search_stat)
+        try:
+            result_buffer = []
+            search_results = search(search_param=self.search_param)
+            search_stat = SearchStat(dirs=0, files=0, hits=0)
+            # tic = perf_counter()
+            logger.debug("search started")
+            for search_result in search_results:
+                if QThread.currentThread().isInterruptionRequested():
+                    break
+                if search_result.is_dir:
+                    search_stat.dirs += 1
+                else:
+                    search_stat.files += 1
+                result_buffer.append(search_result)
+                # self.progress.emit(FileSearchResultList(__root__=[search_result]))
+            #     toc = perf_counter()
+            #     if toc - tic > 0.1:
+            #         self.progress.emit(FileSearchResultList(__root__=result_buffer))
+            #         logger.debug(f"Flushed {len(result_buffer)} items")
+            #         result_buffer = []
+            #         tic = perf_counter()
+            # self.progress.emit(FileSearchResultList(__root__=result_buffer))
+            logger.debug("search finished - processing results")
+            self.progress.emit(FileSearchResultList(__root__=result_buffer))
+            logger.debug("results processed")
+            self.finished.emit(search_stat)
+        except Exception as e:
+            logger.error(str(e))
+            self.exception.emit(str(e))

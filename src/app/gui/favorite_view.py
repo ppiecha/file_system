@@ -111,8 +111,7 @@ class FavoriteTree(QTreeWidget):
         item.setText(1, favorite.description)
         item.setText(2, favorite.path)
         item.setData(0, Qt.UserRole, favorite)
-        icon = self.style().standardIcon(getattr(QStyle, "SP_DirIcon"))
-        item.setIcon(0, icon)
+        item.setIcon(0, self.main_form.icons["dir"])
         return item
 
     def create_top_level_item(self, favorite: Favorite) -> QTreeWidgetItem:

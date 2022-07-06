@@ -10,7 +10,6 @@ text1 = """flag = re.IGNORECASE if not case_sensitive else 0"""
 def assert_keyword(keyword: str, text: str, hits: Iterator[re.Match], ignore_case: bool = True):
     for hit in hits:
         for reg in hit.regs:
-            print("reg", reg)
             if ignore_case:
                 assert text[reg[0] : reg[1]].lower() == keyword.lower()
             else:

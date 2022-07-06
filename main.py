@@ -12,9 +12,7 @@ if __name__ == "__main__":
     app_qt_object.setStyle("Fusion")  # Style needed for palette to work
     app_qt_object.setPalette(dark_palette)
     app_model = App().dict()
-    # print(app_model)
     app_model.update(json_from_file(file_name=get_config_file()))
-    # print(app_model)
     app_model = App(**app_model)
     main_form = MainForm(app=app_model, app_qt_object=app_qt_object)
     app_qt_object.setApplicationName(app_model.name)

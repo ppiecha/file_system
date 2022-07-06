@@ -230,7 +230,6 @@ def get_new_name(full_name: str) -> str:
         if fnmatch.fnmatch(path.stem, "*(*)"):
             start = path.stem.rfind("(")
             stop = path.stem.rfind(")")
-            # print(path.stem[start:stop+1])
             try:
                 num = int(path.stem[start + 1 : stop])
             except:
@@ -407,7 +406,6 @@ def get_drives():
             info = win32api.GetVolumeInformation(drive)
         except:
             info = [""]
-        # print(drive, "=>", drive_types[win32file.GetDriveType(drive)])
         drive_dict[drive] = [drive, info[0], drive_types[win32file.GetDriveType(drive)], drive]
     desk_path = shell.SHGetFolderPath(0, shellcon.CSIDL_DESKTOP, None, 0)
     home_path = Path.home()
@@ -427,7 +425,6 @@ def get_context_menu(path, file_names):
             pidl = parent_folder.ParseDisplayName(hwnd, None, item)[1]
             pidls.append(pidl)
         context_menu = parent_folder.GetUIObjectOf(hwnd, pidls, shell.IID_IContextMenu, 0)[1]
-        # print(parent_folder.GetDisplayNameOf(pidls[0], shellcon.SHGDN_FORPARSING | shellcon.SHGDN_FORADDRESSBAR))
     else:
         item = Path(path)
         path = item.parent

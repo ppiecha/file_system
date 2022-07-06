@@ -6,7 +6,8 @@ from enum import Enum, auto
 from itertools import accumulate
 from typing import Sequence, Iterator, Optional, List, Tuple, Dict
 
-from PySide2.QtWidgets import QWidget, QStyle
+from chardet.universaldetector import UniversalDetector
+
 from pydantic import BaseModel
 
 from src.app.utils.path_util import extract_folders, path_caption
@@ -18,6 +19,18 @@ def format_keyword(keyword: str) -> str:
 
 def format_path(path: str) -> str:
     return f"""<span style="background-color:transparent;color:aqua">{path}</span>"""
+
+
+def format_file_name(file_name: str) -> str:
+    return f"""<span style="background-color:transparent;color:LightBlue">{file_name} </span>"""
+
+
+def format_directory(directory: str) -> str:
+    return f"""<b style="background-color:transparent;color:Gray">{directory}</b>"""
+
+
+def format_error(file_name: str, error: str) -> str:
+    return f"""{format_file_name(file_name)}<br>{error}"""
 
 
 class SearchConfig(BaseModel):
@@ -72,6 +85,10 @@ class LineHit(BaseModel):
     line_text: str
     hit_range: Range
     line_hit_range: Range
+    file_name: str
+
+    def column_number(self) -> int:
+        return self.line_hit_range[0] + 1
 
     def as_html(self):
         line_number = f"""<span style="background-color:transparent;color:Gray">line {self.line_number}: </span>"""
@@ -79,13 +96,27 @@ class LineHit(BaseModel):
         text_before = f"""<span style="background-color:transparent">{text_before}</span >"""
         keyword = self.line_text[self.line_hit_range[0] : self.line_hit_range[1]]
         keyword = format_keyword(keyword=keyword)
-        text_after = self.line_text[self.line_hit_range[1] :]
+        text_after = self.line_text[self.line_hit_range[1]:]
         text_after = f"""<span style="background-color:transparent">{text_after}</span>"""
         text = "".join([line_number, text_before, keyword, text_after])
         return f"<pre><code>{text}</code></pre>"
 
 
+detector = UniversalDetector()
+
+
+def file_encoding(file_name: str) -> str:
+    detector.reset()
+    for line in open(file_name, 'rb'):
+        detector.feed(line)
+        if detector.done:
+            break
+    detector.close()
+    return detector.result["encoding"]
+
+
 def open_file(file_name: str) -> List[str] | str:
+    # file_encoding(file_name=file_name)
     try:
         with open(file_name, "r", encoding="utf-8") as file:
             return file.readlines()
@@ -106,7 +137,7 @@ def line_range_map(lines: List[str]) -> LineRangeMap:
     return ranges
 
 
-def line_hit(match: re.Match, lines: List[str], line_map: LineRangeMap) -> LineHit:
+def line_hit(match: re.Match, lines: List[str], line_map: LineRangeMap, file_name: str) -> LineHit:
     if match is None or len(match.regs) != 1:
         raise ValueError(f"Match is empty or contains not exactly one tuple {match}")
     hit_range = match.regs[0]
@@ -126,10 +157,11 @@ def line_hit(match: re.Match, lines: List[str], line_map: LineRangeMap) -> LineH
     line_hit_range = (hit_range[0] - line_range[0], hit_range[1] - line_range[0])
     return LineHit(
         line_range=line_range,
-        line_number=line_number,
+        line_number=line_number + 1,
         line_text=line_text.rstrip("\n"),
         hit_range=hit_range,
         line_hit_range=line_hit_range,
+        file_name=file_name,
     )
 
 
@@ -138,7 +170,7 @@ class FileSearchResult(BaseModel):
     file_name: str
     is_dir: bool
     error: Optional[str] = None
-    hits: Optional[Iterator[re.Match]] = None
+    hits: Optional[List[re.Match]] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -148,7 +180,7 @@ class FileSearchResult(BaseModel):
             return ()
         lines = open_file(file_name=self.file_name)
         line_map = line_range_map(lines=lines)
-        return (line_hit(match=match, lines=lines, line_map=line_map) for match in self.hits)
+        return (line_hit(match=match, lines=lines, line_map=line_map, file_name=self.file_name) for match in self.hits)
 
     def file_caption(self) -> str:
         pass
@@ -158,16 +190,21 @@ class FileSearchResult(BaseModel):
 
     def as_html(self) -> str:
         if self.error:
-            return self.error
-        return (
-            f"""<span style="background-color:transparent;color:LightBlue" >{self.file_name} </span>"""
-            f"""<b style="background-color:transparent;color:Gray">{self.file_directory()}</b>"""
-        )
+            return format_error(file_name=self.file_name, error=self.error)
+        return format_file_name(file_name=self.file_name)
 
-    def icon(self):
-        if self.is_dir:
-            return QWidget().style().standardIcon(getattr(QStyle, "SP_DirIcon"))
-        return QWidget().style().standardIcon(getattr(QStyle, "SP_FileIcon"))
+
+class FileSearchResultList(BaseModel):
+    __root__: List[FileSearchResult] = []
+
+    def __iter__(self) -> Iterator[FileSearchResult]:
+        return iter(self.__root__)
+
+    def __getitem__(self, item) -> FileSearchResult:
+        return self.__root__[item]
+
+    def __len__(self):
+        return len(self.__root__)
 
 
 class SearchState(Enum):

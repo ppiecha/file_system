@@ -4,6 +4,7 @@ from typing import Callable
 from PySide2.QtGui import QIcon, QKeySequence, Qt
 from PySide2.QtWidgets import QAction, QMenu, QWidget
 
+from src.app.utils.constant import Context
 from src.app.utils.path_util import (
     copy_items_to_clipboard,
     paste_items_from_clipboard,
@@ -140,14 +141,14 @@ def create_duplicate_action(parent_func: Callable, path_func: Callable) -> Actio
     )
 
 
-def create_view_action(parent_func: Callable, path_func: Callable) -> Action:
+def create_view_action(parent_func: Callable, path_func: Callable, line_func: Callable) -> Action:
     return Action(
         parent=parent_func().main_form,
         caption=CommonAction.VIEW.value,
         shortcut=[QKeySequence(Qt.Key_F3), QKeySequence(Qt.CTRL + Qt.Key_Return)],
         # shortcut=QKeySequence("F3,Ctrl+Enter"),
         # shortcut=QKeySequence("A,Ctrl+O"),
-        slot=lambda: view_item(parent=parent_func().main_form, path_func=path_func),
+        slot=lambda: view_item(parent=parent_func().main_form, path_func=path_func, line_func=line_func),
         tip="View item",
     )
 
@@ -162,12 +163,12 @@ def create_edit_action(parent_func: Callable, path_func: Callable) -> Action:
     )
 
 
-def create_go_to_action(parent_func: Callable, path_func: Callable) -> Action:
+def create_go_to_action(parent_func: Callable, path_func: Callable, context_func: Callable) -> Action:
     return Action(
         parent=parent_func().main_form,
         caption=CommonAction.GO_TO.value,
         shortcut=QKeySequence(Qt.CTRL + Qt.Key_G),
-        slot=lambda: go_to_item(parent=parent_func().main_form, path_func=path_func),
+        slot=lambda: go_to_item(parent=parent_func().main_form, path_func=path_func, context_func=context_func),
         tip="Go to specified item",
     )
 

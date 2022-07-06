@@ -1,20 +1,24 @@
+from __future__ import annotations
 import math
 import os.path
 import subprocess
 import logging
-from typing import List, Callable, Tuple, Optional
+import typing
+from typing import List, Callable, Tuple, Optional, Dict
 
 from PySide2.QtCore import QDir, QFileInfo, QMimeData, QUrl, Qt, QDirIterator
 from PySide2.QtWidgets import QMessageBox, QApplication, QInputDialog
 
 from src.app.gui.dialog.base import select_folder
 from src.app.gui.dialog.sys_path_edit import SysPathDialog
-from src.app.utils.constant import APP_NAME
+if typing.TYPE_CHECKING:
+    from src.app.model.search import LineHit
+from src.app.utils.constant import APP_NAME, Context
 from src.app.utils.logger import get_console_logger
 from src.app.utils.shell import paste, cut, delete, rename, copy, copy_file, fail, move
 from src.app.utils.thread import run_in_thread
 
-logger = get_console_logger(name=__name__, log_level=logging.ERROR)
+logger = get_console_logger(name=__name__, log_level=logging.INFO)
 Paths = List[str]
 
 
@@ -36,14 +40,11 @@ def all_files(paths: Paths) -> bool:
 
 def extract_path(item: str) -> str:
     info = QFileInfo(item)
-    logger.debug(f"extract_path {item} {info.suffix()} {info.absolutePath()} {info.absoluteFilePath()}")
-    if info.suffix():
-        path = item
-    else:
-        if item.endswith(os.sep):
-            path = item
-        else:
-            path = "".join([item, os.sep])
+    # logger.info(f"extract_path {item} {info.suffix()} {info.absolutePath()} {info.absoluteFilePath()} {info.absoluteDir()}")
+    path = item
+    if info.isDir():
+        if path[-1] not in ("\\", "/"):
+            path = "".join([item, "/"])
     return QFileInfo(path).path()
 
 
@@ -156,7 +157,6 @@ def rename_if_exists(parent, path: str, user_is_aware: bool = False) -> Optional
                 APP_NAME,
                 f"{item_type_name} <b> {item_name} </b> already exists in {parent_item_path} <br> Use another name?",
             )
-        print(resp)
         if resp == QMessageBox.Yes:
             label = f"New {item_type_name} name"
             name, ok = QInputDialog.getText(parent, label, label, text=item_name)
@@ -178,7 +178,7 @@ def cut_items_to_clipboard(parent, path_func: Callable) -> bool:
     is_ok, path = validate_single_path(parent=parent, paths=path_func())
     path = extract_path(item=path)
     if is_ok:
-        run_in_thread(parent=parent, target=cut, args=[path], lst=parent.threads)
+        run_in_thread(parent=parent, target=cut, args=[path], threads=parent.threads)
         return True
     return True
 
@@ -197,7 +197,7 @@ def paste_items_from_clipboard(parent, path_func: Callable) -> bool:
     is_ok, path = validate_single_path(parent=parent, paths=path_func())
     if is_ok:
         path = extract_path(item=path)
-        run_in_thread(parent=parent, target=paste, args=[path], lst=parent.threads)
+        run_in_thread(parent=parent, target=paste, args=[path], threads=parent.threads)
         return True
     return False
 
@@ -205,7 +205,7 @@ def paste_items_from_clipboard(parent, path_func: Callable) -> bool:
 def delete_items(parent, path_func: Callable) -> bool:
     paths = path_func()
     modifiers = QApplication.keyboardModifiers()
-    run_in_thread(parent=parent, target=delete, args=[paths, modifiers == Qt.ControlModifier], lst=parent.threads)
+    run_in_thread(parent=parent, target=delete, args=[paths, modifiers == Qt.ControlModifier], threads=parent.threads)
     return True
 
 
@@ -215,7 +215,7 @@ def rename_item(parent, path_func: Callable) -> bool:
         new_path = rename_if_exists(parent=parent, path=path, user_is_aware=True)
         if not new_path:
             return False
-        run_in_thread(parent=parent, target=rename, args=[path, new_path, False], lst=parent.threads)
+        run_in_thread(parent=parent, target=rename, args=[path, new_path, False], threads=parent.threads)
     return True
 
 
@@ -227,13 +227,13 @@ def duplicate_item(parent, path_func: Callable) -> bool:
             return False
         info = QFileInfo(path)
         if info.suffix():
-            run_in_thread(parent=parent, target=copy_file, args=[path, new_path, False], lst=parent.threads)
+            run_in_thread(parent=parent, target=copy_file, args=[path, new_path, False], threads=parent.threads)
         else:
             run_in_thread(
                 parent=parent,
                 target=copy,
                 args=[os.path.join(path, "*.*"), new_path, False],
-                lst=parent.threads,
+                threads=parent.threads,
             )
         return True
     return False
@@ -251,7 +251,7 @@ def copy_move(parent, path_func: Callable, move_flag: bool = True) -> bool:
             parent=parent,
             target=func,
             args=[paths, path, False],
-            lst=parent.threads,
+            threads=parent.threads,
         )
 
 
@@ -304,10 +304,25 @@ def go_to_repo(parent, path_func: Callable) -> bool:
     return False
 
 
-def view_item(parent, path_func: Callable) -> bool:
+def view_item(parent, path_func: Callable, line_func: Callable[[], Dict[str, LineHit]] | None = None) -> bool:
     if not parent.app.sys_paths.vs_code.path:
         SysPathDialog.exec(parent=parent, sys_paths=parent.app.sys_paths)
     paths = path_func()
+    if line_func:
+        path_hits = line_func()
+        for path in paths:
+            if path in path_hits:
+                line_hit = path_hits[path]
+                cmd = path
+                if line_hit.line_number is not None:
+                    cmd = f"{cmd}:{str(line_hit.line_number)}"
+                    if line_hit.column_number() is not None:
+                        cmd = f"{cmd}:{str(line_hit.column_number())}"
+                args = ["-g"] + [cmd]
+            else:
+                args = [path]
+            exec_item(sys_path=parent.app.sys_paths.vs_code.path, args=args)
+        return True
     if paths and parent.app.sys_paths.vs_code.path:
         files = only_files(paths=paths)
         if paths != files:
@@ -334,19 +349,23 @@ def edit_item(parent, path_func: Callable) -> bool:
     return False
 
 
-def go_to_item(parent, path_func: Callable) -> bool:
-    path, is_ok = QInputDialog.getText(parent, "Go to item", "Specify file or folder", text="")
+def go_to_item(parent, path_func: Callable, context_func: Callable) -> bool:
+    if context_func() == Context.search:
+        paths, is_ok = path_func(), True
+    else:
+        path, is_ok = QInputDialog.getText(parent, "Go to item", "Specify file or folder", text="")
+        paths = [path]
     if is_ok:
-        info = QFileInfo(path)
-        folder = extract_path(item=path)
-        selection = None
-        if not info.exists():
-            QMessageBox.information(parent, APP_NAME, "Specified file or folder doesn't exist")
-            return False
-        if info.isFile():
-            selection = [path]
-        parent.tree_box.open_tree_page(pinned_path=folder, find_existing=True, go_to_page=True, selection=selection)
-        return True
+        for path in paths:
+            info = QFileInfo(path)
+            folder = extract_path(item=path)
+            selection = None
+            if not info.exists():
+                QMessageBox.information(parent, APP_NAME, "Specified file or folder doesn't exist")
+                return False
+            if info.isFile():
+                selection = [path]
+            parent.tree_box.open_tree_page(pinned_path=folder, find_existing=True, go_to_page=True, selection=selection)
     return False
 
 

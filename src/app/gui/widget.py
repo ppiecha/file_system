@@ -1,6 +1,6 @@
 from typing import List
 
-from PySide2.QtWidgets import QBoxLayout, QWidget
+from PySide2.QtWidgets import QBoxLayout, QWidget, QStyle
 
 
 class Layout(QBoxLayout):
@@ -10,17 +10,6 @@ class Layout(QBoxLayout):
             self.setContentsMargins(delta, delta, delta, delta)
             self.setMargin(delta)
             self.setSpacing(delta + 5)
-
-
-# class PathSelector(QWidget):
-#     def __init__(self, parent):
-#         super().__init__(parent=parent)
-#         layout = Layout(direction=QBoxLayout.LeftToRight, delta=0)
-#         path = QLineEdit()
-#         button = QPushButton()
-#         layout.addWidget(path)
-#         layout.addWidget(button)
-#         self.setLayout(layout)
 
 
 def populated_box_layout(direction: QBoxLayout.Direction, widgets: List[QWidget], delta: int = 0) -> Layout:

@@ -1,9 +1,9 @@
 from threading import Thread
-from typing import Callable, Sequence, List
+from typing import Callable, Sequence, List, NamedTuple
 
+from PySide2.QtCore import QObject, Signal, QThread
 from PySide2.QtWidgets import QMessageBox
 
-from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger, get_file_handler
 
 logger = get_console_logger(name=__name__)
@@ -27,12 +27,53 @@ class ShellThread(Thread):
         try:
             self._real_run()
         except Exception as e:
-            QMessageBox.critical(self.parent, APP_NAME, "\n".join(["Exception in background thread", str(e)]))
+            # QMessageBox.critical(self.parent, APP_NAME, "\n".join(["Exception in background thread", str(e)]))
             logger.error(str(e))
 
 
-def run_in_thread(parent, target: Callable, args: Sequence, lst: List[ShellThread] = None) -> None:
-    th = ShellThread(parent=parent, target=target, args=args)
-    th.start()
-    lst = lst or []
-    lst.append(th)
+class ShellWorker(QObject):
+    exception = Signal(str)
+    finished = Signal()
+
+    def __init__(self, parent, target: Callable, args: Sequence):
+        super().__init__()
+        self.parent = parent
+        self.target = target
+        self.args = args
+
+    def run(self):
+        try:
+            logger.debug(f"Executing {self.target} with args {self.args}")
+            self.target(*self.args)
+        except Exception as e:
+            logger.error(str(e))
+            self.exception.emit(str(e))
+        finally:
+            self.finished.emit()
+
+
+class ThreadWithWorker(NamedTuple):
+    thread: QThread
+    worker: ShellWorker
+
+
+def run_in_thread(parent, target: Callable, args: Sequence, threads: List[ShellThread] = None) -> None:
+    # th = ShellThread(parent=parent, target=target, args=args)
+    # th.start()
+    # lst = lst or []
+    # lst.append(th)
+    thread = QThread()
+    worker = ShellWorker(parent=parent, target=target, args=args)
+    thread_with_worker = ThreadWithWorker(thread=thread, worker=worker)
+    worker.moveToThread(thread)
+    thread.started.connect(worker.run)
+    worker.finished.connect(thread.quit)
+    worker.finished.connect(worker.deleteLater)
+    thread.finished.connect(lambda: threads.remove(thread_with_worker))
+    thread.finished.connect(thread.deleteLater)
+    worker.exception.connect(lambda exc: QMessageBox.critical(parent, "Exception in background thread", exc))
+    # Start the thread
+    logger.debug(f"Starting thread {thread} with worker {worker}")
+    thread.start()
+    threads = threads or []
+    threads.append(thread_with_worker)

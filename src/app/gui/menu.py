@@ -125,7 +125,7 @@ def init_command_menu(main_form):
     command_menu = main_form.menuBar().addMenu("&Command")
     # Go to
     main_form.actions[CommonAction.GO_TO] = create_go_to_action(
-        parent_func=main_form.current_tree, path_func=main_form.path_func
+        parent_func=main_form.current_tree, path_func=main_form.path_func, context_func=main_form.context_func
     )
     command_menu.addAction(main_form.actions[CommonAction.GO_TO])
     # Go to repo
@@ -157,7 +157,7 @@ def init_command_menu(main_form):
     command_menu.addAction(main_form.actions[CommonAction.RENAME])
     # View
     main_form.actions[CommonAction.VIEW] = create_view_action(
-        parent_func=main_form.current_tree, path_func=main_form.path_func
+        parent_func=main_form.current_tree, path_func=main_form.path_func, line_func=main_form.line_func
     )
     command_menu.addAction(main_form.actions[CommonAction.VIEW])
     # Edit

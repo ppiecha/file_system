@@ -33,8 +33,19 @@ def search_file(
     else:
         text = "".join(text_lines)
         if has_hits(data=text):
-            search_result.hits = find_keyword(search_param=search_param, text=text)
+            search_result.hits = list(find_keyword(search_param=search_param, text=text))
     return search_result
+
+
+def is_in_excluded_dirs(file_info: QFileInfo, excluded_dirs: List[str]):
+    path = file_info.fileName()
+    if file_info.isFile():
+        path = file_info.path()
+    path_parts = path.split("/")
+    for excluded_folder in excluded_dirs:
+        if [part for part in path_parts if part.lower() == excluded_folder.lower()]:
+            return True
+    return False
 
 
 def search(
@@ -46,6 +57,8 @@ def search(
     while it.hasNext():
         file_name = it.next()
         file_info = QFileInfo(file_name)
+        if is_in_excluded_dirs(file_info=file_info, excluded_dirs=search_param.excluded_dirs):
+            continue
         search_result = FileSearchResult(
             keyword=search_param.keyword,
             file_name=file_name,

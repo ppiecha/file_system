@@ -1,9 +1,9 @@
 import sys
 import traceback
-from typing import Optional, List
+from typing import Optional, List, Callable
 
 from PySide2.QtGui import QIcon, Qt
-from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox, QApplication
+from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox, QApplication, QWidget, QStyle
 
 from src.app.gui.dialog.base import CustomMessageBox
 from src.app.gui.dialog.search.search_dlg import SearchDlg
@@ -12,7 +12,8 @@ from src.app.gui.menu import init_menu
 from src.app.gui.tree_view import TreeView
 from src.app.gui.tree_box import TreeBox
 from src.app.model.schema import App, get_config_file, WindowState
-from src.app.utils.constant import APP_NAME
+from src.app.model.search import FileSearchResult
+from src.app.utils.constant import APP_NAME, Context
 from src.app.utils.logger import get_console_logger, get_file_handler
 from src.app.utils.serializer import json_to_file
 
@@ -23,6 +24,13 @@ logger.addHandler(get_file_handler())
 class MainForm(QMainWindow):
     def __init__(self, app: App, app_qt_object: QApplication):
         super().__init__()
+
+        self.icons = {
+            "dir": self.style().standardIcon(getattr(QStyle, "SP_DirIcon")),
+            "file": self.style().standardIcon(getattr(QStyle, "SP_FileIcon")),
+            "warning": self.style().standardIcon(getattr(QStyle, "SP_MessageBoxWarning"))
+        }
+
         self.process_args()
         self.app = app
         self.app_qt_object = app_qt_object
@@ -31,12 +39,19 @@ class MainForm(QMainWindow):
         self.splitter = QSplitter(self)
         self.favorite_tree = FavoriteTree(parent=self.splitter, app_model=app)
         self.tree_box = TreeBox(parent=self.splitter, app_model=app)
-        self.search_dlg = SearchDlg(mf=self)
         self.splitter.addWidget(self.favorite_tree)
         self.splitter.addWidget(self.tree_box)
         self.setCentralWidget(self.splitter)
         self.init_ui()
         init_menu(main_form=self)
+        self.search_dlg = SearchDlg(mf=self)
+
+    def get_icon(self, res: FileSearchResult):
+        if res.is_dir:
+            return self.icons["dir"]
+        if res.error:
+            return self.icons["warning"]
+        return self.icons["file"]
 
     def process_args(self):
         if len(sys.argv) > 1:
@@ -128,12 +143,28 @@ class MainForm(QMainWindow):
         return current_tree
 
     def path_func(self) -> Optional[List[str]]:
-        current_tree = self.current_tree()
-        if not current_tree:
-            return []
-        paths = current_tree.get_selected_paths()
-        if len(paths) > 0:
-            # return [path for path in paths if QFileInfo(path).exists()]
-            return paths
+        if self.isActiveWindow():
+            current_tree = self.current_tree()
+            if not current_tree:
+                return []
+            paths = current_tree.get_selected_paths()
+            if len(paths) > 0:
+                return paths
+        if self.search_dlg.isActiveWindow() and self.search_dlg.search_control.currentWidget():
+            paths = self.search_dlg.search_control.currentWidget().search_tree.get_selected_paths()
+            if len(paths) > 0:
+                return paths
         QMessageBox.information(self, APP_NAME, "No path selected")
+        return []
+
+    def context_func(self) -> Context:
+        if self.isActiveWindow():
+            return Context.main
+        if self.search_dlg.isActiveWindow():
+            return Context.search
+        raise ValueError("Undefined context")
+
+    def line_func(self) -> Callable:
+        if self.search_dlg.isActiveWindow() and self.search_dlg.search_control.currentWidget():
+            return self.search_dlg.search_control.currentWidget().search_tree.get_paths_with_hits()
         return []
