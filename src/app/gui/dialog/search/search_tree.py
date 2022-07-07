@@ -3,7 +3,7 @@ import dataclasses
 from typing import List, Dict
 
 from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QTreeWidget, QAbstractItemView, QTreeWidgetItem, QLabel, QMenu, QAction
+from PySide2.QtWidgets import QTreeWidget, QAbstractItemView, QTreeWidgetItem, QLabel, QMenu, QAction, QHeaderView
 
 from src.app.gui.action.command import CommonAction
 from src.app.gui.action.file import FileAction
@@ -32,6 +32,8 @@ class SearchTree(QTreeWidget):
 
     def init_ui(self):
         self.setHeaderHidden(True)
+        self.header().setStretchLastSection(False)
+        self.header().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         # self.clicked.connect(self.on_clicked)
@@ -42,22 +44,41 @@ class SearchTree(QTreeWidget):
         # self.itemCollapsed.connect(self.collapsed)
         # self.itemSelectionChanged.connect(self.selection_changed)
 
-    def process_result(self, file_search_result: FileSearchResult):
-        file_item = QTreeWidgetItem(self)
-        self.setItemWidget(file_item, 0, QLabel(file_search_result.as_html()))
-        file_item.setData(0, Qt.UserRole, file_search_result)
-        file_item.setIcon(0, self.main_form.get_icon(res=file_search_result))
-        for hit in file_search_result.hit_iter():
-            line_item = QTreeWidgetItem(file_item)
-            line_item.setData(0, Qt.UserRole, hit)
-            hit_label = QLabel(hit.as_html())
-            line_item.setSizeHint(0, hit_label.sizeHint())
-            self.setItemWidget(line_item, 0, hit_label)
+    # def process_result(self, file_search_result: FileSearchResult):
+    #     file_item = QTreeWidgetItem(self)
+    #     self.setItemWidget(file_item, 0, QLabel(file_search_result.as_html()))
+    #     file_item.setData(0, Qt.UserRole, file_search_result)
+    #     file_item.setIcon(0, self.main_form.get_icon(res=file_search_result))
+    #     for hit in file_search_result.hit_iter():
+    #         line_item = QTreeWidgetItem(file_item)
+    #         line_item.setData(0, Qt.UserRole, hit)
+    #         hit_label = QLabel(hit.as_html())
+    #         line_item.setSizeHint(0, hit_label.sizeHint())
+    #         self.setItemWidget(line_item, 0, hit_label)
 
     def process_result_list(self, file_search_result_list: FileSearchResultList):
+        self.setColumnCount(1)
+        items = []
         for file_search_result in file_search_result_list:
-            self.process_result(file_search_result=file_search_result)
-            # self.main_form.app_qt_object.processEvents()
+            self.main_form.app_qt_object.processEvents()
+            file_item = QTreeWidgetItem(self)
+            file_item.setData(0, Qt.UserRole, file_search_result)
+            file_item.setIcon(0, self.main_form.get_icon(res=file_search_result))
+            file_label = QLabel(file_search_result.as_html())
+            file_item.setSizeHint(0, file_label.sizeHint())
+            self.setItemWidget(file_item, 0, file_label)
+            for hit in file_search_result.hit_iter():
+                line_item = QTreeWidgetItem(file_item)
+                line_item.setData(0, Qt.UserRole, hit)
+                hit_label = QLabel(hit.as_html())
+                line_item.setSizeHint(0, hit_label.sizeHint())
+                self.setItemWidget(line_item, 0, hit_label)
+            items.append(file_item)
+        self.addTopLevelItems(items)
+
+        # for file_search_result in file_search_result_list:
+        #     self.process_result(file_search_result=file_search_result)
+        # self.main_form.app_qt_object.processEvents()
 
     def add_search_info_node(self, search_param: SearchParam):
         search_header = QTreeWidgetItem(self)
@@ -67,13 +88,19 @@ class SearchTree(QTreeWidget):
         self.clear()
         self.add_search_info_node(search_param=search_param)
 
+    def clear_tree(self):
+        self.clear()
+
     def get_selected_paths(self) -> List[str]:
         return [item.data(0, Qt.UserRole).file_name for item in self.selectedItems()]
 
     def get_paths_with_hits(self) -> Dict[str, LineHit]:
         if self.search_panel.search_control.search_dlg.isActiveWindow():
-            return {item.data(0, Qt.UserRole).file_name: item.data(0, Qt.UserRole)
-                    for item in self.selectedItems() if isinstance(item.data(0, Qt.UserRole), LineHit)}
+            return {
+                item.data(0, Qt.UserRole).file_name: item.data(0, Qt.UserRole)
+                for item in self.selectedItems()
+                if isinstance(item.data(0, Qt.UserRole), LineHit)
+            }
         return {}
 
     def open_menu(self, position):

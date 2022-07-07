@@ -96,7 +96,7 @@ class LineHit(BaseModel):
         text_before = f"""<span style="background-color:transparent">{text_before}</span >"""
         keyword = self.line_text[self.line_hit_range[0] : self.line_hit_range[1]]
         keyword = format_keyword(keyword=keyword)
-        text_after = self.line_text[self.line_hit_range[1]:]
+        text_after = self.line_text[self.line_hit_range[1] :]
         text_after = f"""<span style="background-color:transparent">{text_after}</span>"""
         text = "".join([line_number, text_before, keyword, text_after])
         return f"<pre><code>{text}</code></pre>"
@@ -107,7 +107,7 @@ detector = UniversalDetector()
 
 def file_encoding(file_name: str) -> str:
     detector.reset()
-    for line in open(file_name, 'rb'):
+    for line in open(file_name, "rb"):
         detector.feed(line)
         if detector.done:
             break

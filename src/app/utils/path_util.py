@@ -11,6 +11,7 @@ from PySide2.QtWidgets import QMessageBox, QApplication, QInputDialog
 
 from src.app.gui.dialog.base import select_folder
 from src.app.gui.dialog.sys_path_edit import SysPathDialog
+
 if typing.TYPE_CHECKING:
     from src.app.model.search import LineHit
 from src.app.utils.constant import APP_NAME, Context
@@ -18,7 +19,7 @@ from src.app.utils.logger import get_console_logger
 from src.app.utils.shell import paste, cut, delete, rename, copy, copy_file, fail, move
 from src.app.utils.thread import run_in_thread
 
-logger = get_console_logger(name=__name__, log_level=logging.INFO)
+logger = get_console_logger(name=__name__, log_level=logging.ERROR)
 Paths = List[str]
 
 
@@ -366,6 +367,7 @@ def go_to_item(parent, path_func: Callable, context_func: Callable) -> bool:
             if info.isFile():
                 selection = [path]
             parent.tree_box.open_tree_page(pinned_path=folder, find_existing=True, go_to_page=True, selection=selection)
+            parent.activate()
     return False
 
 

@@ -24,9 +24,7 @@ class SearchControl(QTabWidget):
             parent_func=self.mf.current_tree, path_func=self.mf.path_func, context_func=self.mf.context_func
         )
         go_to_action.setText("Go to item")
-        self.search_actions = {
-            "go_to_item": go_to_action
-        }
+        self.search_actions = {"go_to_item": go_to_action}
 
     def add_search_panel(self, path: str):
         index = self.index_of_path(path=path)

@@ -48,21 +48,25 @@ class TreeBox(QTabWidget):
         go_to_page: bool = False,
         selection: List[str] = None,
     ):
+        selected_path = selection[0] if selection and len(selection) == 1 else None
         if find_existing:
             page = self.page(path=pinned_path)
             if page:
                 self.setCurrentIndex(self.indexOf(page))
-                if selection and len(selection) == 1:
-                    current_tree = self.current_tree()
-                    if current_tree:
-                        current_tree.current_path = selection[0]
+                current_tree = self.current_tree()
+                if current_tree and selected_path:
+                    current_tree.current_path = selected_path
                 return
         if create:
             tree_model = self.app_model.add_page(pinned_path=pinned_path)
         else:
             tree_model = self.app_model.get_page_by_pinned_path(pinned_path=pinned_path)
             tree_model = tree_model or Tree(pinned_path=pinned_path)
-        self.add_page(tree_model=tree_model, go_to_page=go_to_page, last_selected_path=tree_model.last_selected_path)
+        self.add_page(
+            tree_model=tree_model,
+            go_to_page=go_to_page,
+            last_selected_path=tree_model.last_selected_path or selected_path,
+        )
 
     def open_root_page(self):
         self.open_tree_page(pinned_path=None, find_existing=False, go_to_page=True)

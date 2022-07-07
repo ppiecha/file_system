@@ -59,15 +59,8 @@ def search(
         file_info = QFileInfo(file_name)
         if is_in_excluded_dirs(file_info=file_info, excluded_dirs=search_param.excluded_dirs):
             continue
-        search_result = FileSearchResult(
+        yield FileSearchResult(
             keyword=search_param.keyword,
             file_name=file_name,
             is_dir=file_info.isDir(),
         )
-        if not search_result.is_dir and search_param.keyword:
-            text_lines = open_file(file_name=file_name)
-            search_result = search_file(search_param=search_param, text_lines=text_lines, search_result=search_result)
-        if search_result.error is not None or search_result.hits is not None or not search_param.keyword:
-            yield search_result
-        if search_result.error:
-            logger.error(search_result.error)

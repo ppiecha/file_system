@@ -1,9 +1,10 @@
+import logging
 import sys
 import traceback
 from typing import Optional, List, Callable
 
 from PySide2.QtGui import QIcon, Qt
-from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox, QApplication, QWidget, QStyle
+from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox, QApplication, QStyle
 
 from src.app.gui.dialog.base import CustomMessageBox
 from src.app.gui.dialog.search.search_dlg import SearchDlg
@@ -17,7 +18,7 @@ from src.app.utils.constant import APP_NAME, Context
 from src.app.utils.logger import get_console_logger, get_file_handler
 from src.app.utils.serializer import json_to_file
 
-logger = get_console_logger(name=__name__)
+logger = get_console_logger(name=__name__, log_level=logging.ERROR)
 logger.addHandler(get_file_handler())
 
 
@@ -28,7 +29,7 @@ class MainForm(QMainWindow):
         self.icons = {
             "dir": self.style().standardIcon(getattr(QStyle, "SP_DirIcon")),
             "file": self.style().standardIcon(getattr(QStyle, "SP_FileIcon")),
-            "warning": self.style().standardIcon(getattr(QStyle, "SP_MessageBoxWarning"))
+            "warning": self.style().standardIcon(getattr(QStyle, "SP_MessageBoxWarning")),
         }
 
         self.process_args()
@@ -164,7 +165,11 @@ class MainForm(QMainWindow):
             return Context.search
         raise ValueError("Undefined context")
 
-    def line_func(self) -> Callable:
+    def line_func(self):
         if self.search_dlg.isActiveWindow() and self.search_dlg.search_control.currentWidget():
             return self.search_dlg.search_control.currentWidget().search_tree.get_paths_with_hits()
         return []
+
+    def activate(self):
+        self.activateWindow()
+        self.show()
