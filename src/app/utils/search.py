@@ -3,7 +3,7 @@ from typing import Iterator, List
 
 from PySide2.QtCore import QDirIterator, QDir, QFileInfo
 
-from src.app.model.search import FileSearchResult, SearchParam, open_file, SearchState
+from src.app.model.search import FileSearchResult, SearchParam
 from src.app.utils.logger import get_console_logger
 
 logger = get_console_logger(name=__name__)

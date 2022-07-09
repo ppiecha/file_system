@@ -1,15 +1,14 @@
-import copy
 import dataclasses
 from typing import List, Dict
 
 from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QTreeWidget, QAbstractItemView, QTreeWidgetItem, QLabel, QMenu, QAction, QHeaderView
+from PySide2.QtWidgets import QTreeWidget, QAbstractItemView, QTreeWidgetItem, QLabel, QMenu, QHeaderView
 
 from src.app.gui.action.command import CommonAction
 from src.app.gui.action.file import FileAction
 from src.app.gui.action.folder import FolderAction
 from src.app.gui.action.selection import SelectionAction
-from src.app.model.search import FileSearchResult, SearchParam, FileSearchResultList, LineHit
+from src.app.model.search import SearchParam, FileSearchResultList, LineHit
 from src.app.utils import path_util
 from src.app.utils.logger import get_console_logger
 

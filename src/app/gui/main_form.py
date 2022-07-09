@@ -1,13 +1,16 @@
 import logging
 import sys
 import traceback
-from typing import Optional, List, Callable
+from time import sleep
+from typing import Optional, List
 
+from PySide2.QtCore import QThread
 from PySide2.QtGui import QIcon, Qt
 from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox, QApplication, QStyle
 
 from src.app.gui.dialog.base import CustomMessageBox
 from src.app.gui.dialog.search.search_dlg import SearchDlg
+from src.app.gui.dialog.search.search_panel import SearchWorker
 from src.app.gui.favorite_view import FavoriteTree
 from src.app.gui.menu import init_menu
 from src.app.gui.tree_view import TreeView
@@ -17,8 +20,9 @@ from src.app.model.search import FileSearchResult
 from src.app.utils.constant import APP_NAME, Context
 from src.app.utils.logger import get_console_logger, get_file_handler
 from src.app.utils.serializer import json_to_file
+from src.app.utils.thread import ThreadWithWorker
 
-logger = get_console_logger(name=__name__, log_level=logging.ERROR)
+logger = get_console_logger(name=__name__, log_level=logging.DEBUG)
 logger.addHandler(get_file_handler())
 
 
@@ -36,7 +40,7 @@ class MainForm(QMainWindow):
         self.app = app
         self.app_qt_object = app_qt_object
         self.actions = {}
-        self.threads = []
+        self.threads: List[ThreadWithWorker] = []
         self.splitter = QSplitter(self)
         self.favorite_tree = FavoriteTree(parent=self.splitter, app_model=app)
         self.tree_box = TreeBox(parent=self.splitter, app_model=app)
@@ -46,6 +50,14 @@ class MainForm(QMainWindow):
         self.init_ui()
         init_menu(main_form=self)
         self.search_dlg = SearchDlg(mf=self)
+
+    def remove_thread(self, thread: ThreadWithWorker):
+        try:
+            # logger.debug(f"Removing {thread}")
+            self.threads.remove(thread)
+            logger.debug(f"Threads count {len(self.threads)}")
+        except ValueError as e:
+            logger.debug(f"Cannot remove thread")
 
     def get_icon(self, res: FileSearchResult):
         if res.is_dir:
@@ -118,7 +130,33 @@ class MainForm(QMainWindow):
     def save_settings(self):
         json_to_file(json_dict=self.app.dict(), file_name=get_config_file())
 
+    def app_should_quit(self) -> bool:
+        message = """Some <b>background threads</b> are still running<br>
+                     Are you sure you want to <b>quit?</b>"""
+        if len(self.threads) > 0:
+            logger.debug(f"app_should_quit 1 {self.threads}")
+            resp = QMessageBox.question(self, APP_NAME, message)
+            if resp == QMessageBox.No:
+                return False
+            self.hide()
+            for index in range(len(self.threads)):
+                if isinstance(self.threads[index].worker, SearchWorker):
+                    self.threads[index].thread.requestInterruption()
+            sleep(1)
+            # logger.debug(f"app_should_quit 2 {self.threads}")
+            # while (count := len([thread for thread in self.threads if isinstance(thread.worker, SearchWorker)])) > 0:
+            #     logger.debug(count)
+            #     sleep(0.1)
+            # if (count := len(self.threads)) > 0:
+            #     QMessageBox.question(self, APP_NAME, f"App is about to quit. "
+            #                                          f"{str(count)} shell thread(s) are still active")
+            return True
+        return True
+
     def closeEvent(self, event):
+        if not self.app_should_quit():
+            event.ignore()
+            return
         self.search_dlg.close()
         if not self.isMaximized():
             self.app.win_state.x = self.frameGeometry().x()

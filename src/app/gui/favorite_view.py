@@ -5,7 +5,7 @@ from enum import Enum, auto
 
 from PySide2.QtCore import QPoint, QEvent
 from PySide2.QtGui import Qt, QFocusEvent
-from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem, QAbstractItemView, QMenu, QStyle, QMessageBox
+from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem, QAbstractItemView, QMenu, QMessageBox
 
 from src.app.gui.action.command import Action
 from src.app.gui.dialog.favorite_edit import FavoriteDialog

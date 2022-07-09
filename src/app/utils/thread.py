@@ -57,11 +57,7 @@ class ThreadWithWorker(NamedTuple):
     worker: ShellWorker
 
 
-def run_in_thread(parent, target: Callable, args: Sequence, threads: List[ShellThread] = None) -> None:
-    # th = ShellThread(parent=parent, target=target, args=args)
-    # th.start()
-    # lst = lst or []
-    # lst.append(th)
+def run_in_thread(parent, target: Callable, args: Sequence, threads: List[ThreadWithWorker] = None) -> None:
     thread = QThread()
     worker = ShellWorker(parent=parent, target=target, args=args)
     thread_with_worker = ThreadWithWorker(thread=thread, worker=worker)

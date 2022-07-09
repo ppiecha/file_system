@@ -1,6 +1,5 @@
 from __future__ import annotations
 from enum import Enum
-from time import perf_counter, sleep
 from typing import List, Dict, NamedTuple
 
 from PySide2.QtCore import QThread, Signal, QObject, Qt
@@ -25,7 +24,6 @@ from src.app.model.search import (
     SearchParam,
     SearchConfig,
     SearchState,
-    FileSearchResult,
     FileSearchResultList,
     open_file,
 )
@@ -33,6 +31,7 @@ from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger
 from src.app.utils.path_util import path_caption
 from src.app.utils.search import search, search_file
+from src.app.utils.thread import ThreadWithWorker
 
 logger = get_console_logger(__name__)
 
@@ -89,9 +88,7 @@ class SearchPanel(QWidget):
         self.form.setContentsMargins(10, 10, 10, 10)
         self.form.setSpacing(5)
 
-        # self.search_state = SearchState.READY
-        self.search_thread: QThread | None = None
-        self.search_worker: SearchWorker | None = None
+        self.thread_with_worker: ThreadWithWorker | None = None
 
         self.search_param = SearchParam()
         self.widget_map = {key: None for key in self.search_param.dict().keys()}
@@ -157,7 +154,10 @@ class SearchPanel(QWidget):
         self.progress.setTextVisible(False)
 
     def reset_search_thread(self):
-        self.search_thread = None
+        logger.debug(f"excuting reset_search")
+        self.main_form.remove_thread(thread=self.thread_with_worker)
+        self.thread_with_worker.thread.deleteLater()
+        self.thread_with_worker = None
 
     def enable_search_controls(self, enabled: bool):
         for control in self.widget_map.values():
@@ -169,10 +169,14 @@ class SearchPanel(QWidget):
     def search_path_caption(self) -> str:
         return path_caption(path=self.search_path())
 
-    def search_action(self):
-        if self.search_thread and self.search_thread.isRunning():
-            self.search_thread.requestInterruption()
+    def cancel_search(self):
+        if self.thread_with_worker.thread and self.thread_with_worker.thread.isRunning():
+            self.thread_with_worker.thread.requestInterruption()
             self.search_btn.set_state(search_state=SearchState.CANCELLED)
+
+    def search_action(self):
+        if self.thread_with_worker and self.thread_with_worker.thread and self.thread_with_worker.thread.isRunning():
+            self.cancel_search()
             return
         self.search()
 
@@ -185,7 +189,7 @@ class SearchPanel(QWidget):
         self.progress.setTextVisible(True)
         self.progress.setRange(progress_status.progress_min, progress_status.progress_max)
         self.progress.setValue(progress_status.progress_value)
-        self.progress.text = lambda: progress_status.progress_text()
+        self.progress.text = progress_status.progress_text
         # self.main_form.app_qt_object.processEvents()
 
     def search_on_progress(self, file_search_result_list: FileSearchResultList):
@@ -217,22 +221,23 @@ class SearchPanel(QWidget):
     def search(self):
         search_param = self.get_search_param()
         # self.search_on_started(search_param=search_param)
-        self.search_thread = QThread()
-        self.search_worker = SearchWorker(search_param=search_param)
-        self.search_worker.moveToThread(self.search_thread)
-        self.search_thread.started.connect(self.search_worker.run)
-        self.search_worker.finished.connect(self.search_thread.quit)
-        self.search_worker.finished.connect(self.search_worker.deleteLater)
-        self.search_thread.finished.connect(self.search_thread.deleteLater)
-        self.search_thread.finished.connect(self.reset_search_thread)
-        self.search_worker.started.connect(self.search_on_started)
-        self.search_worker.progress_status.connect(self.search_on_progress_status)
-        self.search_worker.progress.connect(self.search_on_progress)
-        self.search_worker.finished.connect(self.search_on_finished)
-        self.search_worker.exception.connect(self.search_on_exception)
-        self.search_worker.user_exception.connect(self.search_on_user_exception)
+        search_thread = QThread()
+        search_worker = SearchWorker(search_param=search_param)
+        self.thread_with_worker = ThreadWithWorker(thread=search_thread, worker=search_worker)
+        search_worker.moveToThread(search_thread)
+        search_thread.started.connect(search_worker.run)
+        search_worker.finished.connect(search_thread.quit)
+        search_worker.finished.connect(search_worker.deleteLater)
+        search_thread.finished.connect(self.reset_search_thread)
+        search_worker.started.connect(self.search_on_started)
+        search_worker.progress_status.connect(self.search_on_progress_status)
+        search_worker.progress.connect(self.search_on_progress)
+        search_worker.finished.connect(self.search_on_finished)
+        search_worker.exception.connect(self.search_on_exception)
+        search_worker.user_exception.connect(self.search_on_user_exception)
         # Start the thread
-        self.search_thread.start()
+        search_thread.start()
+        self.main_form.threads.append(self.thread_with_worker)
 
     def get_search_param(self) -> SearchParam:
         search_param = {}
@@ -284,9 +289,9 @@ class SearchWorker(QObject):
         self.search_param = search_param
 
     def check_if_user_requested_cancel(self):
-        # sleep(0.1)
         QThread.currentThread().usleep(1)
         if QThread.currentThread().isInterruptionRequested():
+            logger.debug("TERMINATED")
             raise UserInterruptionRequest("Cancelled")
 
     def run(self):

@@ -10,7 +10,6 @@ from PySide2.QtWidgets import (
     QDialogButtonBox,
     QFileDialog,
     QAbstractButton,
-    QApplication,
     QStyle,
     QMessageBox,
     QTextEdit,

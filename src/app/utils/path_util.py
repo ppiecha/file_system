@@ -12,12 +12,15 @@ from PySide2.QtWidgets import QMessageBox, QApplication, QInputDialog
 from src.app.gui.dialog.base import select_folder
 from src.app.gui.dialog.sys_path_edit import SysPathDialog
 
-if typing.TYPE_CHECKING:
-    from src.app.model.search import LineHit
+
 from src.app.utils.constant import APP_NAME, Context
 from src.app.utils.logger import get_console_logger
 from src.app.utils.shell import paste, cut, delete, rename, copy, copy_file, fail, move
 from src.app.utils.thread import run_in_thread
+
+if typing.TYPE_CHECKING:
+    from src.app.model.search import LineHit
+
 
 logger = get_console_logger(name=__name__, log_level=logging.ERROR)
 Paths = List[str]
@@ -41,7 +44,6 @@ def all_files(paths: Paths) -> bool:
 
 def extract_path(item: str) -> str:
     info = QFileInfo(item)
-    # logger.info(f"extract_path {item} {info.suffix()} {info.absolutePath()} {info.absoluteFilePath()} {info.absoluteDir()}")
     path = item
     if info.isDir():
         if path[-1] not in ("\\", "/"):
