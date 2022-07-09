@@ -154,8 +154,8 @@ class SearchPanel(QWidget):
         self.progress.setTextVisible(False)
 
     def reset_search_thread(self):
-        logger.debug(f"excuting reset_search")
-        self.main_form.remove_thread(thread=self.thread_with_worker)
+        logger.debug("excuting reset_search")
+        self.main_form.remove_thread(thread_with_worker=self.thread_with_worker)
         self.thread_with_worker.thread.deleteLater()
         self.thread_with_worker = None
 

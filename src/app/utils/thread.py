@@ -1,3 +1,4 @@
+import logging
 from threading import Thread
 from typing import Callable, Sequence, List, NamedTuple
 
@@ -6,7 +7,7 @@ from PySide2.QtWidgets import QMessageBox
 
 from src.app.utils.logger import get_console_logger, get_file_handler
 
-logger = get_console_logger(name=__name__)
+logger = get_console_logger(name=__name__, log_level=logging.ERROR)
 logger.addHandler(get_file_handler())
 
 
@@ -57,19 +58,28 @@ class ThreadWithWorker(NamedTuple):
     worker: ShellWorker
 
 
-def run_in_thread(parent, target: Callable, args: Sequence, threads: List[ThreadWithWorker] = None) -> None:
+def run_in_thread(parent, target: Callable, args: Sequence, threads: List[ThreadWithWorker]) -> None:
+    def on_finish(tww: ThreadWithWorker):
+        def finalize():
+            logger.debug(f"count {len(threads)}")
+            logger.debug(f"finishing {id(tww)}")
+            parent.remove_thread(thread_with_worker=tww)
+            tww.thread.deleteLater()
+            logger.debug("cleanup done")
+
+        return finalize
+
+    logger.debug(f"run_in_thread {type(parent)}")
     thread = QThread()
     worker = ShellWorker(parent=parent, target=target, args=args)
     thread_with_worker = ThreadWithWorker(thread=thread, worker=worker)
+    threads.append(thread_with_worker)
     worker.moveToThread(thread)
     thread.started.connect(worker.run)
     worker.finished.connect(thread.quit)
     worker.finished.connect(worker.deleteLater)
-    thread.finished.connect(lambda: threads.remove(thread_with_worker))
-    thread.finished.connect(thread.deleteLater)
+    thread.finished.connect(on_finish(tww=thread_with_worker))
     worker.exception.connect(lambda exc: QMessageBox.critical(parent, "Exception in background thread", exc))
     # Start the thread
     logger.debug(f"Starting thread {thread} with worker {worker}")
     thread.start()
-    threads = threads or []
-    threads.append(thread_with_worker)

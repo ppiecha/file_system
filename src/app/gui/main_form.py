@@ -1,10 +1,8 @@
 import logging
 import sys
 import traceback
-from time import sleep
 from typing import Optional, List
 
-from PySide2.QtCore import QThread
 from PySide2.QtGui import QIcon, Qt
 from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox, QApplication, QStyle
 
@@ -22,7 +20,7 @@ from src.app.utils.logger import get_console_logger, get_file_handler
 from src.app.utils.serializer import json_to_file
 from src.app.utils.thread import ThreadWithWorker
 
-logger = get_console_logger(name=__name__, log_level=logging.DEBUG)
+logger = get_console_logger(name=__name__, log_level=logging.ERROR)
 logger.addHandler(get_file_handler())
 
 
@@ -50,14 +48,15 @@ class MainForm(QMainWindow):
         self.init_ui()
         init_menu(main_form=self)
         self.search_dlg = SearchDlg(mf=self)
+        self.app_qt_object.aboutToQuit.connect(self.on_quit)
 
-    def remove_thread(self, thread: ThreadWithWorker):
+    def remove_thread(self, thread_with_worker: ThreadWithWorker):
         try:
-            # logger.debug(f"Removing {thread}")
-            self.threads.remove(thread)
+            logger.debug(f"Removing {id(thread_with_worker)}")
+            self.threads.remove(thread_with_worker)
             logger.debug(f"Threads count {len(self.threads)}")
-        except ValueError as e:
-            logger.debug(f"Cannot remove thread")
+        except ValueError:
+            logger.debug("Cannot remove thread")
 
     def get_icon(self, res: FileSearchResult):
         if res.is_dir:
@@ -127,29 +126,23 @@ class MainForm(QMainWindow):
             self.splitter.setSizes(self.app.win_state.splitter_sizes)
         self.splitter.splitterMoved.connect(self.on_splitter_moved)
 
-    def save_settings(self):
-        json_to_file(json_dict=self.app.dict(), file_name=get_config_file())
-
     def app_should_quit(self) -> bool:
         message = """Some <b>background threads</b> are still running<br>
                      Are you sure you want to <b>quit?</b>"""
         if len(self.threads) > 0:
-            logger.debug(f"app_should_quit 1 {self.threads}")
             resp = QMessageBox.question(self, APP_NAME, message)
             if resp == QMessageBox.No:
                 return False
-            self.hide()
-            for index in range(len(self.threads)):
-                if isinstance(self.threads[index].worker, SearchWorker):
-                    self.threads[index].thread.requestInterruption()
-            sleep(1)
-            # logger.debug(f"app_should_quit 2 {self.threads}")
-            # while (count := len([thread for thread in self.threads if isinstance(thread.worker, SearchWorker)])) > 0:
-            #     logger.debug(count)
-            #     sleep(0.1)
-            # if (count := len(self.threads)) > 0:
-            #     QMessageBox.question(self, APP_NAME, f"App is about to quit. "
-            #                                          f"{str(count)} shell thread(s) are still active")
+            for thread in [t for t in self.threads if isinstance(t.worker, SearchWorker)]:
+                thread.thread.requestInterruption()
+                thread.thread.quit()
+                if not thread.thread.wait():
+                    logger.debug("Search thread NOT terminated")
+                if [t for t in self.threads if not isinstance(t.worker, SearchWorker)]:
+                    QMessageBox.information(
+                        self, APP_NAME, "Shell operation in progress. " "Cancel it manually or wait to finish"
+                    )
+                    return False
             return True
         return True
 
@@ -158,6 +151,14 @@ class MainForm(QMainWindow):
             event.ignore()
             return
         self.search_dlg.close()
+
+    def on_quit(self):
+        logger.debug(f"on quit {len(self.threads)}")
+        self.save_settings()
+
+        self.app_qt_object.deleteLater()
+
+    def save_settings(self):
         if not self.isMaximized():
             self.app.win_state.x = self.frameGeometry().x()
             self.app.win_state.y = self.frameGeometry().y()
