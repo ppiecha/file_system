@@ -66,7 +66,6 @@ class Action(QAction):
         self.setStatusTip(status_tip or caption)
         if slot:
             self.triggered.connect(slot)
-        # logger.debug(self.shortcutContext())
         self.setShortcutContext(Qt.ApplicationShortcut)
 
 
@@ -145,19 +144,17 @@ def create_view_action(parent_func: Callable, path_func: Callable, line_func: Ca
         parent=parent_func().main_form,
         caption=CommonAction.VIEW.value,
         shortcut=[QKeySequence(Qt.Key_F3), QKeySequence(Qt.CTRL + Qt.Key_Return)],
-        # shortcut=QKeySequence("F3,Ctrl+Enter"),
-        # shortcut=QKeySequence("A,Ctrl+O"),
         slot=lambda: view_item(parent=parent_func().main_form, path_func=path_func, line_func=line_func),
         tip="View item",
     )
 
 
-def create_edit_action(parent_func: Callable, path_func: Callable) -> Action:
+def create_edit_action(parent_func: Callable, path_func: Callable, line_func: Callable) -> Action:
     return Action(
         parent=parent_func().main_form,
         caption=CommonAction.EDIT.value,
         shortcut=QKeySequence(Qt.Key_F4),
-        slot=lambda: edit_item(parent=parent_func().main_form, path_func=path_func),
+        slot=lambda: edit_item(parent=parent_func().main_form, path_func=path_func, line_func=line_func),
         tip="Edit item",
     )
 

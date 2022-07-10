@@ -1,11 +1,12 @@
 import logging
 import sys
 import traceback
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from PySide2.QtGui import QIcon, Qt
 from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox, QApplication, QStyle
 
+from src.app.gui.action.command import Action
 from src.app.gui.dialog.base import CustomMessageBox
 from src.app.gui.dialog.search.search_dlg import SearchDlg
 from src.app.gui.dialog.search.search_panel import SearchWorker
@@ -37,7 +38,7 @@ class MainForm(QMainWindow):
         self.process_args()
         self.app = app
         self.app_qt_object = app_qt_object
-        self.actions = {}
+        self.actions: Dict[str, Action] = {}
         self.threads: List[ThreadWithWorker] = []
         self.splitter = QSplitter(self)
         self.favorite_tree = FavoriteTree(parent=self.splitter, app_model=app)

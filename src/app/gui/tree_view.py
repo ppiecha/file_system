@@ -18,6 +18,7 @@ from PySide2.QtWidgets import (
 from src.app.gui.action.command import CommonAction
 from src.app.gui.action.file import FileAction
 from src.app.gui.action.folder import FolderAction
+from src.app.gui.action.selection import SelectionAction
 from src.app.utils import path_util
 from src.app.utils.path_util import path_caption, convert_size, file_first_lines, dir_list
 from src.app.model.schema import Tree
@@ -296,6 +297,12 @@ class TreeView(QTreeView):
             menu.addSeparator()
             menu.addAction(self.main_form.actions[CommonAction.RENAME])
             menu.addAction(self.main_form.actions[CommonAction.DUPLICATE])
+            selection_menu = QMenu("Copy selected")
+            selection_menu.addAction(self.main_form.actions[SelectionAction.COPY_PATH])
+            selection_menu.addAction(self.main_form.actions[SelectionAction.COPY_PATH_WITH_NAME])
+            selection_menu.addAction(self.main_form.actions[SelectionAction.COPY_NAME])
+            menu.addSeparator()
+            menu.addMenu(selection_menu)
             menu.exec_(self.viewport().mapToGlobal(position))
 
     def dragEnterEvent(self, event: QDragEnterEvent):

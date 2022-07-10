@@ -162,7 +162,7 @@ def init_command_menu(main_form):
     command_menu.addAction(main_form.actions[CommonAction.VIEW])
     # Edit
     main_form.actions[CommonAction.EDIT] = create_edit_action(
-        parent_func=main_form.current_tree, path_func=main_form.path_func
+        parent_func=main_form.current_tree, path_func=main_form.path_func, line_func=main_form.line_func
     )
     command_menu.addAction(main_form.actions[CommonAction.EDIT])
     # Duplicate

@@ -6,6 +6,7 @@ from enum import Enum, auto
 from itertools import accumulate
 from typing import Sequence, Iterator, Optional, List, Tuple, Dict
 
+from PySide2.QtCore import QFileInfo
 from chardet.universaldetector import UniversalDetector
 
 from pydantic import BaseModel
@@ -100,6 +101,9 @@ class LineHit(BaseModel):
         text_after = f"""<span style="background-color:transparent">{text_after}</span>"""
         text = "".join([line_number, text_before, keyword, text_after])
         return f"<pre><code>{text}</code></pre>"
+
+    def file_name_short(self) -> str:
+        return QFileInfo(self.file_name).fileName()
 
 
 detector = UniversalDetector()

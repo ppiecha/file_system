@@ -335,7 +335,7 @@ def view_item(parent, path_func: Callable, line_func: Callable[[], Dict[str, Lin
     return False
 
 
-def edit_item(parent, path_func: Callable) -> bool:
+def edit_item(parent, path_func: Callable, line_func: Callable[[], Dict[str, LineHit]] | None = None) -> bool:
     if not parent.app.sys_paths.notepad.path or not parent.app.sys_paths.vs_code.path:
         logger.info(f"sys paths before edit {parent.app.sys_paths}")
         SysPathDialog.exec(parent=parent, sys_paths=parent.app.sys_paths)
@@ -347,7 +347,19 @@ def edit_item(parent, path_func: Callable) -> bool:
         if folders:
             exec_item(sys_path=parent.app.sys_paths.vs_code.path, args=["-n"] + folders)
         if files:
-            exec_item(sys_path=parent.app.sys_paths.notepad.path, args=files)
+            path_hits = line_func()
+            for file in files:
+                if file in path_hits:
+                    line_hit = path_hits[file]
+                    cmd = file
+                    if line_hit.line_number is not None:
+                        cmd = f"-n{str(line_hit.line_number)} {cmd}"
+                        if line_hit.column_number() is not None:
+                            cmd = f"-c{str(line_hit.column_number())} {cmd}"
+                    args = [cmd]
+                else:
+                    args = [file]
+                exec_item(sys_path=parent.app.sys_paths.notepad.path, args=args)
         return True
     return False
 
