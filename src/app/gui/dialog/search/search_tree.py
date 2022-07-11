@@ -113,19 +113,17 @@ class SearchTree(QTreeWidget):
 
     def on_item_activated(self):
         item = self.currentItem()
-        match item.data(0, Qt.UserRole):
-            case LineHit() as line:
-                if self.main_form.app_qt_object.keyboardModifiers() != Qt.ShiftModifier:
-                    self.main_form.actions[CommonAction.VIEW].trigger()
-                else:
-                    QInputDialog.getText(
-                        self,
-                        "Line preview",
-                        f"{line.file_name}<br>Line number <b>{line.line_number}</b>",
-                        text=line.line_text,
-                    )
-            case FileSearchResult():
-                if self.main_form.app_qt_object.keyboardModifiers() == Qt.ShiftModifier:
-                    self.search_panel.search_control.search_actions["go_to_item"].trigger()
-            case _:
-                pass
+        item_data = item.data(0, Qt.UserRole)
+        if isinstance(item_data, LineHit):
+            if self.main_form.app_qt_object.keyboardModifiers() != Qt.ShiftModifier:
+                self.main_form.actions[CommonAction.VIEW].trigger()
+            else:
+                QInputDialog.getText(
+                    self,
+                    "Line preview",
+                    f"{item_data.file_name}<br>Line number <b>{item_data.line_number}</b>",
+                    text=item_data.line_text,
+                )
+        if isinstance(item_data, FileSearchResult):
+            if self.main_form.app_qt_object.keyboardModifiers() == Qt.ShiftModifier:
+                self.search_panel.search_control.search_actions["go_to_item"].trigger()

@@ -47,19 +47,18 @@ class SearchButton(QPushButton):
         self.search_panel = search_panel
 
     def set_state(self, search_state: SearchState):
-        match search_state:
-            case SearchState.READY | SearchState.COMPLETED:
-                self.setText(SearchButtonCaption.SEARCH.value)
-                self.setEnabled(True)
-                self.search_panel.enable_search_controls(enabled=True)
-            case SearchState.RUNNING:
-                self.setText(SearchButtonCaption.CANCEL.value)
-                self.setEnabled(True)
-                self.search_panel.enable_search_controls(enabled=False)
-            case SearchState.CANCELLED:
-                self.setText(SearchButtonCaption.CANCEL.value)
-                self.setEnabled(False)
-                self.search_panel.enable_search_controls(enabled=False)
+        if search_state in (SearchState.READY, SearchState.COMPLETED):
+            self.setText(SearchButtonCaption.SEARCH.value)
+            self.setEnabled(True)
+            self.search_panel.enable_search_controls(enabled=True)
+        elif search_state == SearchState.RUNNING:
+            self.setText(SearchButtonCaption.CANCEL.value)
+            self.setEnabled(True)
+            self.search_panel.enable_search_controls(enabled=False)
+        elif search_state == SearchState.CANCELLED:
+            self.setText(SearchButtonCaption.CANCEL.value)
+            self.setEnabled(False)
+            self.search_panel.enable_search_controls(enabled=False)
 
 
 class EditableComboBox(QComboBox):
@@ -242,16 +241,15 @@ class SearchPanel(QWidget):
     def get_search_param(self) -> SearchParam:
         search_param = {}
         for key, widget in self.widget_map.items():
-            match widget:
-                case QLineEdit() as edit:
-                    search_param[key] = edit.text()
-                case EditableComboBox() as combo:
-                    if key == "path":
-                        search_param[key] = combo.currentText()
-                    else:
-                        search_param[key] = split_multiple_values(text=combo.currentText())
-                case QCheckBox() as check:
-                    search_param[key] = check.isChecked()
+            if isinstance(widget, QLineEdit):
+                search_param[key] = widget.text()
+            elif isinstance(widget, EditableComboBox):
+                if key == "path":
+                    search_param[key] = widget.currentText()
+                else:
+                    search_param[key] = split_multiple_values(text=widget.currentText())
+            elif isinstance(widget, QCheckBox):
+                search_param[key] = widget.isChecked()
         return SearchParam(**search_param)
 
 
