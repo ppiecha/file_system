@@ -92,7 +92,7 @@ class TreeBox(QTabWidget):
         if len(pages) == 0:
             return None
         if len(pages) > 1:
-            raise RuntimeError(f"Found for than one page with path {path}")
+            raise RuntimeError(f"Found more for than one page with path {path}")
         return pages[0]
 
     def go_to_page(self, pinned_path: str):

@@ -81,5 +81,8 @@ class App(BaseModel):
         return pages[0] if pages else None
 
     def remove_page(self, page: Tree):
-        self.pages.remove(page)
+        if page in self.pages:
+            self.pages.remove(page)
+        else:
+            raise ValueError(f"Cannot remove\n{page}\nfrom pages\n{self.pages}")
         logger.debug(f"Page removed {page}")
