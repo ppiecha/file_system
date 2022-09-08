@@ -13,7 +13,7 @@ from src.app.gui.dialog.base import select_folder
 from src.app.gui.dialog.sys_path_edit import SysPathDialog
 
 
-from src.app.utils.constant import APP_NAME, Context
+from src.app.utils.constant import APP_NAME, Context, DEFAULT_ENCODING
 from src.app.utils.logger import get_console_logger
 from src.app.utils.shell import paste, cut, delete, rename, copy, copy_file, fail, move
 from src.app.utils.thread import run_in_thread
@@ -93,7 +93,7 @@ def file_first_lines(file_path: str, count: int) -> List[str]:
     parts = []
     if not info.isFile():
         fail(f"{file_path} is not a file")
-    with open(info.absoluteFilePath(), "r", encoding="utf-8") as file:
+    with open(info.absoluteFilePath(), "r", encoding=DEFAULT_ENCODING) as file:
         for line_no, line in enumerate(file):
             parts.append(line.rstrip())
             if line_no >= count:

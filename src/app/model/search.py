@@ -10,6 +10,7 @@ from PySide2.QtCore import QFileInfo
 
 from pydantic import BaseModel
 
+from src.app.utils.constant import DEFAULT_ENCODING
 from src.app.utils.path_util import extract_folders, path_caption
 
 
@@ -121,7 +122,7 @@ class LineHit(BaseModel):
 def open_file(file_name: str) -> List[str] | str:
     # file_encoding(file_name=file_name)
     try:
-        with open(file_name, "r", encoding="utf-8") as file:
+        with open(file_name, "r", encoding=DEFAULT_ENCODING) as file:
             return file.readlines()
     except (UnicodeDecodeError, PermissionError, OSError) as e:
         return str(e)

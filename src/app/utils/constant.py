@@ -7,3 +7,6 @@ APP_NAME = "File system"
 class Context(Enum):
     main = auto()
     search = auto()
+
+
+DEFAULT_ENCODING = "latin-1"

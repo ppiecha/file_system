@@ -40,3 +40,4 @@ pylint src
 - Option to create file from clipboard content
 - Option to duplicate content of file/folder under different name in the same location
 - Option to copy multiple items name/path at once
+- Preview of file/folder content in tooltip
