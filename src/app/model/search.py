@@ -7,7 +7,6 @@ from itertools import accumulate
 from typing import Sequence, Iterator, Optional, List, Tuple, Dict
 
 from PySide2.QtCore import QFileInfo
-from chardet.universaldetector import UniversalDetector
 
 from pydantic import BaseModel
 
@@ -106,17 +105,17 @@ class LineHit(BaseModel):
         return QFileInfo(self.file_name).fileName()
 
 
-detector = UniversalDetector()
+# detector = UniversalDetector()
 
 
-def file_encoding(file_name: str) -> str:
-    detector.reset()
-    for line in open(file_name, "rb"):
-        detector.feed(line)
-        if detector.done:
-            break
-    detector.close()
-    return detector.result["encoding"]
+# def file_encoding(file_name: str) -> str:
+#     detector.reset()
+#     for line in open(file_name, "rb"):
+#         detector.feed(line)
+#         if detector.done:
+#             break
+#     detector.close()
+#     return detector.result["encoding"]
 
 
 def open_file(file_name: str) -> List[str] | str:

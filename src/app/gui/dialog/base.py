@@ -20,7 +20,7 @@ from pydantic import BaseModel
 from src.app.gui.widget import Layout
 from src.app.utils.logger import get_console_logger
 
-logger = get_console_logger(name=__name__, log_level=logging.DEBUG)
+logger = get_console_logger(name=__name__, log_level=logging.ERROR)
 
 
 def select_folder(parent, text: str = None, caption: str = "Select folder") -> str:

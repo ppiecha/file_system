@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import logging
 from functools import partial
 from typing import List, Callable
 from enum import Enum, auto
@@ -16,7 +18,7 @@ from src.app.model.schema import App
 from src.app.utils.logger import get_console_logger
 
 
-logger = get_console_logger(name=__name__)
+logger = get_console_logger(name=__name__, log_level=logging.ERROR)
 
 
 class EditMode(Enum):

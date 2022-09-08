@@ -27,7 +27,7 @@ from src.app.utils.logger import get_console_logger
 from src.app.utils.shell import start_file, open_folder, copy, move
 from src.app.utils.thread import run_in_thread
 
-logger = get_console_logger(name=__name__, log_level=logging.INFO)
+logger = get_console_logger(name=__name__, log_level=logging.ERROR)
 
 
 class TreeColumn(int, Enum):

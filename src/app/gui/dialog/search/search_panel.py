@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import logging
 from enum import Enum
 from typing import List, Dict, NamedTuple
 
@@ -33,7 +35,7 @@ from src.app.utils.path_util import path_caption
 from src.app.utils.search import search, search_file
 from src.app.utils.thread import ThreadWithWorker
 
-logger = get_console_logger(__name__)
+logger = get_console_logger(__name__, log_level=logging.ERROR)
 
 
 class SearchButtonCaption(str, Enum):

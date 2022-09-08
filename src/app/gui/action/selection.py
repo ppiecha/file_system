@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 from typing import Callable
 
@@ -8,7 +9,7 @@ from src.app.gui.action.command import Action
 from src.app.utils.logger import get_console_logger
 from src.app.utils.path_util import extract_path, folder_name, file_name
 
-logger = get_console_logger(name=__name__)
+logger = get_console_logger(name=__name__, log_level=logging.ERROR)
 
 
 class SelectionAction(Enum):

@@ -5,4 +5,3 @@ pytest==7.0.1
 winshell==0.6
 pywin32==303
 pylint==2.12.2
-chardet==5.0.0

@@ -1,4 +1,5 @@
 import dataclasses
+import logging
 from typing import List, Dict
 
 from PySide2.QtCore import Qt, QSize
@@ -12,7 +13,7 @@ from src.app.model.search import SearchParam, FileSearchResultList, LineHit, Fil
 from src.app.utils import path_util
 from src.app.utils.logger import get_console_logger
 
-logger = get_console_logger(__name__)
+logger = get_console_logger(name=__name__, log_level=logging.ERROR)
 
 
 @dataclasses.dataclass

@@ -11,7 +11,7 @@ from src.app.model.schema import App, Tree
 from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger
 
-logger = get_console_logger(name=__name__, log_level=logging.INFO)
+logger = get_console_logger(name=__name__, log_level=logging.ERROR)
 
 
 class TreeBox(QTabWidget):

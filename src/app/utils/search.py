@@ -1,19 +1,20 @@
+import logging
 import re
-from typing import Iterator, List
+from typing import Iterator, List, Union
 
 from PySide2.QtCore import QDirIterator, QDir, QFileInfo
 
 from src.app.model.search import FileSearchResult, SearchParam
 from src.app.utils.logger import get_console_logger
 
-logger = get_console_logger(name=__name__)
+logger = get_console_logger(name=__name__, log_level=logging.ERROR)
 
 
 def find_keyword(
     search_param: SearchParam,
     text: str,
     find_first: bool = False,
-) -> Iterator[re.Match] | re.Match:
+) -> Union[Iterator[re.Match], re.Match]:
     flag = re.IGNORECASE if search_param.ignore_case else 0
     esc_word = search_param.keyword if search_param.reg_exp else re.escape(search_param.keyword)
     pattern = r"\b" + esc_word + r"\b" if search_param.whole_words else r"" + esc_word + r""
@@ -23,7 +24,7 @@ def find_keyword(
 
 
 def search_file(
-    search_param: SearchParam, text_lines: List[str] | str, search_result: FileSearchResult
+    search_param: SearchParam, text_lines: Union[List[str], str], search_result: FileSearchResult
 ) -> FileSearchResult:
     def has_hits(data: str) -> bool:
         return find_keyword(search_param=search_param, text=data, find_first=True) is not None

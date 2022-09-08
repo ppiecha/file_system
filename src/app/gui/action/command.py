@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 from typing import Callable
 
@@ -22,7 +23,7 @@ from src.app.utils.path_util import (
 from src.app.utils.logger import get_console_logger
 from src.app.utils.shell import properties
 
-logger = get_console_logger(name=__name__)
+logger = get_console_logger(name=__name__, log_level=logging.ERROR)
 
 
 class CommonAction(str, Enum):

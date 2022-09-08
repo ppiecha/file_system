@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import List, Optional
 
 from PySide2.QtCore import QFileInfo
@@ -7,7 +8,7 @@ from pydantic import BaseModel
 
 from src.app.utils.logger import get_console_logger
 
-logger = get_console_logger(name=__name__)
+logger = get_console_logger(name=__name__, log_level=logging.ERROR)
 
 
 class Favorite(BaseModel):

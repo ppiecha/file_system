@@ -7,7 +7,7 @@ from src.app.gui.dialog.base import FormDialog, Properties, FileEdit
 from src.app.model.schema import SysPath, SysPaths
 from src.app.utils.logger import get_console_logger
 
-logger = get_console_logger(name=__name__, log_level=logging.DEBUG)
+logger = get_console_logger(name=__name__, log_level=logging.ERROR)
 
 
 class SysPathDialog(FormDialog):
