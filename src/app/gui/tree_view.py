@@ -329,7 +329,7 @@ class TreeView(QTreeView):
         logger.debug(f"dropped files {files} action {func}")
         if files and path:
             run_in_thread(
-                parent=self,
+                parent=self.main_form,
                 target=func,
                 args=[files, path, False],
                 threads=self.main_form.threads,
