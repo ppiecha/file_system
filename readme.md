@@ -2,10 +2,13 @@
 
 > Windows file system browser  
 > Simplifies browsing source code written in various programming languages
+
+![File system screenshot](./screenshot/file_system.png "File system screenshot")
+
 ### Requirements
 Python >= 3.9 \
 Windows >= 10 \
-see ***requirements.txt*** file
+see `requirements.txt` file
 ### Installation
 pywin32 post install script (copies required DLLs) \
 https://github.com/mhammond/pywin32/blob/main/pywin32_postinstall.py
