@@ -4,7 +4,7 @@ from PySide2.QtWidgets import QApplication
 
 from src.app.gui.main_form import MainForm
 from src.app.gui.palette import dark_palette
-from src.app.model.schema import App, get_config_file
+from src.app.model.schema import get_config_file, App
 from src.app.utils.serializer import json_from_file
 
 if __name__ == "__main__":

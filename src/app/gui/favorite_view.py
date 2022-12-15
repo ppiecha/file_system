@@ -14,7 +14,7 @@ from src.app.gui.dialog.favorite_edit import FavoriteDialog
 from src.app.model.favorite import Favorite, Favorites
 from src.app.utils.constant import APP_NAME
 from src.app.utils.path_util import all_folders, path_caption
-from src.app.model.schema import App
+from src.app.model.schema import Branch
 from src.app.utils.logger import get_console_logger
 
 
@@ -28,10 +28,12 @@ class EditMode(Enum):
 
 
 class FavoriteTree(QTreeWidget):
-    def __init__(self, parent, app_model: App):
+    def __init__(self, parent, branch_model: Branch):
         super().__init__(parent=parent)
-        self.favorites = app_model.favorites
-        self.main_form = parent.parent()
+        self.favorites = branch_model.favorites
+        self.branch_panel = parent.parent()
+        self.branch_box = self.branch_panel.parent()
+        self.main_form = self.branch_box.main_form
         self.init_ui()
         self.recreate()
 
@@ -208,6 +210,8 @@ class FavoriteTree(QTreeWidget):
                 self.favorite_tree.favorites.selected = selected
                 # logger.debug(f"selected after operation {self.favorite_tree.favorites.selected}")
                 self.save_tree_and_recreate()
+            else:
+                raise ValueError(f"Unhandled case {favorite} {mode}")
 
         def open_menu(self, position: QPoint):
             self.clear()

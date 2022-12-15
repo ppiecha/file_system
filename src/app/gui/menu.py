@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from src.app.gui.action.command import (
     CommonAction,
     create_copy_items_to_clipboard_action,
@@ -31,6 +33,7 @@ from src.app.gui.action.folder import (
     create_open_console_action,
     create_select_folder_in_new_tab_action,
 )
+from src.app.gui.action.group import GroupAction, create_new_group_action
 from src.app.gui.action.selection import (
     SelectionAction,
     create_copy_path_action,
@@ -44,12 +47,16 @@ from src.app.gui.action.tab import (
     create_close_all_tabs_action,
 )
 
+if TYPE_CHECKING:
+    from src.app.gui.main_form import MainForm
+
 
 def init_menu(main_form):
     init_file_menu(main_form)
     init_folder_menu(main_form)
     init_command_menu(main_form)
     init_selection_menu(main_form)
+    init_group_menu(main_form)
     init_tab_menu(main_form)
     init_view_menu(main_form)
 
@@ -222,18 +229,38 @@ def init_selection_menu(main_form):
     # Invert selection
 
 
+def init_group_menu(main_form):
+    group_menu = main_form.menuBar().addMenu("&Group")
+    # New
+    main_form.actions[GroupAction.NEW] = create_new_group_action(parent=main_form.group)
+    group_menu.addAction(main_form.actions[GroupAction.NEW])
+    # # Close all
+    # group_menu.addSeparator()
+    # main_form.actions[TabAction.CLOSE_ALL] = create_close_all_tabs_action(
+    #     parent_func=lambda: main_form.current_tree_box()
+    # )
+    # group_menu.addAction(main_form.actions[TabAction.CLOSE_ALL])
+    # # Close
+    # main_form.actions[TabAction.CLOSE] = create_close_tab_action(
+    #     parent_func=lambda: main_form.current_tree_box(), index_func=main_form.current_tree_box().currentIndex
+    # )
+    # group_menu.addAction(main_form.actions[TabAction.CLOSE])
+
+
 def init_tab_menu(main_form):
     tab_menu = main_form.menuBar().addMenu("&Tab")
     # New
-    main_form.actions[TabAction.NEW] = create_new_tab_action(parent=main_form.tree_box)
+    main_form.actions[TabAction.NEW] = create_new_tab_action(parent=main_form.current_tree_box())
     tab_menu.addAction(main_form.actions[TabAction.NEW])
     # Close all
     tab_menu.addSeparator()
-    main_form.actions[TabAction.CLOSE_ALL] = create_close_all_tabs_action(parent_func=lambda: main_form.tree_box)
+    main_form.actions[TabAction.CLOSE_ALL] = create_close_all_tabs_action(
+        parent_func=lambda: main_form.current_tree_box()
+    )
     tab_menu.addAction(main_form.actions[TabAction.CLOSE_ALL])
     # Close
     main_form.actions[TabAction.CLOSE] = create_close_tab_action(
-        parent_func=lambda: main_form.tree_box, index_func=main_form.tree_box.currentIndex
+        parent_func=lambda: main_form.current_tree_box(), index_func=main_form.current_tree_box().currentIndex
     )
     tab_menu.addAction(main_form.actions[TabAction.CLOSE])
 

@@ -335,6 +335,7 @@ def view_item(parent, path_func: Callable, line_func: Callable[[], Dict[str, Lin
     return False
 
 
+# pylint: too-many-nested-blocks
 def edit_item(parent, path_func: Callable, line_func: Callable[[], Dict[str, LineHit]] | None = None) -> bool:
     if not parent.app.sys_paths.notepad.path or not parent.app.sys_paths.vs_code.path:
         logger.info(f"sys paths before edit {parent.app.sys_paths}")

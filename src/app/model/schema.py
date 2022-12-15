@@ -62,14 +62,11 @@ class SysPaths(BaseModel):
     chrome: SysPath = SysPath()
 
 
-class App(BaseModel):
-    name: str = APP_NAME
+class Branch(BaseModel):
+    name: Optional[str] = None
     pages: List[Tree] = []
     last_page_pinned_path: Optional[str] = None
     favorites: Favorites = Favorites()
-    win_state: WindowState = WindowState()
-    sys_paths: Optional[SysPaths] = SysPaths()
-    search_win_state: SearchWindowState = SearchWindowState()
 
     def add_page(self, pinned_path: str = None) -> Tree:
         tree = Tree(pinned_path=pinned_path)
@@ -86,3 +83,17 @@ class App(BaseModel):
         else:
             raise ValueError(f"Cannot remove\n{page}\nfrom pages\n{self.pages}")
         logger.debug(f"Page removed {page}")
+
+
+class App(BaseModel):
+    name: str = APP_NAME
+    win_state: WindowState = WindowState()
+    sys_paths: Optional[SysPaths] = SysPaths()
+    search_win_state: SearchWindowState = SearchWindowState()
+    branches: List[Branch] = []
+
+    def get_branch_by_name(self, name: str):
+        lookup = [branch for branch in self.branches if branch.name == name]
+        if not lookup or len(lookup) > 1:
+            raise ValueError(f"Cannot find branch by name {name} {lookup}")
+        return lookup[0]

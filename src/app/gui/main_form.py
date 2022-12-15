@@ -4,31 +4,30 @@ import traceback
 from typing import Optional, List, Dict
 
 from PySide2.QtGui import QIcon, Qt
-from PySide2.QtWidgets import QMainWindow, QSplitter, QMessageBox, QApplication, QStyle
+from PySide2.QtWidgets import QMainWindow, QMessageBox, QApplication, QStyle, QBoxLayout, QWidget, QMenu
 
 from src.app.gui.action.command import Action
+from src.app.gui.branch_box import BranchBox, BranchPanel
 from src.app.gui.dialog.base import CustomMessageBox
 from src.app.gui.dialog.search.search_dlg import SearchDlg
 from src.app.gui.dialog.search.search_panel import SearchWorker
-from src.app.gui.favorite_view import FavoriteTree
 from src.app.gui.menu import init_menu
-from src.app.gui.tree_view import TreeView
 from src.app.gui.tree_box import TreeBox
-from src.app.model.schema import App, get_config_file, WindowState
+from src.app.gui.tree_view import TreeView
+from src.app.model.schema import get_config_file, WindowState, App
 from src.app.model.search import FileSearchResult
 from src.app.utils.constant import APP_NAME, Context
 from src.app.utils.logger import get_console_logger, get_file_handler
 from src.app.utils.serializer import json_to_file
 from src.app.utils.thread import ThreadWithWorker
 
-logger = get_console_logger(name=__name__, log_level=logging.ERROR)
+logger = get_console_logger(name=__name__, log_level=logging.INFO)
 logger.addHandler(get_file_handler())
 
 
 class MainForm(QMainWindow):
     def __init__(self, app: App, app_qt_object: QApplication):
         super().__init__()
-
         self.icons = {
             "dir": self.style().standardIcon(getattr(QStyle, "SP_DirIcon")),
             "file": self.style().standardIcon(getattr(QStyle, "SP_FileIcon")),
@@ -40,12 +39,8 @@ class MainForm(QMainWindow):
         self.app_qt_object = app_qt_object
         self.actions: Dict[str, Action] = {}
         self.threads: List[ThreadWithWorker] = []
-        self.splitter = QSplitter(self)
-        self.favorite_tree = FavoriteTree(parent=self.splitter, app_model=app)
-        self.tree_box = TreeBox(parent=self.splitter, app_model=app)
-        self.splitter.addWidget(self.favorite_tree)
-        self.splitter.addWidget(self.tree_box)
-        self.setCentralWidget(self.splitter)
+        self.group = BranchBox(parent=self, app_model=app)
+        self.setCentralWidget(self.group)
         self.init_ui()
         init_menu(main_form=self)
         self.search_dlg = SearchDlg(mf=self)
@@ -121,11 +116,11 @@ class MainForm(QMainWindow):
     def init_ui(self):
         self.setWindowTitle(self.app.name)
         self.setWindowIcon(QIcon("file_system.ico"))
-        if not self.app.pages:
-            self.tree_box.open_root_page()
-        if self.app.win_state and self.app.win_state.splitter_sizes:
-            self.splitter.setSizes(self.app.win_state.splitter_sizes)
-        self.splitter.splitterMoved.connect(self.on_splitter_moved)
+        # if not self.app.pages:
+        #     self.tree_box.open_root_page()
+        # if self.app.win_state and self.app.win_state.splitter_sizes:
+        #     self.splitter.setSizes(self.app.win_state.splitter_sizes)
+        # self.splitter.splitterMoved.connect(self.on_splitter_moved)
 
     def app_should_quit(self) -> bool:
         message = """Some <b>background threads</b> are still running<br>
@@ -154,10 +149,10 @@ class MainForm(QMainWindow):
         self.search_dlg.close()
 
     def on_quit(self):
-        logger.debug(f"on quit {len(self.threads)}")
+        logger.info(f"on quit {len(self.threads)}")
         self.save_settings()
-
         self.app_qt_object.deleteLater()
+        logger.info("Last command")
 
     def save_settings(self):
         if not self.isMaximized():
@@ -167,21 +162,27 @@ class MainForm(QMainWindow):
             self.app.win_state.height = self.size().height()
         self.app.win_state.is_maximized = self.isMaximized()
         self.app.win_state.on_top = (self.windowFlags() & ~Qt.WindowStaysOnTopHint) == Qt.WindowStaysOnTopHint
-        self.app.win_state.splitter_sizes = self.splitter.sizes()
-        self.tree_box.store_pages_layout()
-        if current_tree := self.tree_box.current_tree():
-            self.app.last_page_pinned_path = current_tree.pinned_path
+        # self.app.win_state.splitter_sizes = self.splitter.sizes()
+        self.group.store_branches_layout()
+        self.group.save_pinned_paths()
         json_to_file(json_dict=self.app.dict(), file_name=get_config_file())
 
-    def on_splitter_moved(self, pos, index):
-        self.app.win_state.splitter_sizes = self.splitter.sizes()
+    def current_branch_panel(self) -> Optional[BranchPanel]:
+        return self.group.current_branch_panel()
 
     def current_tree(self) -> Optional[TreeView]:
-        current_tree = self.tree_box.current_tree()
+        current_branch = self.current_branch_panel()
+        if not current_branch:
+            QMessageBox.information(self, APP_NAME, "No group selected")
+            return None
+        current_tree = current_branch.tree_box.current_tree()
         if not current_tree:
             QMessageBox.information(self, APP_NAME, "No tab selected")
             return None
         return current_tree
+
+    def current_tree_box(self) -> TreeBox:
+        return self.current_tree().tree_box
 
     def path_func(self) -> Optional[List[str]]:
         if self.isActiveWindow():

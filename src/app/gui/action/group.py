@@ -8,35 +8,36 @@ from PySide2.QtWidgets import QWidget
 from src.app.gui.action.command import Action
 
 
-class TabAction(str, Enum):
-    NEW = "New"
-    CLOSE_ALL = "Close all tabs"
-    CLOSE_OTHER = "Close other tabs"
-    CLOSE = "Close"
+class GroupAction(str, Enum):
+    NEW = "New group"
+    RENAME = "Rename group"
+    CLOSE_ALL = "Close all groups"
+    CLOSE_OTHER = "Close other groups"
+    CLOSE = "Close group"
 
 
-def create_new_tab_action(parent: QWidget) -> Action:
+def create_new_group_action(parent: QWidget) -> Action:
     return Action(
         parent=parent,
-        caption=TabAction.NEW.value,
-        shortcut=QKeySequence(Qt.CTRL + Qt.Key_T),
-        slot=parent.open_root_page,
+        caption=GroupAction.NEW,
+        shortcut=QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_G),
+        slot=parent.new_group,
     )
 
 
-def create_close_all_tabs_action(parent_func: Callable) -> Action:
+def create_close_all_groups_action(parent_func: Callable) -> Action:
     return Action(
         parent=parent_func().main_form,
-        caption=TabAction.CLOSE_ALL.value,
+        caption=GroupAction.CLOSE_ALL.value,
         shortcut=QKeySequence(Qt.CTRL + Qt.Key_F4),
         slot=lambda: parent_func().close_all_pages(),
     )
 
 
-def create_close_tab_action(parent_func: Callable, index_func: Callable) -> Action:
+def create_close_group_action(parent_func: Callable, index_func: Callable) -> Action:
     return Action(
         parent=parent_func().main_form,
-        caption=TabAction.CLOSE.value,
+        caption=GroupAction.CLOSE.value,
         shortcut=QKeySequence(Qt.SHIFT + Qt.CTRL + Qt.Key_T),
         slot=lambda: parent_func().close_page(index_func=index_func),
     )

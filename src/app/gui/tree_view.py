@@ -42,7 +42,7 @@ class TreeView(QTreeView):
         super().__init__(parent)
         self.last_selected_path = last_selected_path
         self.tree_box = parent
-        self.main_form = self.tree_box.parent().parent()
+        self.main_form = self.tree_box.main_form
         self.sys_model = QFileSystemModel()
         self.proxy = SortFilterModel(self)
         self.proxy.setSourceModel(self.sys_model)

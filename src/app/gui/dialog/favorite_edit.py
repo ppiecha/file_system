@@ -39,6 +39,7 @@ class FavoriteDialog(FormDialog):
 
     @classmethod
     def get_favorite(cls, parent, favorite: Favorite = None) -> BaseModel:
-        dlg = cls(parent=parent, entity=favorite, caption="Edit favorite")
+        dlg = cls(parent=parent, entity=favorite if favorite else Favorite(), caption="Edit favorite")
+        # dlg = cls(parent=parent, entity=favorite, caption="Edit favorite")
         dlg.exec_()
         return dlg.get_entity()
