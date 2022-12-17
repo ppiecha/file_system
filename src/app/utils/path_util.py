@@ -179,7 +179,6 @@ def rename_if_exists(parent, path: str, user_is_aware: bool = False) -> Optional
 
 def cut_items_to_clipboard(parent, path_func: Callable) -> bool:
     is_ok, path = validate_single_path(parent=parent, paths=path_func())
-    path = extract_path(item=path)
     if is_ok:
         run_in_thread(parent=parent, target=cut, args=[path], threads=parent.threads)
         return True
