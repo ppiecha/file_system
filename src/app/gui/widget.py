@@ -12,7 +12,7 @@ class Layout(QBoxLayout):
             self.setSpacing(delta + 5)
 
 
-def populated_box_layout(widgets: List[QWidget], direction = QBoxLayout.TopToBottom, delta: int = 0) -> Layout:
+def populated_box_layout(widgets: List[QWidget], direction=QBoxLayout.TopToBottom, delta: int = 0) -> Layout:
     layout = Layout(direction=direction, delta=delta)
     for widget in widgets:
         layout.addWidget(widget)

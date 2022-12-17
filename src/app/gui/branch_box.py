@@ -100,6 +100,10 @@ class BranchBox(QTabWidget):
             return
         for branch in self.app_model.branches:
             self.add_branch(branch=branch)
+        if self.app_model.last_branch and self.app_model.last_branch in [
+            branch.name for branch in self.app_model.branches
+        ]:
+            self.go_to_branch(self.app_model.get_branch_by_name(self.app_model.last_branch))
 
     def add_branch(self, branch: Branch) -> BranchPanel:
         branch_panel = self.get_branch_component(branch=branch)

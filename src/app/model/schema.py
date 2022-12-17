@@ -90,6 +90,7 @@ class App(BaseModel):
     win_state: WindowState = WindowState()
     sys_paths: Optional[SysPaths] = SysPaths()
     search_win_state: SearchWindowState = SearchWindowState()
+    last_branch: Optional[str] = None
     branches: List[Branch] = []
 
     def get_branch_by_name(self, name: str):

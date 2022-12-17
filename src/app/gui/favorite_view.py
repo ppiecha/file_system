@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from functools import partial
-from typing import List, Callable
+from typing import List, Callable, Optional
 from enum import Enum, auto
 
 from PySide2.QtCore import QPoint, QEvent
@@ -68,6 +68,12 @@ class FavoriteTree(QTreeWidget):
         super().enterEvent(event)
         logger.debug("enterEvent")
         self.remove_dead_entries()
+
+    def current_favorite(self) -> Optional[Favorite]:
+        item = self.currentItem()
+        if item:
+            return self.get_favorite(item)
+        return None
 
     # pylint: disable=unused-argument)
     def on_item_activated(self, item: QTreeWidgetItem, column: int):

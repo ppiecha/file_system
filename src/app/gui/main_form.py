@@ -11,6 +11,7 @@ from src.app.gui.branch_box import BranchBox, BranchPanel
 from src.app.gui.dialog.base import CustomMessageBox
 from src.app.gui.dialog.search.search_dlg import SearchDlg
 from src.app.gui.dialog.search.search_panel import SearchWorker
+from src.app.gui.favorite_view import FavoriteTree
 from src.app.gui.menu import init_menu
 from src.app.gui.tree_box import TreeBox
 from src.app.gui.tree_view import TreeView
@@ -161,10 +162,18 @@ class MainForm(QMainWindow):
         # self.app.win_state.splitter_sizes = self.splitter.sizes()
         self.group.store_branches_layout()
         self.group.save_pinned_paths()
+        self.app.last_branch = self.group.current_branch_panel().branch.name
         json_to_file(json_dict=self.app.dict(), file_name=get_config_file())
 
     def current_branch_panel(self) -> Optional[BranchPanel]:
         return self.group.current_branch_panel()
+
+    def current_favorite_tree(self) -> Optional[FavoriteTree]:
+        current_branch = self.current_branch_panel()
+        if not current_branch:
+            QMessageBox.information(self, APP_NAME, "No group selected")
+            return None
+        return current_branch.favorite_tree
 
     def current_tree(self) -> Optional[TreeView]:
         current_branch = self.current_branch_panel()
@@ -182,12 +191,14 @@ class MainForm(QMainWindow):
 
     def path_func(self) -> Optional[List[str]]:
         if self.isActiveWindow():
-            current_tree = self.current_tree()
-            if not current_tree:
-                return []
-            paths = current_tree.get_selected_paths()
-            if len(paths) > 0:
-                return paths
+            if (current_tree := self.current_tree()).hasFocus():
+                if not current_tree:
+                    return []
+                paths = current_tree.get_selected_paths()
+                if len(paths) > 0:
+                    return paths
+            if (current_tree := self.current_favorite_tree()).hasFocus():
+                return [current_tree.current_favorite().path]
         if self.search_dlg.isActiveWindow() and self.search_dlg.search_control.currentWidget():
             paths = self.search_dlg.search_control.currentWidget().search_tree.get_selected_paths()
             if len(paths) > 0:
