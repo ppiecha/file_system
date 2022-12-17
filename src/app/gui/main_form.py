@@ -66,11 +66,9 @@ class MainForm(QMainWindow):
             opts = [opt for opt in sys.argv[1:] if opt.startswith("-")]
             # args = [arg for arg in sys.argv[1:] if not arg.startswith("-")]
             if "-w" in opts:
-                sys.excepthook = self.except_hook
-        else:
-            pass
+                sys.excepthook = self.ui_except_hook
 
-    def except_hook(self, type_, value, tb):
+    def ui_except_hook(self, type_, value, tb):
         message = "".join(traceback.format_exception(type_, value, tb))
         box = CustomMessageBox(
             QMessageBox.Critical,
@@ -149,10 +147,8 @@ class MainForm(QMainWindow):
         self.search_dlg.close()
 
     def on_quit(self):
-        logger.info(f"on quit {len(self.threads)}")
         self.save_settings()
         self.app_qt_object.deleteLater()
-        logger.info("Last command")
 
     def save_settings(self):
         if not self.isMaximized():

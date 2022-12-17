@@ -170,20 +170,14 @@ class FavoriteTree(QTreeWidget):
     def open_menu(self, position: QPoint):
         items = self.selectedItems()
         parent_item = items[0] if items else None
-        with FavoriteTree.Menu(favorite_tree=self, current_item=parent_item) as menu:
-            menu.open_menu(position=position)
+        menu = FavoriteTree.Menu(favorite_tree=self, current_item=parent_item)
+        menu.open_menu(position=position)
 
     class Menu(QMenu):
         def __init__(self, favorite_tree: FavoriteTree, current_item: QTreeWidgetItem):
-            super().__init__(parent=favorite_tree)
+            super().__init__(parent=None)
             self.favorite_tree = favorite_tree
             self.current_item = current_item
-
-        def __enter__(self):
-            return self
-
-        def __exit__(self, exc_type, exc_val, exc_tb):
-            pass
 
         def save_tree_and_recreate(self):
             self.favorite_tree.save_to_file()

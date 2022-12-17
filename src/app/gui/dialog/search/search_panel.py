@@ -21,6 +21,7 @@ from PySide2.QtWidgets import (
 
 from src.app.gui.dialog.base import PathEdit
 from src.app.gui.dialog.search.search_tree import SearchTree, SearchStat
+from src.app.gui.widget import widget_of_widgets
 from src.app.model.search import (
     SearchParam,
     SearchConfig,
@@ -97,8 +98,8 @@ class SearchPanel(QWidget):
         self.widget_map["keyword"] = QLineEdit()
         self.widget_map["keyword"].setStyleSheet("color: gold")
         self.search_btn = SearchButton(caption=SearchButtonCaption.SEARCH.value, search_panel=self)
-        self.keyword_search = WidgetContainer(
-            parent=self, direction=QBoxLayout.LeftToRight, widgets=[self.widget_map["keyword"], self.search_btn]
+        self.keyword_search = widget_of_widgets(
+            direction=QBoxLayout.LeftToRight, widgets=[self.widget_map["keyword"], self.search_btn]
         )
         self.search_config = SearchConfig()
         self.widget_map["name_filters"] = EditableComboBox(self.search_config.name_filters)
