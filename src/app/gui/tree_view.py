@@ -77,7 +77,7 @@ class TreeView(QTreeView):
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
 
-        self.clicked.connect(self.on_clicked)
+        # self.clicked.connect(self.on_clicked)
         self.activated.connect(self.on_activated)
         self.customContextMenuRequested.connect(self.open_menu)
 
@@ -350,11 +350,6 @@ class TreeView(QTreeView):
             else:
                 ind = self.proxy_index(sys_index=self.sys_model.index(item_path))
                 logger.debug(f"activated proxy index valid {ind.isValid()} children {self.proxy.rowCount(ind)}")
-                # if self.proxy.rowCount(ind) > 0:
-                if self.isExpanded(index):
-                    self.collapse(index)
-                else:
-                    self.expand(index)
 
     def store_layout(self):
         expanded = []
