@@ -4,10 +4,10 @@ import traceback
 from typing import Optional, List, Dict
 
 from PySide2.QtGui import QIcon, Qt
-from PySide2.QtWidgets import QMainWindow, QMessageBox, QApplication, QStyle, QBoxLayout, QWidget, QMenu
+from PySide2.QtWidgets import QMainWindow, QMessageBox, QApplication, QStyle
 
 from src.app.gui.action.command import Action
-from src.app.gui.branch_box import BranchBox, BranchPanel
+from src.app.gui.group_box import GroupBox, GroupPanel
 from src.app.gui.dialog.base import CustomMessageBox
 from src.app.gui.dialog.search.search_dlg import SearchDlg
 from src.app.gui.dialog.search.search_panel import SearchWorker
@@ -40,9 +40,10 @@ class MainForm(QMainWindow):
         self.app_qt_object = app_qt_object
         self.actions: Dict[str, Action] = {}
         self.threads: List[ThreadWithWorker] = []
-        self.group = BranchBox(parent=self, app_model=app)
+        self.group = GroupBox(parent=self, app_model=app)
         self.setCentralWidget(self.group)
         self.init_ui()
+        self.menu = self.menuBar()
         init_menu(main_form=self)
         self.search_dlg = SearchDlg(mf=self)
         self.app_qt_object.aboutToQuit.connect(self.on_quit)
@@ -155,27 +156,30 @@ class MainForm(QMainWindow):
         self.app.win_state.is_maximized = self.isMaximized()
         self.app.win_state.on_top = (self.windowFlags() & ~Qt.WindowStaysOnTopHint) == Qt.WindowStaysOnTopHint
         # self.app.win_state.splitter_sizes = self.splitter.sizes()
-        self.group.store_branches_layout()
+        self.group.store_groups_layout()
         self.group.save_pinned_paths()
-        self.app.last_branch = self.group.current_branch_panel().branch.name
+        if panel := self.group.current_group_panel():
+            self.app.last_group = self.group.current_group_panel().group.name
+        else:
+            self.app.last_group = None
         json_to_file(json_dict=self.app.dict(), file_name=get_config_file())
 
-    def current_branch_panel(self) -> Optional[BranchPanel]:
-        return self.group.current_branch_panel()
+    def current_group_panel(self) -> Optional[GroupPanel]:
+        return self.group.current_group_panel()
 
     def current_favorite_tree(self) -> Optional[FavoriteTree]:
-        current_branch = self.current_branch_panel()
-        if not current_branch:
+        current_group = self.current_group_panel()
+        if not current_group:
             QMessageBox.information(self, APP_NAME, "No group selected")
             return None
-        return current_branch.favorite_tree
+        return current_group.favorite_tree
 
     def current_tree(self) -> Optional[TreeView]:
-        current_branch = self.current_branch_panel()
-        if not current_branch:
+        current_group = self.current_group_panel()
+        if not current_group:
             QMessageBox.information(self, APP_NAME, "No group selected")
             return None
-        current_tree = current_branch.tree_box.current_tree()
+        current_tree = current_group.tree_box.current_tree()
         if not current_tree:
             QMessageBox.information(self, APP_NAME, "No tab selected")
             return None

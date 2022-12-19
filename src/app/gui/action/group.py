@@ -25,12 +25,12 @@ def create_new_group_action(parent: QWidget) -> Action:
     )
 
 
-def create_close_all_groups_action(parent_func: Callable) -> Action:
+def close_group_action(parent_func: Callable) -> Action:
     return Action(
         parent=parent_func().main_form,
-        caption=GroupAction.CLOSE_ALL.value,
-        shortcut=QKeySequence(Qt.CTRL + Qt.Key_F4),
-        slot=lambda: parent_func().close_all_pages(),
+        caption=GroupAction.CLOSE.value,
+        shortcut=None,
+        slot=parent_func().close_current_group,
     )
 
 
@@ -38,6 +38,6 @@ def create_close_group_action(parent_func: Callable, index_func: Callable) -> Ac
     return Action(
         parent=parent_func().main_form,
         caption=GroupAction.CLOSE.value,
-        shortcut=QKeySequence(Qt.SHIFT + Qt.CTRL + Qt.Key_T),
+        shortcut=None,
         slot=lambda: parent_func().close_page(index_func=index_func),
     )

@@ -14,7 +14,7 @@ from src.app.gui.dialog.favorite_edit import FavoriteDialog
 from src.app.model.favorite import Favorite, Favorites
 from src.app.utils.constant import APP_NAME
 from src.app.utils.path_util import all_folders, path_caption
-from src.app.model.schema import Branch
+from src.app.model.schema import Group
 from src.app.utils.logger import get_console_logger
 
 
@@ -28,12 +28,12 @@ class EditMode(Enum):
 
 
 class FavoriteTree(QTreeWidget):
-    def __init__(self, parent, branch_model: Branch):
+    def __init__(self, parent, group: Group):
         super().__init__(parent=parent)
-        self.favorites = branch_model.favorites
-        self.branch_panel = parent.parent()
-        self.branch_box = self.branch_panel.parent()
-        self.main_form = self.branch_box.main_form
+        self.favorites = group.favorites
+        self.group_panel = parent.parent()
+        self.group_box = self.group_panel.parent()
+        self.main_form = self.group_box.main_form
         self.init_ui()
         self.recreate()
 

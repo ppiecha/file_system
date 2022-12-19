@@ -6,21 +6,22 @@ from PySide2.QtWidgets import QTabWidget, QMenu, QMessageBox, QFileDialog
 
 from src.app.gui.action.tab import create_close_tab_action, create_close_all_tabs_action
 from src.app.gui.tree_view import TreeView
+from src.app.gui.widget import TabWidget
 from src.app.utils.path_util import path_caption
-from src.app.model.schema import Branch, Tree
+from src.app.model.schema import Group, Tree
 from src.app.utils.constant import APP_NAME
 from src.app.utils.logger import get_console_logger
 
 logger = get_console_logger(name=__name__, log_level=logging.ERROR)
 
 
-class TreeBox(QTabWidget):
-    def __init__(self, parent, branch_model: Branch):
+class TreeBox(TabWidget):
+    def __init__(self, parent, group: Group):
         super().__init__(parent=parent)
-        self.branch_panel = self.parent().parent()
-        self.branch_box = self.branch_panel.parent()
-        self.main_form = self.branch_box.main_form
-        self.branch_model = branch_model
+        self.group_panel = self.parent().parent()
+        self.group_box = self.group_panel.parent()
+        self.main_form = self.group_box.main_form
+        self.group = group
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.open_menu)
         self.currentChanged.connect(self.on_current_changed)
@@ -36,13 +37,13 @@ class TreeBox(QTabWidget):
 
     # pylint: disable=unnecessary-comprehension
     def open_pages(self):
-        if not self.branch_model.pages:
-            self.open_root_page()
+        if not self.group.pages:
+            self.open_root_page(find_existing=True)
             return
-        for page in self.branch_model.pages:
-            logger.info(f"Opening page {str(page.pinned_path)} last path {self.branch_model.last_page_pinned_path}")
+        for page in self.group.pages:
+            logger.info(f"Opening page {str(page.pinned_path)} last path {self.group.last_page_pinned_path}")
             self.open_tree_page(pinned_path=page.pinned_path, create=False, find_existing=False)
-        if pinned_path := self.branch_model.last_page_pinned_path:
+        if pinned_path := self.group.last_page_pinned_path:
             self.go_to_page(pinned_path=pinned_path)
 
     def open_tree_page(
@@ -63,9 +64,9 @@ class TreeBox(QTabWidget):
                     current_tree.current_path = selected_path
                 return
         if create:
-            tree_model = self.branch_model.add_page(pinned_path=pinned_path)
+            tree_model = self.group.add_page(pinned_path=pinned_path)
         else:
-            tree_model = self.branch_model.get_page_by_pinned_path(pinned_path=pinned_path)
+            tree_model = self.group.get_page_by_pinned_path(pinned_path=pinned_path)
             tree_model = tree_model or Tree(pinned_path=pinned_path)
         self.add_page(
             tree_model=tree_model,
@@ -73,8 +74,8 @@ class TreeBox(QTabWidget):
             last_selected_path=tree_model.last_selected_path or selected_path,
         )
 
-    def open_root_page(self):
-        self.open_tree_page(pinned_path=None, find_existing=False, go_to_page=True)
+    def open_root_page(self, find_existing: bool = False):
+        self.open_tree_page(pinned_path=None, find_existing=find_existing, go_to_page=True)
 
     def open_user_defined_page(self):
         path = QFileDialog.getExistingDirectory(self, APP_NAME, QDir.homePath())
@@ -118,7 +119,7 @@ class TreeBox(QTabWidget):
             QMessageBox.information(self.parent(), APP_NAME, "No tab selected")
             return
         page = self.widget(index)
-        self.branch_model.remove_page(page=page.tree_model)
+        self.group.remove_page(page=page.tree_model)
         page.deleteLater()
         self.removeTab(index)
 

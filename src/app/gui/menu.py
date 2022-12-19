@@ -33,7 +33,7 @@ from src.app.gui.action.folder import (
     create_open_console_action,
     create_select_folder_in_new_tab_action,
 )
-from src.app.gui.action.group import GroupAction, create_new_group_action
+from src.app.gui.action.group import GroupAction, create_new_group_action, create_close_group_action
 from src.app.gui.action.selection import (
     SelectionAction,
     create_copy_path_action,
@@ -62,7 +62,7 @@ def init_menu(main_form):
 
 
 def init_file_menu(main_form):
-    file_menu = main_form.menuBar().addMenu("&File")
+    file_menu = main_form.menuWidget().addMenu("&File")
     # Create
     main_form.actions[FileAction.CREATE] = create_file_action(
         parent_func=main_form.current_tree, path_func=main_form.path_func
@@ -240,11 +240,11 @@ def init_group_menu(main_form):
     #     parent_func=lambda: main_form.current_tree_box()
     # )
     # group_menu.addAction(main_form.actions[TabAction.CLOSE_ALL])
-    # # Close
-    # main_form.actions[TabAction.CLOSE] = create_close_tab_action(
-    #     parent_func=lambda: main_form.current_tree_box(), index_func=main_form.current_tree_box().currentIndex
-    # )
-    # group_menu.addAction(main_form.actions[TabAction.CLOSE])
+    # Close
+    main_form.actions[GroupAction.CLOSE] = create_close_group_action(
+        parent_func=lambda: main_form.group, index_func=main_form.group.currentIndex
+    )
+    group_menu.addAction(main_form.actions[GroupAction.CLOSE])
 
 
 def init_tab_menu(main_form):

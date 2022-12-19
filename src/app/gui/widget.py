@@ -1,6 +1,6 @@
 from typing import List
 
-from PySide2.QtWidgets import QBoxLayout, QWidget
+from PySide2.QtWidgets import QBoxLayout, QWidget, QTabWidget
 
 
 class Layout(QBoxLayout):
@@ -26,3 +26,14 @@ def widget_of_widgets(
     widget.setContentsMargins(delta, delta, delta, delta)
     widget.setLayout(populated_box_layout(direction=direction, widgets=widgets, delta=delta))
     return widget
+
+
+class TabWidget(QTabWidget):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.tabBarClicked.connect(self.on_click)
+
+    def on_click(self, index):
+        if 0 <= index < self.tabBar().count():
+            self.setCurrentIndex(index)
+

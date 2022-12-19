@@ -62,7 +62,7 @@ class SysPaths(BaseModel):
     chrome: SysPath = SysPath()
 
 
-class Branch(BaseModel):
+class Group(BaseModel):
     name: Optional[str] = None
     pages: List[Tree] = []
     last_page_pinned_path: Optional[str] = None
@@ -91,11 +91,14 @@ class App(BaseModel):
     win_state: WindowState = WindowState()
     sys_paths: Optional[SysPaths] = SysPaths()
     search_win_state: SearchWindowState = SearchWindowState()
-    last_branch: Optional[str] = None
-    branches: List[Branch] = []
+    last_group: Optional[str] = None
+    groups: List[Group] = []
 
-    def get_branch_by_name(self, name: str):
-        lookup = [branch for branch in self.branches if branch.name == name]
+    def get_group_by_name(self, name: str):
+        lookup = [group for group in self.groups if group.name == name]
         if not lookup or len(lookup) > 1:
-            raise ValueError(f"Cannot find branch by name {name} {lookup}")
+            raise ValueError(f"Cannot find group by name {name} {lookup}")
         return lookup[0]
+
+    def remove_group(self, group: Group):
+        self.groups.remove(group)
