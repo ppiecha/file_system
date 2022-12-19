@@ -67,6 +67,7 @@ class Branch(BaseModel):
     pages: List[Tree] = []
     last_page_pinned_path: Optional[str] = None
     favorites: Favorites = Favorites()
+    splitter_sizes: Optional[List[int]] = None
 
     def add_page(self, pinned_path: str = None) -> Tree:
         tree = Tree(pinned_path=pinned_path)

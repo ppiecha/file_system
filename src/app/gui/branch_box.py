@@ -22,14 +22,14 @@ class BranchPanel(QWidget):
         self.splitter.addWidget(self.favorite_tree)
         self.splitter.addWidget(self.tree_box)
 
-        if self.app.win_state and self.app.win_state.splitter_sizes:
-            self.splitter.setSizes(self.app.win_state.splitter_sizes)
+        if branch.splitter_sizes:
+            self.splitter.setSizes(branch.splitter_sizes)
         self.splitter.splitterMoved.connect(self.on_splitter_moved)
 
         self.setLayout(populated_box_layout(widgets=[self.splitter]))
 
     def on_splitter_moved(self, pos, index):
-        self.app.win_state.splitter_sizes = self.splitter.sizes()
+        self.branch.splitter_sizes = self.splitter.sizes()
 
 
 class BranchBox(QTabWidget):
@@ -51,7 +51,8 @@ class BranchBox(QTabWidget):
     def save_pinned_paths(self):
         for panel in self.get_all_branch_panels():
             current_tree = panel.tree_box.current_tree()
-            panel.branch.last_page_pinned_path = current_tree.pinned_path
+            path = current_tree.pinned_path if current_tree else None
+            panel.branch.last_page_pinned_path = path
 
     def store_branches_layout(self):
         for panel in self.get_all_branch_panels():

@@ -115,11 +115,6 @@ class MainForm(QMainWindow):
     def init_ui(self):
         self.setWindowTitle(self.app.name)
         self.setWindowIcon(QIcon("file_system.ico"))
-        # if not self.app.pages:
-        #     self.tree_box.open_root_page()
-        # if self.app.win_state and self.app.win_state.splitter_sizes:
-        #     self.splitter.setSizes(self.app.win_state.splitter_sizes)
-        # self.splitter.splitterMoved.connect(self.on_splitter_moved)
 
     def app_should_quit(self) -> bool:
         message = """Some <b>background threads</b> are still running<br>

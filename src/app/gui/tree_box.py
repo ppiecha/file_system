@@ -36,7 +36,10 @@ class TreeBox(QTabWidget):
 
     # pylint: disable=unnecessary-comprehension
     def open_pages(self):
-        for page in [page for page in self.branch_model.pages]:
+        if not self.branch_model.pages:
+            self.open_root_page()
+            return
+        for page in self.branch_model.pages:
             logger.info(f"Opening page {str(page.pinned_path)} last path {self.branch_model.last_page_pinned_path}")
             self.open_tree_page(pinned_path=page.pinned_path, create=False, find_existing=False)
         if pinned_path := self.branch_model.last_page_pinned_path:
