@@ -2,8 +2,9 @@ import logging
 from enum import Enum
 from typing import Callable
 
-from PySide2.QtGui import QIcon, QKeySequence, Qt
-from PySide2.QtWidgets import QAction, QMenu, QWidget
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon, QKeySequence, QAction
+from PySide6.QtWidgets import QMenu, QWidget
 
 from src.app.utils.path_util import (
     copy_items_to_clipboard,
@@ -61,13 +62,13 @@ class Action(QAction):
         if isinstance(shortcut, list):
             # logger.debug(f"shortcut list {list(map(lambda s: s.toString(), shortcut))}")
             self.setShortcuts(shortcut)
-        else:
+        elif shortcut is not None:
             self.setShortcut(shortcut)
         self.setToolTip(tip or caption)
         self.setStatusTip(status_tip or caption)
         if slot:
             self.triggered.connect(slot)
-        self.setShortcutContext(Qt.ApplicationShortcut)
+        # self.setShortcutContext(Qt.ApplicationShortcut)
 
 
 def create_action(parent: QWidget, caption: str, slot: callable, shortcut: QKeySequence, tip: str):
@@ -84,7 +85,7 @@ def create_cut_items_to_clipboard_action(parent_func: Callable, path_func: Calla
     return Action(
         parent=parent_func().main_form,
         caption=CommonAction.CUT.value,
-        shortcut=Qt.CTRL + Qt.Key_X,
+        shortcut=Qt.CTRL | Qt.Key_X,
         slot=lambda: cut_items_to_clipboard(parent=parent_func().main_form, path_func=path_func),
         tip="Cut item to clipboard",
     )
@@ -94,7 +95,7 @@ def create_copy_items_to_clipboard_action(parent_func: Callable, path_func: Call
     return Action(
         parent=parent_func().main_form,
         caption=CommonAction.COPY.value,
-        shortcut=Qt.CTRL + Qt.Key_C,
+        shortcut=Qt.CTRL | Qt.Key_C,
         slot=lambda: copy_items_to_clipboard(parent=parent_func(), path_func=path_func),
         tip="Copies selected items to clipboard",
     )
@@ -104,7 +105,7 @@ def create_paste_items_from_clipboard_action(parent_func: Callable, path_func: C
     return Action(
         parent=parent_func().main_form,
         caption=CommonAction.PASTE.value,
-        shortcut=Qt.CTRL + Qt.Key_V,
+        shortcut=Qt.CTRL | Qt.Key_V,
         slot=lambda: paste_items_from_clipboard(parent=parent_func().main_form, path_func=path_func),
         tip="Paste item from clipboard into selected path",
     )
@@ -114,7 +115,7 @@ def create_delete_items_action(parent_func: Callable, path_func: Callable) -> Ac
     return Action(
         parent=parent_func().main_form,
         caption=CommonAction.DELETE.value,
-        shortcut=[QKeySequence(Qt.Key_Delete), QKeySequence(Qt.CTRL + Qt.Key_Delete)],
+        shortcut=[QKeySequence(Qt.Key_Delete), QKeySequence(Qt.CTRL | Qt.Key_Delete)],
         slot=lambda: delete_items(parent=parent_func().main_form, path_func=path_func),
         tip="Deletes selected items",
     )
@@ -144,7 +145,7 @@ def create_view_action(parent_func: Callable, path_func: Callable, line_func: Ca
     return Action(
         parent=parent_func().main_form,
         caption=CommonAction.VIEW.value,
-        shortcut=[QKeySequence(Qt.Key_F3), QKeySequence(Qt.CTRL + Qt.Key_Return)],
+        shortcut=[QKeySequence(Qt.Key_F3), QKeySequence(Qt.CTRL | Qt.Key_Return)],
         slot=lambda: view_item(parent=parent_func().main_form, path_func=path_func, line_func=line_func),
         tip="View item",
     )
@@ -164,7 +165,7 @@ def create_go_to_action(parent_func: Callable, path_func: Callable, context_func
     return Action(
         parent=parent_func().main_form,
         caption=CommonAction.GO_TO.value,
-        shortcut=QKeySequence(Qt.CTRL + Qt.Key_G),
+        shortcut=QKeySequence(Qt.CTRL | Qt.Key_G),
         slot=lambda: go_to_item(parent=parent_func().main_form, path_func=path_func, context_func=context_func),
         tip="Go to specified item",
     )
@@ -174,7 +175,7 @@ def create_go_to_repo_action(parent_func: Callable, path_func: Callable) -> Acti
     return Action(
         parent=parent_func().main_form,
         caption=CommonAction.GO_TO_REPO.value,
-        shortcut=QKeySequence(Qt.CTRL + Qt.Key_R),
+        shortcut=QKeySequence(Qt.CTRL | Qt.Key_R),
         slot=lambda: go_to_repo(parent=parent_func().main_form, path_func=path_func),
         tip="Go to related Git repository URL",
     )
@@ -199,7 +200,7 @@ def create_copy_to_action(parent_func: Callable, path_func: Callable) -> Action:
     return Action(
         parent=parent_func().main_form,
         caption=CommonAction.COPY_TO.value,
-        shortcut=QKeySequence(Qt.CTRL + Qt.Key_F5),
+        shortcut=QKeySequence(Qt.CTRL | Qt.Key_F5),
         slot=lambda: copy_move(parent=parent_func().main_form, path_func=path_func, move_flag=False),
         tip="Copy items to selected location",
     )
@@ -219,7 +220,7 @@ def create_search_action(parent_func: Callable, path_func: Callable) -> Action:
     return Action(
         parent=parent_func().main_form,
         caption=CommonAction.SEARCH.value,
-        shortcut=QKeySequence(Qt.CTRL + Qt.Key_F),
+        shortcut=QKeySequence(Qt.CTRL | Qt.Key_F),
         slot=lambda: search_in_path(parent=parent_func().main_form, path_func=path_func),
         tip="Search in specified path",
     )

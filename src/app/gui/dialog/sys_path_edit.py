@@ -1,6 +1,6 @@
 import logging
 
-from PySide2.QtWidgets import QAbstractButton, QDialogButtonBox
+from PySide6.QtWidgets import QAbstractButton, QDialogButtonBox
 from pydantic import BaseModel
 
 from src.app.gui.dialog.base import FormDialog, Properties, FileEdit

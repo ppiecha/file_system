@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Iterator, List, Union
 
-from PySide2.QtCore import QDirIterator, QDir, QFileInfo
+from PySide6.QtCore import QDirIterator, QDir, QFileInfo
 
 from src.app.model.search import FileSearchResult, SearchParam
 from src.app.utils.logger import get_console_logger
@@ -51,7 +51,7 @@ def is_in_excluded_dirs(file_info: QFileInfo, excluded_dirs: List[str]):
 
 def search(
     search_param: SearchParam,
-    filters: QDir.Filters = QDir.AllEntries | QDir.NoSymLinks | QDir.Dirs | QDir.NoDotAndDotDot | QDir.DirsFirst,
+    filters: QDir.Filters = QDir.AllEntries | QDir.NoSymLinks | QDir.Dirs | QDir.NoDotAndDotDot,  # | QDir.DirsFirst,
 ) -> Iterator[FileSearchResult]:
     flags = QDirIterator.Subdirectories if search_param.subdirectories else QDirIterator.NoIteratorFlags
     it = QDirIterator(search_param.path, search_param.name_filters, filters, flags)

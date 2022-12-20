@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Dict
 
-from PySide2.QtWidgets import QTabWidget, QAction
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QTabWidget
 
 from src.app.gui.action.command import create_go_to_action
 from src.app.gui.dialog.search.search_panel import SearchPanel

@@ -1,6 +1,6 @@
 import sys
 
-from PySide2.QtWidgets import QApplication, QGridLayout, QPushButton, QStyle, QWidget
+from PySide6.QtWidgets import QApplication, QGridLayout, QPushButton, QStyle, QWidget
 
 from src.app.gui.palette import dark_palette
 

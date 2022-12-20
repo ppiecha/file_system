@@ -1,7 +1,7 @@
 import json
 from typing import Dict, Any
 
-from PySide2.QtCore import QFileInfo
+from PySide6.QtCore import QFileInfo
 
 from src.app.utils.constant import DEFAULT_ENCODING
 

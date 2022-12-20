@@ -4,9 +4,9 @@ import logging
 from enum import Enum
 from typing import List, Dict, NamedTuple
 
-from PySide2.QtCore import QThread, Signal, QObject, Qt
-from PySide2.QtGui import QFontMetrics
-from PySide2.QtWidgets import (
+from PySide6.QtCore import QThread, Signal, QObject, Qt
+from PySide6.QtGui import QFontMetrics
+from PySide6.QtWidgets import (
     QWidget,
     QFormLayout,
     QComboBox,

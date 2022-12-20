@@ -3,8 +3,9 @@ import sys
 import traceback
 from typing import Optional, List, Dict
 
-from PySide2.QtGui import QIcon, Qt
-from PySide2.QtWidgets import QMainWindow, QMessageBox, QApplication, QStyle
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QMainWindow, QMessageBox, QApplication, QStyle
 
 from src.app.gui.action.command import Action
 from src.app.gui.group_box import GroupBox, GroupPanel
@@ -88,7 +89,7 @@ class MainForm(QMainWindow):
     def set_geometry_and_show(self, app: QApplication):
         state: WindowState = self.app.win_state
         new_state: WindowState = self.app.win_state
-        screen_rect = app.desktop().availableGeometry(self)
+        screen_rect = app.primaryScreen().availableGeometry()
         if state.x < screen_rect.x():
             new_state.x = screen_rect.x()
         if state.y < screen_rect.y():
@@ -141,11 +142,16 @@ class MainForm(QMainWindow):
         if not self.app_should_quit():
             event.ignore()
             return
+        # for k in [action for action in self.actions]:
+        #     del self.actions[k]
+        # del self.actions
+        # del self.menu
+        # gc.collect()
         self.search_dlg.close()
 
     def on_quit(self):
         self.save_settings()
-        self.app_qt_object.deleteLater()
+        # self.app_qt_object.deleteLater()
 
     def save_settings(self):
         if not self.isMaximized():
@@ -159,7 +165,7 @@ class MainForm(QMainWindow):
         self.group.store_groups_layout()
         self.group.save_pinned_paths()
         if panel := self.group.current_group_panel():
-            self.app.last_group = self.group.current_group_panel().group.name
+            self.app.last_group = panel.group.name
         else:
             self.app.last_group = None
         json_to_file(json_dict=self.app.dict(), file_name=get_config_file())
@@ -188,7 +194,7 @@ class MainForm(QMainWindow):
     def current_tree_box(self) -> TreeBox:
         return self.current_tree().tree_box
 
-    def path_func(self) -> Optional[List[str]]:
+    def path_func(self, show_info: bool = True) -> Optional[List[str]]:
         if self.isActiveWindow():
             if (current_tree := self.current_tree()).hasFocus():
                 if not current_tree:
@@ -196,13 +202,14 @@ class MainForm(QMainWindow):
                 paths = current_tree.get_selected_paths()
                 if len(paths) > 0:
                     return paths
-            if (current_tree := self.current_favorite_tree()).hasFocus():
+            if (current_tree := self.current_favorite_tree()).hasFocus() and current_tree.current_favorite():
                 return [current_tree.current_favorite().path]
         if self.search_dlg.isActiveWindow() and self.search_dlg.search_control.currentWidget():
             paths = self.search_dlg.search_control.currentWidget().search_tree.get_selected_paths()
             if len(paths) > 0:
                 return paths
-        QMessageBox.information(self, APP_NAME, "No path selected")
+        if show_info:
+            QMessageBox.information(self, APP_NAME, "No path selected")
         return []
 
     def context_func(self) -> Context:

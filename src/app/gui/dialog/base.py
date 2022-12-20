@@ -1,9 +1,9 @@
 import logging
 from typing import Callable, Dict, Any
 
-from PySide2.QtCore import QDir
-from PySide2.QtGui import Qt
-from PySide2.QtWidgets import (
+from PySide6.QtCore import QDir
+from PySide6.QtGui import Qt
+from PySide6.QtWidgets import (
     QDialog,
     QFormLayout,
     QLineEdit,

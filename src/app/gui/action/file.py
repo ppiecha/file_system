@@ -2,8 +2,8 @@ from enum import Enum
 from functools import partial
 from typing import Callable
 
-from PySide2.QtCore import Qt
-from PySide2.QtGui import QKeySequence
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QKeySequence
 
 import src.app.utils.file_util
 from src.app.gui.action.command import Action
@@ -22,7 +22,7 @@ def create_file_action(parent_func: Callable, path_func: Callable) -> Action:
     return Action(
         parent=parent_func().main_form,
         caption=FileAction.CREATE.value,
-        shortcut=QKeySequence(Qt.CTRL + Qt.Key_N),
+        shortcut=QKeySequence(Qt.CTRL | Qt.Key_N),
         slot=partial(src.app.utils.file_util.create_file, parent_func, path_func),
         tip="Creates new file under current folder",
     )
@@ -32,7 +32,7 @@ def create_file_from_clipboard_text_action(parent_func: Callable, path_func: Cal
     return Action(
         parent=parent_func().main_form,
         caption=FileAction.CREATE_CLIP.value,
-        shortcut=QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_V),
+        shortcut=QKeySequence(Qt.CTRL | Qt.SHIFT | Qt.Key_V),
         slot=partial(src.app.utils.file_util.create_text_file_from_clip, parent_func, path_func),
         tip="Creates new file from clipboard text under current folder",
     )

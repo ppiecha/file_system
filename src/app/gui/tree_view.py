@@ -3,9 +3,9 @@ import logging
 from enum import Enum
 from typing import List, Optional, Callable, Set, Any
 
-from PySide2.QtCore import QDir, QFileInfo, QModelIndex, QSortFilterProxyModel, QItemSelection
-from PySide2.QtGui import Qt, QPainter, QPalette, QDropEvent, QDragMoveEvent, QDragEnterEvent
-from PySide2.QtWidgets import (
+from PySide6.QtCore import QDir, QFileInfo, QModelIndex, QSortFilterProxyModel, QItemSelectionModel
+from PySide6.QtGui import Qt, QPainter, QPalette, QDropEvent, QDragMoveEvent, QDragEnterEvent
+from PySide6.QtWidgets import (
     QTreeView,
     QFileSystemModel,
     QMenu,
@@ -81,12 +81,12 @@ class TreeView(QTreeView):
         self.activated.connect(self.on_activated)
         self.customContextMenuRequested.connect(self.open_menu)
 
-    def selectionChanged(self, selected: QItemSelection, deselected: QItemSelection) -> None:
-        super().selectionChanged(selected, deselected)
-        # app = self.main_form.app_qt_object
-        # logger.info(f"is active {app.activeWindow()} {app.focusWidget()}")
-        # if app.activeWindow() != 0 and app.focusWidget() != 0:
-        #     self.setFocus()
+    # def selectionChanged(self, selected: QItemSelection, deselected: QItemSelection) -> None:
+    #     super().selectionChanged(selected, deselected)
+    # app = self.main_form.app_qt_object
+    # logger.info(f"is active {app.activeWindow()} {app.focusWidget()}")
+    # if app.activeWindow() != 0 and app.focusWidget() != 0:
+    #     self.setFocus()
 
     def drawRow(self, painter: QPainter, options: QStyleOptionViewItem, index: QModelIndex) -> None:
         new_options = QStyleOptionViewItem(options)
@@ -140,7 +140,9 @@ class TreeView(QTreeView):
                 index = self.proxy_index(sys_index=sys_index)
                 self.setCurrentIndex(index)
                 selection_model = self.selectionModel()
-                selection_model.select(index, selection_model.Clear | selection_model.Select | selection_model.Current)
+                selection_model.select(
+                    index, QItemSelectionModel.Clear | QItemSelectionModel.Select | QItemSelectionModel.Current
+                )
                 self.scrollTo(index, QAbstractItemView.ScrollHint.PositionAtCenter)
             else:
                 logger.debug(f"Invalid path {path}")
@@ -249,7 +251,7 @@ class TreeView(QTreeView):
 
     def get_filter(self) -> QDir.Filters:
         files, hidden, system = self.tree_model.show_files, self.tree_model.show_hidden, self.tree_model.show_system
-        f = QDir.Drives | QDir.Dirs | QDir.NoDotAndDotDot | QDir.DirsFirst
+        f = QDir.Drives | QDir.Dirs | QDir.NoDotAndDotDot  # | QDir.DirsFirst
         if files:
             f = f | QDir.Files
         if hidden:

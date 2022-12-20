@@ -2,8 +2,8 @@ import dataclasses
 import logging
 from typing import List, Dict
 
-from PySide2.QtCore import Qt, QSize
-from PySide2.QtWidgets import QTreeWidget, QAbstractItemView, QTreeWidgetItem, QLabel, QMenu, QHeaderView, QInputDialog
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtWidgets import QTreeWidget, QAbstractItemView, QTreeWidgetItem, QLabel, QMenu, QHeaderView, QInputDialog
 
 from src.app.gui.action.command import CommonAction
 from src.app.gui.action.file import FileAction

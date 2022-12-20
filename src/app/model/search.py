@@ -6,7 +6,7 @@ from enum import Enum, auto
 from itertools import accumulate
 from typing import Sequence, Iterator, Optional, List, Tuple, Dict
 
-from PySide2.QtCore import QFileInfo
+from PySide6.QtCore import QFileInfo
 
 from pydantic import BaseModel
 

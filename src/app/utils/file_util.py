@@ -1,8 +1,8 @@
 import os
 from typing import Callable, Optional
 
-from PySide2.QtCore import QFileInfo, QDir
-from PySide2.QtWidgets import QMessageBox, QInputDialog, QApplication
+from PySide6.QtCore import QFileInfo, QDir
+from PySide6.QtWidgets import QMessageBox, QInputDialog, QApplication
 
 from src.app.utils.path_util import logger, validate_single_path, extract_path, rename_if_exists
 from src.app.utils.constant import APP_NAME

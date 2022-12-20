@@ -1,6 +1,6 @@
 import sys
 
-from PySide2.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 
 from src.app.gui.main_form import MainForm
 from src.app.gui.palette import dark_palette
@@ -15,8 +15,8 @@ if __name__ == "__main__":
     app_model.update(json_from_file(file_name=get_config_file()))
     app_model = App(**app_model)
     main_form = MainForm(app=app_model, app_qt_object=app_qt_object)
-    app_qt_object.setApplicationName(app_model.name)
-    app_qt_object.setApplicationDisplayName(app_model.name)
+    # app_qt_object.setApplicationName(app_model.name)
+    # app_qt_object.setApplicationDisplayName(app_model.name)
     main_form.set_geometry_and_show(app_qt_object)
     main_form.current_tree().setFocus()
-    sys.exit(app_qt_object.exec_())
+    sys.exit(app_qt_object.exec())

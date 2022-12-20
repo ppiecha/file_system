@@ -1,7 +1,7 @@
 import logging
 from typing import Optional, List
 
-from PySide2.QtCore import QDir
+from PySide6.QtCore import QDir
 from pydantic import BaseModel
 
 from src.app.model.favorite import Favorites

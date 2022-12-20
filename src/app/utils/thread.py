@@ -2,8 +2,8 @@ import logging
 from threading import Thread
 from typing import Callable, Sequence, List, NamedTuple
 
-from PySide2.QtCore import QObject, Signal, QThread
-from PySide2.QtWidgets import QMessageBox
+from PySide6.QtCore import QObject, Signal, QThread
+from PySide6.QtWidgets import QMessageBox
 
 from src.app.utils.logger import get_console_logger, get_file_handler
 

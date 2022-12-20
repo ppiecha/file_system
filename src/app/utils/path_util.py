@@ -6,8 +6,8 @@ import logging
 import typing
 from typing import List, Callable, Tuple, Optional, Dict
 
-from PySide2.QtCore import QDir, QFileInfo, QMimeData, QUrl, Qt, QDirIterator
-from PySide2.QtWidgets import QMessageBox, QApplication, QInputDialog
+from PySide6.QtCore import QDir, QFileInfo, QMimeData, QUrl, Qt, QDirIterator
+from PySide6.QtWidgets import QMessageBox, QApplication, QInputDialog
 
 from src.app.gui.dialog.base import select_folder
 from src.app.gui.dialog.sys_path_edit import SysPathDialog
@@ -74,6 +74,8 @@ def parent_path(path: str):
 
 
 def path_caption(path: str) -> str:
+    if path is None:
+        return "/"
     directory = QDir(path)
     if directory.isRoot():
         return path.lower()
@@ -334,7 +336,7 @@ def view_item(parent, path_func: Callable, line_func: Callable[[], Dict[str, Lin
     return False
 
 
-# pylint: too-many-nested-blocks
+# pylint: disable=too-many-nested-blocks
 def edit_item(parent, path_func: Callable, line_func: Callable[[], Dict[str, LineHit]] | None = None) -> bool:
     if not parent.app.sys_paths.notepad.path or not parent.app.sys_paths.vs_code.path:
         logger.info(f"sys paths before edit {parent.app.sys_paths}")
@@ -368,7 +370,9 @@ def go_to_item(parent, path_func: Callable, context_func: Callable) -> bool:
     if context_func() == Context.search:
         paths, is_ok = path_func(), True
     else:
-        path, is_ok = QInputDialog.getText(parent, "Go to item", "Specify file or folder", text="")
+        paths = path_func(show_info=False)
+        path = paths[0] if paths else ""
+        path, is_ok = QInputDialog.getText(parent, "Go to item", "Specify file or folder", text=path)
         paths = [path]
     if is_ok:
         for path in paths:
@@ -380,7 +384,13 @@ def go_to_item(parent, path_func: Callable, context_func: Callable) -> bool:
                 return False
             if info.isFile():
                 selection = [path]
-            parent.tree_box.open_tree_page(pinned_path=folder, find_existing=True, go_to_page=True, selection=selection)
+            modifiers = QApplication.keyboardModifiers()
+            if modifiers == Qt.ControlModifier:
+                parent.current_group_panel().tree_box.open_tree_page(
+                    pinned_path=folder, find_existing=True, go_to_page=True, selection=selection
+                )
+            else:
+                parent.current_tree().pinned_path = folder
             parent.activate()
     return False
 

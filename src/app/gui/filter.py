@@ -1,4 +1,4 @@
-from PySide2.QtWidgets import QWidget, QBoxLayout, QLabel, QLineEdit
+from PySide6.QtWidgets import QWidget, QBoxLayout, QLabel, QLineEdit
 
 from src.app.gui.widget import Layout
 

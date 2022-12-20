@@ -5,9 +5,9 @@ from functools import partial
 from typing import List, Callable, Optional
 from enum import Enum, auto
 
-from PySide2.QtCore import QPoint, QEvent
-from PySide2.QtGui import Qt, QFocusEvent
-from PySide2.QtWidgets import QTreeWidget, QTreeWidgetItem, QAbstractItemView, QMenu, QMessageBox
+from PySide6.QtCore import QPoint, QEvent
+from PySide6.QtGui import Qt, QFocusEvent
+from PySide6.QtWidgets import QTreeWidgetItem, QAbstractItemView, QMenu, QMessageBox, QTreeWidget
 
 from src.app.gui.action.command import Action
 from src.app.gui.dialog.favorite_edit import FavoriteDialog
@@ -46,8 +46,10 @@ class FavoriteTree(QTreeWidget):
         # self.doubleClicked.connect(self.on_double_clicked)
         self.itemActivated.connect(self.on_item_activated)
         self.customContextMenuRequested.connect(self.open_menu)
-        self.itemExpanded.connect(self.expanded)
-        self.itemCollapsed.connect(self.collapsed)
+        self.itemExpanded.connect(lambda item: self.expanded(item=item))
+        # self.expanded.connect(self.expanded)
+        self.itemCollapsed.connect(lambda item: self.collapsed(item=item))
+        # self.collapsed.connect(self.collapsed)
         self.itemSelectionChanged.connect(self.selection_changed)
 
     def remove_dead_entries(self):
@@ -132,7 +134,7 @@ class FavoriteTree(QTreeWidget):
         return item
 
     def set_item_selected(self, item: QTreeWidgetItem):
-        self.setItemSelected(item, True)
+        self.setCurrentItem(item)
         self.scrollToItem(item)
 
     def create_children(self, parent: QTreeWidgetItem, children: List[Favorite]) -> QTreeWidgetItem:
@@ -210,8 +212,6 @@ class FavoriteTree(QTreeWidget):
                 self.favorite_tree.favorites.selected = selected
                 # logger.debug(f"selected after operation {self.favorite_tree.favorites.selected}")
                 self.save_tree_and_recreate()
-            else:
-                raise ValueError(f"Unhandled case {favorite} {mode}")
 
         def open_menu(self, position: QPoint):
             self.clear()

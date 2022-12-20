@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from PySide6.QtWidgets import QMenuBar
+
 from src.app.gui.action.command import (
     CommonAction,
     create_copy_items_to_clipboard_action,
@@ -58,11 +60,11 @@ def init_menu(main_form):
     init_selection_menu(main_form)
     init_group_menu(main_form)
     init_tab_menu(main_form)
-    init_view_menu(main_form)
+    # init_view_menu(main_form)
 
 
 def init_file_menu(main_form):
-    file_menu = main_form.menuWidget().addMenu("&File")
+    file_menu = main_form.menu.addMenu("&File")
     # Create
     main_form.actions[FileAction.CREATE] = create_file_action(
         parent_func=main_form.current_tree, path_func=main_form.path_func
@@ -82,7 +84,7 @@ def init_file_menu(main_form):
 
 
 def init_folder_menu(main_form):
-    folder_menu = main_form.menuBar().addMenu("Fol&der")
+    folder_menu = main_form.menu.addMenu("Fol&der")
     # Create
     main_form.actions[FolderAction.CREATE] = create_folder_action(
         parent_func=main_form.current_tree, path_func=main_form.path_func
@@ -129,7 +131,7 @@ def init_folder_menu(main_form):
 
 
 def init_command_menu(main_form):
-    command_menu = main_form.menuBar().addMenu("&Command")
+    command_menu = main_form.menu.addMenu("&Command")
     # Go to
     main_form.actions[CommonAction.GO_TO] = create_go_to_action(
         parent_func=main_form.current_tree, path_func=main_form.path_func, context_func=main_form.context_func
@@ -208,7 +210,7 @@ def init_command_menu(main_form):
 
 
 def init_selection_menu(main_form):
-    selection_menu = main_form.menuBar().addMenu("&Selection")
+    selection_menu = main_form.menu.addMenu("&Selection")
     # Copy path
     main_form.actions[SelectionAction.COPY_PATH] = create_copy_path_action(
         parent_func=main_form.current_tree, path_func=main_form.path_func
@@ -230,7 +232,7 @@ def init_selection_menu(main_form):
 
 
 def init_group_menu(main_form):
-    group_menu = main_form.menuBar().addMenu("&Group")
+    group_menu = main_form.menu.addMenu("&Group")
     # New
     main_form.actions[GroupAction.NEW] = create_new_group_action(parent=main_form.group)
     group_menu.addAction(main_form.actions[GroupAction.NEW])
@@ -248,26 +250,24 @@ def init_group_menu(main_form):
 
 
 def init_tab_menu(main_form):
-    tab_menu = main_form.menuBar().addMenu("&Tab")
+    tab_menu = main_form.menu.addMenu("&Tab")
     # New
     main_form.actions[TabAction.NEW] = create_new_tab_action(parent=main_form.current_tree_box())
     tab_menu.addAction(main_form.actions[TabAction.NEW])
     # Close all
     tab_menu.addSeparator()
-    main_form.actions[TabAction.CLOSE_ALL] = create_close_all_tabs_action(
-        parent_func=lambda: main_form.current_tree_box()
-    )
+    main_form.actions[TabAction.CLOSE_ALL] = create_close_all_tabs_action(parent_func=main_form.current_tree_box)
     tab_menu.addAction(main_form.actions[TabAction.CLOSE_ALL])
     # Close
     main_form.actions[TabAction.CLOSE] = create_close_tab_action(
-        parent_func=lambda: main_form.current_tree_box(), index_func=main_form.current_tree_box().currentIndex
+        parent_func=main_form.current_tree_box, index_func=main_form.current_tree_box().currentIndex
     )
     tab_menu.addAction(main_form.actions[TabAction.CLOSE])
 
 
-def init_view_menu(main_form):
-    view_menu = main_form.menuBar().addMenu("&View")
-    # show favorite
-    # show buttons
-    # file filter
-    # always on top
+# def init_view_menu(main_form):
+#     view_menu = main_form.menu.addMenu("&View")
+# show favorite
+# show buttons
+# file filter
+# always on top

@@ -1,7 +1,7 @@
-from typing import Optional, List, Tuple, Callable
+from typing import Optional, List, Callable
 
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QTabWidget, QWidget, QSplitter, QMenu, QBoxLayout, QInputDialog, QLineEdit, QMessageBox
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QWidget, QSplitter, QMenu, QInputDialog, QLineEdit, QMessageBox
 
 from src.app.gui.action.group import create_new_group_action
 from src.app.gui.favorite_view import FavoriteTree
@@ -101,9 +101,7 @@ class GroupBox(TabWidget):
             return
         for group in self.app_model.groups:
             self.add_group(group=group)
-        if self.app_model.last_group and self.app_model.last_group in [
-            group.name for group in self.app_model.groups
-        ]:
+        if self.app_model.last_group and self.app_model.last_group in [group.name for group in self.app_model.groups]:
             self.go_to_group(self.app_model.get_group_by_name(self.app_model.last_group))
 
     def add_group(self, group: Group) -> GroupPanel:

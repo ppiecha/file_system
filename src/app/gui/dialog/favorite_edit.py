@@ -1,4 +1,6 @@
-from PySide2.QtWidgets import QLineEdit, QAbstractButton, QDialogButtonBox, QMessageBox
+from typing import Optional
+
+from PySide6.QtWidgets import QLineEdit, QAbstractButton, QDialogButtonBox, QMessageBox, QDialog
 from pydantic import BaseModel
 
 from src.app.gui.dialog.base import FormDialog, Properties, PathEdit
@@ -38,9 +40,11 @@ class FavoriteDialog(FormDialog):
             self.components["name"].setText(path_caption(path=path))
 
     @classmethod
-    def get_favorite(cls, parent, favorite: Favorite = None) -> BaseModel:
+    def get_favorite(cls, parent, favorite: Favorite = None) -> Optional[BaseModel]:
         dlg = cls(parent=parent, entity=favorite if favorite else Favorite(), caption="Edit favorite")
         dlg.exec_()
-        entity = dlg.get_entity()
+        entity = None
+        if dlg.result() == QDialog.Accepted:
+            entity = dlg.get_entity()
         dlg.deleteLater()
         return entity

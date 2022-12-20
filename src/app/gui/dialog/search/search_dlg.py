@@ -1,5 +1,5 @@
-from PySide2.QtGui import QIcon, QCloseEvent
-from PySide2.QtWidgets import QDialog, QBoxLayout
+from PySide6.QtGui import QIcon, QCloseEvent
+from PySide6.QtWidgets import QDialog, QBoxLayout
 
 from src.app.gui.dialog.search.search_control import SearchControl
 

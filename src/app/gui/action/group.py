@@ -1,9 +1,9 @@
 from enum import Enum
 from typing import Callable
 
-from PySide2.QtCore import Qt
-from PySide2.QtGui import QKeySequence
-from PySide2.QtWidgets import QWidget
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QKeySequence
+from PySide6.QtWidgets import QWidget
 
 from src.app.gui.action.command import Action
 
@@ -20,7 +20,7 @@ def create_new_group_action(parent: QWidget) -> Action:
     return Action(
         parent=parent,
         caption=GroupAction.NEW,
-        shortcut=QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_G),
+        shortcut=QKeySequence(Qt.CTRL | Qt.SHIFT | Qt.Key_G),
         slot=parent.new_group,
     )
 

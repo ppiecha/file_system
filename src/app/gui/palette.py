@@ -1,5 +1,5 @@
-from PySide2.QtCore import Qt
-from PySide2.QtGui import QPalette, QColor
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QPalette, QColor
 
 dark_palette = QPalette()
 dark_palette.setColor(QPalette.Window, QColor(53, 53, 53))

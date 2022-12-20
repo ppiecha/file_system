@@ -2,8 +2,8 @@ import logging
 from enum import Enum
 from typing import Callable
 
-from PySide2.QtCore import QMimeData, QFileInfo, Qt
-from PySide2.QtWidgets import QApplication
+from PySide6.QtCore import QMimeData, QFileInfo, Qt
+from PySide6.QtWidgets import QApplication
 
 from src.app.gui.action.command import Action
 from src.app.utils.logger import get_console_logger
@@ -46,9 +46,9 @@ def selected_names(path_func: Callable, mode: SelectionAction) -> bool:
 
 def create_copy_path_action(parent_func: Callable, path_func: Callable) -> Action:
     return Action(
-        parent=parent_func().main_form,
+        parent=None,  #  parent_func().main_form,
         caption=SelectionAction.COPY_PATH.value,
-        shortcut=Qt.CTRL + Qt.SHIFT + Qt.Key_P,
+        shortcut=Qt.CTRL | Qt.SHIFT | Qt.Key_P,
         slot=lambda: selected_names(path_func=path_func, mode=SelectionAction.COPY_PATH),
         tip="Copies path(s)",
     )
@@ -58,7 +58,7 @@ def create_copy_path_with_name_action(parent_func: Callable, path_func: Callable
     return Action(
         parent=parent_func().main_form,
         caption=SelectionAction.COPY_PATH_WITH_NAME.value,
-        shortcut=Qt.CTRL + Qt.SHIFT + Qt.Key_C,
+        shortcut=Qt.CTRL | Qt.SHIFT | Qt.Key_C,
         slot=lambda: selected_names(path_func=path_func, mode=SelectionAction.COPY_PATH_WITH_NAME),
         tip="Copies path(s) with name(s)",
     )
@@ -68,7 +68,7 @@ def create_copy_name_action(parent_func: Callable, path_func: Callable) -> Actio
     return Action(
         parent=parent_func().main_form,
         caption=SelectionAction.COPY_NAME.value,
-        shortcut=Qt.SHIFT + Qt.Key_C,
+        shortcut=Qt.SHIFT | Qt.Key_C,
         slot=lambda: selected_names(path_func=path_func, mode=SelectionAction.COPY_NAME),
         tip="Copies only name(s)",
     )

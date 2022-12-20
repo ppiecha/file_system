@@ -1,8 +1,8 @@
 import logging
 from typing import List, Optional, Callable
 
-from PySide2.QtCore import Qt, QDir
-from PySide2.QtWidgets import QTabWidget, QMenu, QMessageBox, QFileDialog
+from PySide6.QtCore import Qt, QDir
+from PySide6.QtWidgets import QMenu, QMessageBox, QFileDialog
 
 from src.app.gui.action.tab import create_close_tab_action, create_close_all_tabs_action
 from src.app.gui.tree_view import TreeView
