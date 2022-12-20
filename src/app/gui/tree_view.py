@@ -299,6 +299,7 @@ class TreeView(QTreeView):
             menu.addSeparator()
             menu.addAction(self.main_form.actions[CommonAction.RENAME])
             menu.addAction(self.main_form.actions[CommonAction.DUPLICATE])
+            menu.addAction(self.main_form.actions[CommonAction.DELETE])
             selection_menu = QMenu("Copy selected")
             selection_menu.addAction(self.main_form.actions[SelectionAction.COPY_PATH])
             selection_menu.addAction(self.main_form.actions[SelectionAction.COPY_PATH_WITH_NAME])

@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING
 
-from PySide6.QtWidgets import QMenuBar
-
 from src.app.gui.action.command import (
     CommonAction,
     create_copy_items_to_clipboard_action,
@@ -35,7 +33,12 @@ from src.app.gui.action.folder import (
     create_open_console_action,
     create_select_folder_in_new_tab_action,
 )
-from src.app.gui.action.group import GroupAction, create_new_group_action, create_close_group_action
+from src.app.gui.action.group import (
+    GroupAction,
+    create_new_group_action,
+    create_close_group_action,
+    create_rename_group_action,
+)
 from src.app.gui.action.selection import (
     SelectionAction,
     create_copy_path_action,
@@ -236,12 +239,10 @@ def init_group_menu(main_form):
     # New
     main_form.actions[GroupAction.NEW] = create_new_group_action(parent=main_form.group)
     group_menu.addAction(main_form.actions[GroupAction.NEW])
-    # # Close all
+    # Rename
     # group_menu.addSeparator()
-    # main_form.actions[TabAction.CLOSE_ALL] = create_close_all_tabs_action(
-    #     parent_func=lambda: main_form.current_tree_box()
-    # )
-    # group_menu.addAction(main_form.actions[TabAction.CLOSE_ALL])
+    main_form.actions[GroupAction.RENAME] = create_rename_group_action(parent_func=lambda: main_form.group)
+    group_menu.addAction(main_form.actions[GroupAction.RENAME])
     # Close
     main_form.actions[GroupAction.CLOSE] = create_close_group_action(
         parent_func=lambda: main_form.group, index_func=main_form.group.currentIndex

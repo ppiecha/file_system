@@ -25,19 +25,19 @@ def create_new_group_action(parent: QWidget) -> Action:
     )
 
 
-def close_group_action(parent_func: Callable) -> Action:
+def create_rename_group_action(parent_func: Callable) -> Action:
     return Action(
         parent=parent_func().main_form,
-        caption=GroupAction.CLOSE.value,
+        caption=GroupAction.RENAME,
         shortcut=None,
-        slot=parent_func().close_current_group,
+        slot=parent_func().rename_group,
     )
 
 
 def create_close_group_action(parent_func: Callable, index_func: Callable) -> Action:
     return Action(
         parent=parent_func().main_form,
-        caption=GroupAction.CLOSE.value,
+        caption=GroupAction.CLOSE,
         shortcut=None,
         slot=lambda: parent_func().close_page(index_func=index_func),
     )

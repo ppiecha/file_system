@@ -50,7 +50,7 @@ def create_select_folder_in_new_tab_action(parent_func: Callable) -> Action:
         parent=parent_func().main_form,
         caption=FolderAction.SELECT_IN_NEW_TAB.value,
         shortcut=QKeySequence(Qt.CTRL | Qt.SHIFT | Qt.Key_O),
-        slot=parent_func().tree_box.open_user_defined_page,
+        slot=lambda: parent_func().tree_box.open_user_defined_page(),
         tip="Open folder in new tab",
     )
 

@@ -196,7 +196,7 @@ class MainForm(QMainWindow):
 
     def path_func(self, show_info: bool = True) -> Optional[List[str]]:
         if self.isActiveWindow():
-            if (current_tree := self.current_tree()).hasFocus():
+            if (current_tree := self.current_tree()) and current_tree.hasFocus():
                 if not current_tree:
                     return []
                 paths = current_tree.get_selected_paths()

@@ -3,7 +3,7 @@ from typing import Optional, List, Callable
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QSplitter, QMenu, QInputDialog, QLineEdit, QMessageBox
 
-from src.app.gui.action.group import create_new_group_action
+from src.app.gui.action.group import create_new_group_action, create_close_group_action, create_rename_group_action
 from src.app.gui.favorite_view import FavoriteTree
 from src.app.gui.tree_box import TreeBox
 from src.app.gui.widget import populated_box_layout, TabWidget
@@ -65,16 +65,22 @@ class GroupBox(TabWidget):
         return self.widget(index)
 
     def get_name(self, group: Group) -> Group:
+        group = group.copy(deep=True)
         text, ok = QInputDialog.getText(self, "", "Enter name", QLineEdit.Normal, text=group.name)
         if ok:
-            if self.is_group_name_valid(name=text):
+            if self.is_group_name_valid(old_name=group.name, new_name=text):
                 group.name = text
             else:
                 QMessageBox.information(self, APP_NAME, "Group name is not valid")
         return group
 
-    def is_group_name_valid(self, name: str) -> bool:
-        return True
+    def is_group_name_valid(self, old_name: str, new_name: str) -> bool:
+        if old_name == new_name:
+            return True
+        if new_name == "":
+            return False
+        lookup = [panel for panel in self.get_all_groups_panels() if panel.group.name == new_name]
+        return len(lookup) == 0
 
     def new_group(self):
         group = Group()
@@ -86,7 +92,11 @@ class GroupBox(TabWidget):
             self.go_to_group(group=group)
 
     def rename_group(self):
-        pass
+        group = self.current_group_panel().group
+        changed_group = self.get_name(group=group)
+        if changed_group.name != group.name and (index := self.currentIndex()) >= 0:
+            group.name = changed_group.name
+            self.setTabText(index, changed_group.name)
 
     def go_to_group(self, group: Group):
         index = self.get_group_index(group=group)
@@ -123,7 +133,8 @@ class GroupBox(TabWidget):
         index = self.tabBar().tabAt(position)
         if index >= 0:
             menu.addAction(create_new_group_action(parent=self))
-            # menu.addAction(create_close_all_tabs_action(parent_func=lambda: self))
+            menu.addAction(create_rename_group_action(parent_func=lambda: self))
+            menu.addAction(create_close_group_action(parent_func=lambda: self, index_func=self.currentIndex))
         menu.exec_(self.mapToGlobal(position))
 
     def on_current_changed(self, index: int):
