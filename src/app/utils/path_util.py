@@ -384,18 +384,20 @@ def go_to_item(parent, path_func: Callable, context_func: Callable) -> bool:
                 return False
             if info.isFile():
                 selection = [path]
-            modifiers = QApplication.keyboardModifiers()
-            if modifiers == Qt.ControlModifier:
+            if Qt.ControlModifier in QApplication.keyboardModifiers():
                 parent.current_group_panel().tree_box.open_tree_page(
                     pinned_path=folder, find_existing=True, go_to_page=True, selection=selection
                 )
             else:
                 parent.current_tree().pinned_path = folder
+                parent.current_tree().set_selection(selection=selection)
+                parent.current_tree().set_last_selected_path(path=selection[0] if selection else None)
             parent.activate()
     return False
 
 
 def search_in_path(parent, path_func: Callable):
-    parent.search_dlg.show()
-    for path in extract_folders(paths=path_func()):
-        parent.search_dlg.search_control.add_search_panel(path=path)
+    if paths := path_func():
+        parent.search_dlg.show()
+        for path in extract_folders(paths=paths):
+            parent.search_dlg.search_control.add_search_panel(path=path)

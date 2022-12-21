@@ -82,7 +82,7 @@ def create_open_folder_externally_action(parent_func: Callable, path_func: Calla
 def create_open_folder_in_new_tab_action(parent_func: Callable, path_func: Callable) -> Action:
     def open_paths():
         for path in path_util.extract_folders(paths=path_func()):
-            parent_func().tree_box.open_tree_page(pinned_path=path, find_existing=False, go_to_page=True)
+            parent_func().tree_box.open_tree_page(pinned_path=path, find_existing=True, go_to_page=True)
 
     return Action(
         parent=parent_func().main_form,

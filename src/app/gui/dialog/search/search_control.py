@@ -4,7 +4,9 @@ from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QTabWidget
 
 from src.app.gui.action.command import create_go_to_action
+from src.app.gui.action.file import create_open_file_action
 from src.app.gui.dialog.search.search_panel import SearchPanel
+from src.app.gui.dialog.search.search_tree import MouseAction
 
 if TYPE_CHECKING:
     from src.app.gui.main_form import MainForm
@@ -24,8 +26,13 @@ class SearchControl(QTabWidget):
         go_to_action = create_go_to_action(
             parent_func=self.mf.current_tree, path_func=self.mf.path_func, context_func=self.mf.context_func
         )
-        go_to_action.setText("Go to item")
-        self.search_actions = {"go_to_item": go_to_action}
+        view_action = create_open_file_action(
+            parent_func=self.mf.current_tree, path_func=self.mf.path_func
+        )
+        self.search_actions = {
+            MouseAction.GO_TO_ITEM: go_to_action,
+            MouseAction.VIEW: view_action
+        }
 
     def add_search_panel(self, path: str):
         index = self.index_of_path(path=path)

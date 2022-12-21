@@ -74,7 +74,7 @@ class TreeBox(TabWidget):
             last_selected_path=tree_model.last_selected_path or selected_path,
         )
 
-    def open_root_page(self, find_existing: bool = False):
+    def open_root_page(self, find_existing: bool = True):
         self.open_tree_page(pinned_path=None, find_existing=find_existing, go_to_page=True)
 
     def open_user_defined_page(self):
@@ -122,6 +122,8 @@ class TreeBox(TabWidget):
         self.group.remove_page(page=page.tree_model)
         page.deleteLater()
         self.removeTab(index)
+        if self.count() == 0:
+            self.open_root_page()
 
     def close_all_pages(self):
         if self.count() > 0:

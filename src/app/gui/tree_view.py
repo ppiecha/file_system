@@ -55,6 +55,9 @@ class TreeView(QTreeView):
         self.filtered_indexes = []
         self.init_ui()
 
+    def set_last_selected_path(self, path: str):
+        self.last_selected_path = path
+
     def init_ui(self):
         self.setStyleSheet(
             """QToolTip {background-color: black;

@@ -102,12 +102,16 @@ class GroupBox(TabWidget):
         index = self.get_group_index(group=group)
         self.setCurrentIndex(index)
 
+    def open_default_group(self):
+        group = Group(name="Default")
+        self.app_model.groups.append(group)
+        group_panel = self.add_group(group=group)
+        self.go_to_group(group=group)
+        group_panel.tree_box.open_root_page(find_existing=True)
+
     def open_groups(self):
         if not self.app_model.groups:
-            group = Group(name="Default")
-            self.app_model.groups.append(group)
-            group_panel = self.add_group(group=group)
-            group_panel.tree_box.open_root_page(find_existing=True)
+            self.open_default_group()
             return
         for group in self.app_model.groups:
             self.add_group(group=group)
@@ -149,3 +153,5 @@ class GroupBox(TabWidget):
         self.app_model.remove_group(page.group)
         page.deleteLater()
         self.removeTab(index)
+        if self.count() == 0:
+            self.open_default_group()

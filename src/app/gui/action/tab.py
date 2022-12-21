@@ -1,4 +1,5 @@
 from enum import Enum
+from functools import partial
 from typing import Callable
 
 from PySide6.QtCore import Qt
@@ -20,7 +21,7 @@ def create_new_tab_action(parent: QWidget) -> Action:
         parent=parent,
         caption=TabAction.NEW.value,
         shortcut=QKeySequence(Qt.CTRL | Qt.Key_T),
-        slot=parent.open_root_page,
+        slot=partial(parent.open_root_page, find_existing=True),
     )
 
 

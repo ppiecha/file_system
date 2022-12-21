@@ -1,5 +1,6 @@
 import dataclasses
 import logging
+from enum import Enum
 from typing import List, Dict
 
 from PySide6.QtCore import Qt, QSize
@@ -14,6 +15,11 @@ from src.app.utils import path_util
 from src.app.utils.logger import get_console_logger
 
 logger = get_console_logger(name=__name__, log_level=logging.ERROR)
+
+
+class MouseAction(str, Enum):
+    GO_TO_ITEM = "go_to_item"
+    VIEW = "view"
 
 
 @dataclasses.dataclass
@@ -34,7 +40,7 @@ class SearchTree(QTreeWidget):
         self.setHeaderHidden(True)
         self.header().setStretchLastSection(False)
         self.header().setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         # self.clicked.connect(self.on_clicked)
         # self.doubleClicked.connect(self.on_double_clicked)
@@ -126,5 +132,7 @@ class SearchTree(QTreeWidget):
                     text=item_data.line_text,
                 )
         if isinstance(item_data, FileSearchResult):
-            if self.main_form.app_qt_object.keyboardModifiers() == Qt.ShiftModifier:
-                self.search_panel.search_control.search_actions["go_to_item"].trigger()
+            if Qt.ShiftModifier in self.main_form.app_qt_object.keyboardModifiers():
+                self.search_panel.search_control.search_actions[MouseAction.GO_TO_ITEM].trigger()
+            else:
+                self.search_panel.search_control.search_actions[MouseAction.VIEW].trigger()
