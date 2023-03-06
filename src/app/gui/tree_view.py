@@ -3,8 +3,8 @@ import logging
 from enum import Enum
 from typing import List, Optional, Callable, Set, Any
 
-from PySide6.QtCore import QDir, QFileInfo, QModelIndex, QSortFilterProxyModel, QItemSelectionModel
-from PySide6.QtGui import Qt, QPainter, QPalette, QDropEvent, QDragMoveEvent, QDragEnterEvent
+from PySide6.QtCore import QDir, QFileInfo, QModelIndex, QSortFilterProxyModel, QItemSelectionModel, Qt
+from PySide6.QtGui import QPainter, QPalette, QDropEvent, QDragMoveEvent, QDragEnterEvent
 from PySide6.QtWidgets import (
     QTreeView,
     QFileSystemModel,
@@ -351,8 +351,9 @@ class TreeView(QTreeView):
             return
         if path.isDir():
             modifiers = QApplication.keyboardModifiers()
-            if modifiers == Qt.ControlModifier:
-                open_folder(dir_name=item_path)
+            if modifiers == Qt.AltModifier:
+                self.main_form.actions[FolderAction.OPEN_TAB].trigger()
+                # open_folder(dir_name=item_path)
             else:
                 ind = self.proxy_index(sys_index=self.sys_model.index(item_path))
                 logger.debug(f"activated proxy index valid {ind.isValid()} children {self.proxy.rowCount(ind)}")
