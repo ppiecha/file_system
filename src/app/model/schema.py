@@ -51,7 +51,7 @@ class SearchWindowState(BaseModel):
 
 
 class SysPath(BaseModel):
-    path: str = None
+    path: Optional[str] = None
     view: bool = True
     edit: bool = True
 

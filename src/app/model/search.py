@@ -8,7 +8,7 @@ from typing import Sequence, Iterator, Optional, List, Tuple, Dict
 
 from PySide6.QtCore import QFileInfo
 
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 
 from src.app.utils.constant import DEFAULT_ENCODING
 from src.app.utils.path_util import extract_folders, path_caption
@@ -198,17 +198,17 @@ class FileSearchResult(BaseModel):
         return format_file_name(file_name=self.file_name)
 
 
-class FileSearchResultList(BaseModel):
-    __root__: List[FileSearchResult] = []
+class FileSearchResultList(RootModel):
+    root: List[FileSearchResult] = []
 
     def __iter__(self) -> Iterator[FileSearchResult]:
-        return iter(self.__root__)
+        return iter(self.root)
 
     def __getitem__(self, item) -> FileSearchResult:
-        return self.__root__[item]
+        return self.root[item]
 
     def __len__(self):
-        return len(self.__root__)
+        return len(self.root)
 
 
 class SearchState(Enum):
